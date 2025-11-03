@@ -15,7 +15,7 @@ async def generate_script(request: ScriptGenerationRequest):
     try:
         # Vérifier que l'idée existe et est validée
         ideas_collection = get_ideas_collection()
-        idea = await ideas_collection.find_one({"id": request.idea_id})
+        idea = await ideas_collection.find_one({"id": request.idea_id}, {"_id": 0})
         
         if not idea:
             raise HTTPException(
