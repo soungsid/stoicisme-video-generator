@@ -53,17 +53,12 @@ Retourne UNIQUEMENT le script adapté avec les marqueurs, sans explications.
 """
         
         try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "Tu es un expert en adaptation de scripts pour ElevenLabs V3."},
-                    {"role": "user", "content": prompt}
-                ],
+            adapted_script = await self.generate_completion(
+                system_prompt="Tu es un expert en adaptation de scripts pour ElevenLabs V3.",
+                user_prompt=prompt,
                 temperature=0.5,
                 max_tokens=3000
             )
-            
-            adapted_script = response.choices[0].message.content.strip()
             
             # Diviser en phrases en préservant les marqueurs
             phrases = self._split_into_phrases(adapted_script)
