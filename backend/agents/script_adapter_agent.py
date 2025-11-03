@@ -1,29 +1,14 @@
-import os
 import re
 from typing import List, Tuple
-from openai import AsyncOpenAI
+from agents.base_agent import BaseAIAgent
 
-class ScriptAdapterAgent:
+class ScriptAdapterAgent(BaseAIAgent):
     """
     Agent IA pour adapter les scripts à ElevenLabs V3 avec marqueurs d'émotion
     """
     
     def __init__(self):
-        self.provider = os.getenv("AI_PROVIDER", "deepseek")
-        
-        if self.provider == "deepseek":
-            self.client = AsyncOpenAI(
-                api_key=os.getenv("DEEPSEEK_API_KEY"),
-                base_url=os.getenv("DEEPSEEK_BASE_URL")
-            )
-            self.model = os.getenv("DEEPSEEK_MODEL")
-        elif self.provider == "openai":
-            self.client = AsyncOpenAI(
-                api_key=os.getenv("OPENAI_API_KEY")
-            )
-            self.model = os.getenv("OPENAI_MODEL")
-        else:
-            raise ValueError(f"Unsupported AI provider: {self.provider}")
+        super().__init__()
     
     async def adapt_script(self, original_script: str) -> Tuple[str, List[str]]:
         """
