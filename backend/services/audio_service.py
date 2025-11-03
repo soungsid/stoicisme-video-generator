@@ -34,7 +34,7 @@ class AudioService:
             # Récupérer le titre pour créer le répertoire
             from database import get_ideas_collection
             ideas_collection = get_ideas_collection()
-            idea = await ideas_collection.find_one({"id": idea_id})
+            idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
             
             if not idea:
                 raise ValueError(f"Idea {idea_id} not found")
