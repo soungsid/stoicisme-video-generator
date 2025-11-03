@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Loader, CheckCircle, XCircle, Trash2, Play } from 'lucide-react';
+import { Plus, Loader, CheckCircle, XCircle, Lightbulb } from 'lucide-react';
 import { ideasApi, scriptsApi, audioApi, videosApi } from '../api';
 import IdeaCard from '../components/IdeaCard';
 import ValidateIdeaModal from '../components/ValidateIdeaModal';
