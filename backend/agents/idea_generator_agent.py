@@ -42,17 +42,13 @@ KEYWORDS: [mot1, mot2, mot3]
 """
         
         try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "Tu es un expert en création de contenu YouTube spécialisé dans le stoïcisme."},
-                    {"role": "user", "content": prompt}
-                ],
+            content = await self.generate_completion(
+                system_prompt="Tu es un expert en création de contenu YouTube spécialisé dans le stoïcisme.",
+                user_prompt=prompt,
                 temperature=0.8,
                 max_tokens=2000
             )
             
-            content = response.choices[0].message.content
             ideas = self._parse_ideas(content)
             
             print(f"✅ Generated {len(ideas)} video ideas")
