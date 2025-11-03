@@ -1,0 +1,89 @@
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+from enum import Enum
+import uuid
+
+class VideoType(str, Enum):
+    SHORT = "short"  # 9:16
+    NORMAL = "normal"  # 16:9
+
+class IdeaStatus(str, Enum):
+    PENDING = "pending"
+    VALIDATED = "validated"
+    SCRIPT_GENERATED = "script_generated"
+    AUDIO_GENERATED = "audio_generated"
+    VIDEO_GENERATED = "video_generated"
+    UPLOADED = "uploaded"
+    REJECTED = "rejected"
+
+class VideoIdea(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    keywords: List[str] = []
+    video_type: VideoType = VideoType.SHORT
+    duration_seconds: Optional[int] = 30
+    status: IdeaStatus = IdeaStatus.PENDING
+    created_at: datetime = Field(default_factory=datetime.now)
+    validated_at: Optional[datetime] = None
+    
+class Script(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    idea_id: str
+    title: str
+    original_script: str
+    elevenlabs_adapted_script: Optional[str] = None
+    phrases: Optional[List[str]] = []
+    created_at: datetime = Field(default_factory=datetime.now)
+    
+class AudioPhrase(BaseModel):
+    phrase_index: int
+    phrase_text: str
+    audio_path: str
+    duration_ms: int
+    start_time_ms: int
+    end_time_ms: int
+
+class AudioGeneration(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    script_id: str
+    idea_id: str
+    phrases: List[AudioPhrase] = []
+    total_duration_ms: int = 0
+    audio_directory: str
+    created_at: datetime = Field(default_factory=datetime.now)
+
+class Video(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    idea_id: str
+    script_id: str
+    audio_id: str
+    title: str
+    video_type: VideoType
+    video_path: str
+    thumbnail_path: Optional[str] = None
+    duration_seconds: float
+    youtube_video_id: Optional[str] = None
+    youtube_url: Optional[str] = None
+    uploaded_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.now)
+
+class YouTubeConfig(BaseModel):
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    token_expiry: Optional[datetime] = None
+    is_authenticated: bool = False
+
+class IdeaGenerationRequest(BaseModel):
+    count: int = Field(default=5, ge=1, le=20)
+
+class ScriptGenerationRequest(BaseModel):
+    idea_id: str
+    duration_seconds: int = Field(default=30, ge=10, le=600)
+
+class ValidateIdeaRequest(BaseModel):
+    video_type: VideoType
+    duration_seconds: int = Field(ge=10, le=600)
+    keywords: Optional[List[str]] = None
