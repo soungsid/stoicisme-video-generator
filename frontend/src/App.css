@@ -1,0 +1,50 @@
+.App {
+  text-align: center;
+}
+
+/* Custom animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Status badges */
+.status-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.status-pending {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.status-validated {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.status-script_generated {
+  @apply bg-indigo-100 text-indigo-800;
+}
+
+.status-audio_generated {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.status-video_generated {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-uploaded {
+  @apply bg-green-600 text-white;
+}
+
+.status-rejected {
+  @apply bg-red-100 text-red-800;
+}
