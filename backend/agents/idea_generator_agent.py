@@ -1,29 +1,14 @@
-import os
 from typing import List
-from models import VideoIdea, VideoType, IdeaStatus
-from openai import AsyncOpenAI
+from models import VideoIdea, IdeaStatus
+from agents.base_agent import BaseAIAgent
 
-class IdeaGeneratorAgent:
+class IdeaGeneratorAgent(BaseAIAgent):
     """
     Agent IA pour générer des idées de vidéos sur le stoïcisme
     """
     
     def __init__(self):
-        self.provider = os.getenv("AI_PROVIDER", "deepseek")
-        
-        if self.provider == "deepseek":
-            self.client = AsyncOpenAI(
-                api_key=os.getenv("DEEPSEEK_API_KEY"),
-                base_url=os.getenv("DEEPSEEK_BASE_URL")
-            )
-            self.model = os.getenv("DEEPSEEK_MODEL")
-        elif self.provider == "openai":
-            self.client = AsyncOpenAI(
-                api_key=os.getenv("OPENAI_API_KEY")
-            )
-            self.model = os.getenv("OPENAI_MODEL")
-        else:
-            raise ValueError(f"Unsupported AI provider: {self.provider}")
+        super().__init__()
     
     async def generate_ideas(self, count: int = 5) -> List[VideoIdea]:
         """
