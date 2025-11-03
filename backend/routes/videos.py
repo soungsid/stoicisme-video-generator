@@ -94,7 +94,7 @@ async def get_video(video_id: str):
     """
     try:
         videos_collection = get_videos_collection()
-        video = await videos_collection.find_one({"id": video_id})
+        video = await videos_collection.find_one({"id": video_id}, {"_id": 0})
         
         if not video:
             raise HTTPException(
