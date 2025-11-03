@@ -94,7 +94,8 @@ async def adapt_script_for_elevenlabs(script_id: str):
                     "phrases": phrases
                 }
             },
-            return_document=True
+            return_document=True,
+            projection={"_id": 0}
         )
         
         return result
