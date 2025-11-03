@@ -56,7 +56,7 @@ async def get_idea(idea_id: str):
     """
     try:
         ideas_collection = get_ideas_collection()
-        idea = await ideas_collection.find_one({"id": idea_id})
+        idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
         
         if not idea:
             raise HTTPException(
