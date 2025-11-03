@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Key, Mic, Brain, Youtube, CheckCircle, XCircle, Loader, ExternalLink } from 'lucide-react';
+import { Mic, Brain, Youtube, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { configApi, youtubeApi } from '../api';
 
 function ConfigPage() {
