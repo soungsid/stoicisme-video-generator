@@ -49,17 +49,12 @@ Structure recommandée:
 """
         
         try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "Tu es un scénariste expert en contenu YouTube sur le stoïcisme."},
-                    {"role": "user", "content": prompt}
-                ],
+            script_text = await self.generate_completion(
+                system_prompt="Tu es un scénariste expert en contenu YouTube sur le stoïcisme.",
+                user_prompt=prompt,
                 temperature=0.7,
                 max_tokens=3000
             )
-            
-            script_text = response.choices[0].message.content.strip()
             
             script = Script(
                 idea_id="",  # Sera défini par l'appelant
