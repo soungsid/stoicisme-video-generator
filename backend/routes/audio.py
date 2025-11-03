@@ -14,7 +14,7 @@ async def generate_audio(script_id: str):
     """
     try:
         scripts_collection = get_scripts_collection()
-        script = await scripts_collection.find_one({"id": script_id})
+        script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
         
         if not script:
             raise HTTPException(
