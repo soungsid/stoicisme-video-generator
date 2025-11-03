@@ -1,0 +1,165 @@
+import React, { useState, useEffect } from 'react';
+import { Video, Loader, Youtube, ExternalLink } from 'lucide-react';
+import { videosApi, youtubeApi } from '../api';
+
+function VideosPage() {
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(null);
+
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
+  const loadVideos = async () => {
+    try {
+      setLoading(true);
+      const response = await videosApi.listVideos();
+      setVideos(response.data);
+    } catch (error) {
+      console.error('Error loading videos:', error);
+      alert('Erreur lors du chargement des vidéos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUploadToYouTube = async (video) => {
+    if (!window.confirm('Uploader cette vidéo sur YouTube ?')) return;
+
+    try {
+      setUploading(video.id);
+      const response = await youtubeApi.uploadVideo(video.id, {
+        title: video.title,
+        description: `Vidéo sur le stoïcisme: ${video.title}`,
+        tags: ['stoicisme', 'philosophie', 'sagesse', 'développement personnel']
+      });
+
+      alert('🎉 Vidéo uploadée sur YouTube avec succès !');
+      window.open(response.data.youtube_url, '_blank');
+      await loadVideos();
+    } catch (error) {
+      console.error('Error uploading to YouTube:', error);
+      alert('Erreur lors de l\'upload: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getStatusBadge = (video) => {
+    if (video.youtube_video_id) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          Uploadée
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        Prête
+      </span>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Vidéos générées</h1>
+        <p className="mt-2 text-sm text-gray-600">
+          Gérez et uploadez vos vidéos sur YouTube
+        </p>
+      </div>
+
+      {videos.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <Video className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune vidéo</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Les vidéos générées apparaîtront ici
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <ul className="divide-y divide-gray-200">
+            {videos.map((video) => (
+              <li key={video.id} className="px-6 py-4 hover:bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        <Video className="h-6 w-6 text-gray-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {video.title}
+                        </p>
+                        <div className="mt-1 flex items-center space-x-2">
+                          {getStatusBadge(video)}
+                          <span className="text-xs text-gray-500">
+                            {formatDuration(video.duration_seconds)}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {video.video_type === 'short' ? '9:16' : '16:9'}
+                          </span>
+                          {video.youtube_url && (
+                            <a
+                              href={video.youtube_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              Voir sur YouTube
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
+                    {!video.youtube_video_id && (
+                      <button
+                        onClick={() => handleUploadToYouTube(video)}
+                        disabled={uploading === video.id}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                        data-testid={`upload-video-${video.id}`}
+                      >
+                        {uploading === video.id ? (
+                          <>
+                            <Loader className="h-4 w-4 mr-1 animate-spin" />
+                            Upload...
+                          </>
+                        ) : (
+                          <>
+                            <Youtube className="h-4 w-4 mr-1" />
+                            Upload YouTube
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default VideosPage;
