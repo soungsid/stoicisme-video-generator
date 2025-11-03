@@ -41,7 +41,7 @@ async def get_all_ideas():
     """
     try:
         ideas_collection = get_ideas_collection()
-        ideas = await ideas_collection.find().sort("created_at", -1).to_list(length=None)
+        ideas = await ideas_collection.find({}, {"_id": 0}).sort("created_at", -1).to_list(length=None)
         return ideas
     except Exception as e:
         raise HTTPException(
