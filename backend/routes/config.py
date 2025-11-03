@@ -47,7 +47,7 @@ async def get_elevenlabs_config():
         api_keys = []
         for i in range(1, 6):
             key = os.getenv(f"ELEVENLABS_API_KEY{i}")
-            if key and key != f"your-elevenlabs-key-{i}":
+            if key and key.startswith("sk_"):
                 api_keys.append({
                     "index": i,
                     "configured": True,
