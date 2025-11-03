@@ -138,7 +138,7 @@ async def get_script_by_idea(idea_id: str):
     """
     try:
         scripts_collection = get_scripts_collection()
-        script = await scripts_collection.find_one({"idea_id": idea_id})
+        script = await scripts_collection.find_one({"idea_id": idea_id}, {"_id": 0})
         
         if not script:
             raise HTTPException(
