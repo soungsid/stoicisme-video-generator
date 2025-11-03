@@ -124,7 +124,8 @@ async def reject_idea(idea_id: str):
         result = await ideas_collection.find_one_and_update(
             {"id": idea_id},
             {"$set": {"status": IdeaStatus.REJECTED}},
-            return_document=True
+            return_document=True,
+            projection={"_id": 0}
         )
         
         if not result:
