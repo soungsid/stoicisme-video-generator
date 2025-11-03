@@ -94,7 +94,8 @@ async def validate_idea(idea_id: str, request: ValidateIdeaRequest):
         result = await ideas_collection.find_one_and_update(
             {"id": idea_id},
             {"$set": update_data},
-            return_document=True
+            return_document=True,
+            projection={"_id": 0}
         )
         
         if not result:
