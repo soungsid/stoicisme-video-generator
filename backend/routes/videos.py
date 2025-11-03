@@ -13,7 +13,7 @@ async def generate_video(script_id: str, background_tasks: BackgroundTasks):
     """
     try:
         scripts_collection = get_scripts_collection()
-        script = await scripts_collection.find_one({"id": script_id})
+        script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
         
         if not script:
             raise HTTPException(
@@ -23,7 +23,7 @@ async def generate_video(script_id: str, background_tasks: BackgroundTasks):
         
         idea_id = script["idea_id"]
         ideas_collection = get_ideas_collection()
-        idea = await ideas_collection.find_one({"id": idea_id})
+        idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
         
         if not idea:
             raise HTTPException(
