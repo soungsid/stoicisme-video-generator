@@ -22,6 +22,9 @@ async def generate_ideas(request: IdeaGenerationRequest):
         
         if ideas_dict:
             await ideas_collection.insert_many(ideas_dict)
+            # Retirer les _id ajoutés par MongoDB
+            for idea_dict in ideas_dict:
+                idea_dict.pop('_id', None)
         
         return {
             "success": True,
