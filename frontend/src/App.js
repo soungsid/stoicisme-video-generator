@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Video, Lightbulb, FileText, Settings, Youtube } from 'lucide-react';
+import { Video, Lightbulb, Settings, Youtube } from 'lucide-react';
 import IdeasPage from './pages/IdeasPage';
 import VideosPage from './pages/VideosPage';
 import ConfigPage from './pages/ConfigPage';
