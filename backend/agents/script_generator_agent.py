@@ -1,28 +1,14 @@
-import os
 from typing import Tuple
-from openai import AsyncOpenAI
+from models import Script
+from agents.base_agent import BaseAIAgent
 
-class ScriptGeneratorAgent:
+class ScriptGeneratorAgent(BaseAIAgent):
     """
     Agent IA pour générer des scripts de vidéos
     """
     
     def __init__(self):
-        self.provider = os.getenv("AI_PROVIDER", "deepseek")
-        
-        if self.provider == "deepseek":
-            self.client = AsyncOpenAI(
-                api_key=os.getenv("DEEPSEEK_API_KEY"),
-                base_url=os.getenv("DEEPSEEK_BASE_URL")
-            )
-            self.model = os.getenv("DEEPSEEK_MODEL")
-        elif self.provider == "openai":
-            self.client = AsyncOpenAI(
-                api_key=os.getenv("OPENAI_API_KEY")
-            )
-            self.model = os.getenv("OPENAI_MODEL")
-        else:
-            raise ValueError(f"Unsupported AI provider: {self.provider}")
+        super().__init__()
     
     async def generate_script(self, title: str, keywords: list, duration_seconds: int) -> any:
         """
