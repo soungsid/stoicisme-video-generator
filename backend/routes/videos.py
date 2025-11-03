@@ -118,7 +118,7 @@ async def list_videos():
     """
     try:
         videos_collection = get_videos_collection()
-        videos = await videos_collection.find().sort("created_at", -1).to_list(length=None)
+        videos = await videos_collection.find({}, {"_id": 0}).sort("created_at", -1).to_list(length=None)
         return videos
     except Exception as e:
         raise HTTPException(
