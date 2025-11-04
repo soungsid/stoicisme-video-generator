@@ -36,6 +36,12 @@ async def generate_audio(script_id: str):
             phrases=script["phrases"]
         )
         
+        # Sauvegarder les phrases audio dans le script
+        await scripts_collection.update_one(
+            {"id": script_id},
+            {"$set": {"audio_phrases": [phrase.model_dump() for phrase in audio_generation.phrases]}}
+        )
+        
         # Mettre à jour le statut de l'idée
         ideas_collection = get_ideas_collection()
         await ideas_collection.update_one(
