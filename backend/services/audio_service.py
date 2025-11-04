@@ -11,7 +11,7 @@ class AudioService:
     
     def __init__(self):
         self.elevenlabs_service = ElevenLabsService()
-        self.base_audio_dir = "/app/ressources/videos"
+        self.base_audio_dir = "../ressources/videos"
     
     def _get_audio_directory(self, title: str) -> str:
         """Créer le répertoire audio pour une vidéo"""

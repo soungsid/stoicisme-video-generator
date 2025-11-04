@@ -43,13 +43,15 @@ class ElevenLabsService:
         Retourne: (chemin du fichier, durée en millisecondes)
         """
         try:
+            print(f"generation audio {output_path} for the text {text} ", )
             client = self._get_next_client()
+            
             
             # Générer l'audio
             audio = client.generate(
                 text=text,
                 voice=self.voice_id,
-                model="eleven_multilingual_v2"
+                model="eleven_multilingual_v3"
             )
             
             # Sauvegarder l'audio
