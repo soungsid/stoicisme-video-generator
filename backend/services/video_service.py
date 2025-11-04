@@ -125,26 +125,44 @@ class VideoService:
             audio_clip = AudioFileClip(combined_audio_path)
             
             # Ajouter l'audio à la vidéo
-            video_clip = video_clip.set_audio(audio_clip)
+            final_video = video_clip.set_audio(audio_clip)
             
-            # TODO: Ajouter les sous-titres (nécessite ImageMagick)
-            # Pour l'instant, on génère sans sous-titres
+            # Ajouter les sous-titres si disponibles
+            if script.get("phrases"):
+                from database import get_scripts_collection
+                scripts_collection = get_scripts_collection()
+                
+                # Récupérer le script complet avec les données audio
+                full_script = await scripts_collection.find_one({"id": script["id"]}, {"_id": 0})
+                
+                if full_script and full_script.get("audio_phrases"):
+                    subtitle_clips = self._create_subtitle_clips(
+                        full_script["audio_phrases"],
+                        int(final_video.w),
+                        int(final_video.h)
+                    )
+                    if subtitle_clips:
+                        final_video = CompositeVideoClip([final_video] + subtitle_clips)
+                        print(f"✅ Added {len(subtitle_clips)} subtitle clips")
             
             # Chemin de sortie
             output_path = os.path.join(video_dir, f"{slugify(title)}.mp4")
             
             # Exporter la vidéo
-            video_clip.write_videofile(
+            final_video.write_videofile(
                 output_path,
                 codec='libx264',
                 audio_codec='aac',
                 fps=24,
-                preset='medium'
+                preset='medium',
+                threads=4,
+                logger=None
             )
             
             # Fermer les clips
-            video_clip.close()
-            audio_clip.close()
+            final_video.close()
+            if audio_clip:
+                audio_clip.close()
             
             print(f"✅ Video generated: {output_path}")
             
