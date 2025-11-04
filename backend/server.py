@@ -50,6 +50,7 @@ app.include_router(audio.router, prefix="/api/audio", tags=["Audio"])
 app.include_router(videos.router, prefix="/api/videos", tags=["Videos"])
 app.include_router(youtube_routes.router, prefix="/api/youtube", tags=["YouTube"])
 app.include_router(config.router, prefix="/api/config", tags=["Configuration"])
+app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Pipeline"])
 
 if __name__ == "__main__":
     import uvicorn
