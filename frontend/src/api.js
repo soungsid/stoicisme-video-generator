@@ -56,4 +56,11 @@ export const configApi = {
   updateYouTubeConfig: (credentials) => api.post('/api/config/youtube', credentials),
 };
 
+// Pipeline API
+export const pipelineApi = {
+  startPipeline: (ideaId, startFrom = 'script') => 
+    api.post(`/api/pipeline/generate/${ideaId}?start_from=${startFrom}`),
+  getPipelineStatus: (ideaId) => api.get(`/api/pipeline/status/${ideaId}`),
+};
+
 export default api;
