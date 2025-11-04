@@ -30,6 +30,9 @@ class VideoIdea(BaseModel):
     video_type: VideoType = VideoType.SHORT
     duration_seconds: Optional[int] = 30
     status: IdeaStatus = IdeaStatus.PENDING
+    error_message: Optional[str] = None
+    progress_percentage: int = 0
+    current_step: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     validated_at: Optional[datetime] = None
     
