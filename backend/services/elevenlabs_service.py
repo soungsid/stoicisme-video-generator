@@ -46,12 +46,12 @@ class ElevenLabsService:
             print(f"generation audio {output_path} for the text {text} ", )
             client = self._get_next_client()
             
-            
             # Générer l'audio
-            audio = client.generate(
+            audio = client.text_to_speech.convert(
                 text=text,
-                voice=self.voice_id,
-                model="eleven_multilingual_v3"
+                voice_id=self.voice_id,
+                model_id="eleven_v3",
+                output_format="mp3_44100_128"  
             )
             
             # Sauvegarder l'audio
