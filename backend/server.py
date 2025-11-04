@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from database import connect_to_mongo, close_mongo_connection
 
 # Import routes
-from routes import ideas, scripts, audio, videos, youtube_routes, config
+from routes import ideas, scripts, audio, videos, youtube_routes, config, pipeline
 
 load_dotenv()
 
