@@ -66,7 +66,12 @@ async def get_elevenlabs_config():
             "api_keys": api_keys,
             "voice_id": voice_id,
             "voice_name": voice_name,
-            "total_keys": len([k for k in api_keys if k["configured"]])
+            "total_keys": len([k for k in api_keys if k["configured"]]),
+            "voice_settings": {
+                "current_voice_id": voice_id,
+                "current_voice_name": voice_name,
+                "can_change": True
+            }
         }
     except Exception as e:
         raise HTTPException(
