@@ -97,24 +97,30 @@ class VideoService:
             title = idea["title"]
             video_type = VideoType(idea["video_type"])
             
+            print(f"🎬 Début de la génération vidéo pour: {title}")
+            
             # Répertoires
             video_dir = self.get_video_directory(title)
             audio_dir = self.get_video_directory(title, "audio")
             
             # Sélectionner un template
+            print("📹 Sélection d'un template vidéo aléatoire...")
             template_path = self._select_random_template()
             
             # Concaténer les audios
+            print("🎵 Concaténation des fichiers audio...")
             combined_audio_path = os.path.join(video_dir, "combined_audio.mp3")
             audio_duration_ms = self._concatenate_audio_files(audio_dir, combined_audio_path)
+            print(f"✅ Audio combiné: {audio_duration_ms/1000:.2f}s")
             
             # Charger le template vidéo
+            print("📽️ Chargement du template vidéo...")
             video_clip = VideoFileClip(template_path)
             
             # Boucler la vidéo pour correspondre à la durée audio
             audio_duration_sec = audio_duration_ms / 1000
             if video_clip.duration < audio_duration_sec:
-                # Boucler la vidéo
+                print(f"🔄 Bouclage de la vidéo (durée template: {video_clip.duration:.2f}s → {audio_duration_sec:.2f}s)")
                 n_loops = int(audio_duration_sec / video_clip.duration) + 1
                 video_clip = video_clip.loop(n=n_loops)
             
@@ -122,6 +128,7 @@ class VideoService:
             video_clip = video_clip.subclip(0, audio_duration_sec)
             
             # Charger l'audio
+            print("🎧 Ajout de l'audio à la vidéo...")
             audio_clip = AudioFileClip(combined_audio_path)
             
             # Ajouter l'audio à la vidéo
@@ -129,6 +136,7 @@ class VideoService:
             
             # Ajouter les sous-titres si disponibles
             if script.get("phrases"):
+                print("📝 Préparation des sous-titres...")
                 from database import get_scripts_collection
                 scripts_collection = get_scripts_collection()
                 
@@ -136,6 +144,7 @@ class VideoService:
                 full_script = await scripts_collection.find_one({"id": script["id"]}, {"_id": 0})
                 
                 if full_script and full_script.get("audio_phrases"):
+                    print(f"✍️ Génération de {len(full_script['audio_phrases'])} sous-titres...")
                     subtitle_clips = self._create_subtitle_clips(
                         full_script["audio_phrases"],
                         int(final_video.w),
@@ -143,12 +152,14 @@ class VideoService:
                     )
                     if subtitle_clips:
                         final_video = CompositeVideoClip([final_video] + subtitle_clips)
-                        print(f"✅ Added {len(subtitle_clips)} subtitle clips")
+                        print(f"✅ {len(subtitle_clips)} sous-titres ajoutés")
             
             # Chemin de sortie
             output_path = os.path.join(video_dir, f"{slugify(title)}.mp4")
             
             # Exporter la vidéo
+            print(f"⏳ Exportation de la vidéo (cela peut prendre plusieurs minutes)...")
+            print(f"   Codec: libx264 | Audio: aac | FPS: 24 | Preset: medium")
             final_video.write_videofile(
                 output_path,
                 codec='libx264',
@@ -164,7 +175,8 @@ class VideoService:
             if audio_clip:
                 audio_clip.close()
             
-            print(f"✅ Video generated: {output_path}")
+            print(f"✅ Vidéo générée avec succès: {output_path}")
+            print(f"📊 Durée finale: {audio_duration_sec:.2f}s")
             
             # Créer l'objet Video
             video = Video(
@@ -180,5 +192,5 @@ class VideoService:
             return video
             
         except Exception as e:
-            print(f"❌ Error generating video: {str(e)}")
+            print(f"❌ Erreur lors de la génération vidéo: {str(e)}")
             raise
