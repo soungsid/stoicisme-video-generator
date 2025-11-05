@@ -3,6 +3,9 @@ import { Plus, Loader, Search, Play, CheckSquare, Square } from 'lucide-react';
 import { ideasApi, pipelineApi } from '../api';
 import IdeaCard from '../components/IdeaCard';
 import ValidateIdeaModal from '../components/ValidateIdeaModal';
+import GenerateIdeasModal from '../components/GenerateIdeasModal';
+import ConfirmModal from '../components/ConfirmModal';
+import Toast from '../components/Toast';
 
 function IdeasPage() {
   const [ideas, setIdeas] = useState([]);
