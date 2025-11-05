@@ -87,6 +87,13 @@ class YouTubeConfig(BaseModel):
 
 class IdeaGenerationRequest(BaseModel):
     count: int = Field(default=5, ge=1, le=20)
+    keywords: Optional[List[str]] = None
+
+class CustomScriptRequest(BaseModel):
+    script_text: str = Field(..., min_length=50)
+    keywords: Optional[List[str]] = None
+    video_type: VideoType = VideoType.SHORT
+    duration_seconds: int = Field(default=30, ge=10, le=600)
 
 class ScriptGenerationRequest(BaseModel):
     idea_id: str
