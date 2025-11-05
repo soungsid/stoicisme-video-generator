@@ -154,3 +154,62 @@ async def get_script_by_idea(idea_id: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching script: {str(e)}"
         )
+
+@router.patch("/{script_id}", response_model=Script)
+async def update_script(script_id: str, title: str = None, original_script: str = None, keywords: List[str] = None):
+    """
+    Mettre à jour un script (titre, contenu, mots-clés)
+    """
+    try:
+        scripts_collection = get_scripts_collection()
+        ideas_collection = get_ideas_collection()
+        
+        script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
+        if not script:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Script {script_id} not found"
+            )
+        
+        update_data = {}
+        
+        if title is not None:
+            update_data["title"] = title
+            # Mettre à jour le titre de l'idée aussi
+            await ideas_collection.update_one(
+                {"id": script["idea_id"]},
+                {"$set": {"title": title}}
+            )
+        
+        if original_script is not None:
+            update_data["original_script"] = original_script
+            # Réinitialiser le script adapté car le contenu a changé
+            update_data["elevenlabs_adapted_script"] = None
+            update_data["phrases"] = []
+            update_data["audio_phrases"] = None
+        
+        if keywords is not None:
+            # Mettre à jour les mots-clés de l'idée
+            await ideas_collection.update_one(
+                {"id": script["idea_id"]},
+                {"$set": {"keywords": keywords}}
+            )
+        
+        if update_data:
+            result = await scripts_collection.find_one_and_update(
+                {"id": script_id},
+                {"$set": update_data},
+                return_document=True,
+                projection={"_id": 0}
+            )
+            return result
+        else:
+            return script
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating script: {str(e)}"
+        )
