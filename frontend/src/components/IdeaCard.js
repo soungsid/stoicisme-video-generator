@@ -41,6 +41,7 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
   const isPending = idea.status === 'pending';
   const isProcessing = ['script_generating', 'script_adapting', 'audio_generating', 'video_generating'].includes(idea.status);
   const canResume = ['validated', 'script_generated', 'script_adapted', 'audio_generated', 'error'].includes(idea.status);
+  const hasScript = ['script_generated', 'script_adapted', 'script_adapting', 'audio_generated', 'audio_generating', 'video_generated', 'video_generating', 'uploaded'].includes(idea.status);
 
   return (
     <div className="bg-white shadow rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow">
