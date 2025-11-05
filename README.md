@@ -260,14 +260,34 @@ Le système utilise automatiquement vos 5 clés ElevenLabs en rotation pour :
 - Maximiser la production
 - Pas de configuration manuelle nécessaire
 
-## 🛠️ Dépannage
+## 🔧 Dépannage
 
 ### Backend ne démarre pas
 ```bash
 # Vérifier les logs
 tail -f /var/log/supervisor/backend.err.log
 
-# Redémarrer
+# Redémarrer avec le script
+./restart_backend.sh
+
+# OU manuellement
+sudo supervisorctl restart backend
+```
+
+### Redémarrage rapide backend uniquement
+
+**Linux/Mac:**
+```bash
+./restart_backend.sh
+```
+
+**Windows:**
+```cmd
+restart_backend.bat
+```
+
+**Ou avec supervisor:**
+```bash
 sudo supervisorctl restart backend
 ```
 
