@@ -57,17 +57,36 @@ function IdeasPage() {
     setFilteredIdeas(filtered);
   };
 
-  const handleGenerateIdeas = async () => {
+  const handleGenerateIdeas = async (data) => {
     try {
       setGenerating(true);
-      const count = prompt('Combien d\'idées ?', '5');
-      if (!count) return;
 
-      await ideasApi.generateIdeas(parseInt(count));
+      if (data.type === 'auto') {
+        // Option 1: Génération automatique
+        await ideasApi.generateIdeas(data.count);
+        setToast({ type: 'success', message: `${data.count} idées générées avec succès !` });
+      } else if (data.type === 'keywords') {
+        // Option 2: Avec mots-clés
+        await ideasApi.generateIdeas(data.count, data.keywords);
+        setToast({ type: 'success', message: `${data.count} idées générées avec les mots-clés !` });
+      } else if (data.type === 'custom') {
+        // Option 3: Script custom
+        await ideasApi.createWithCustomScript({
+          script_text: data.script,
+          keywords: data.keywords,
+          video_type: data.videoType,
+          duration_seconds: data.duration
+        });
+        setToast({ type: 'success', message: 'Idée créée avec votre script !' });
+      }
+
       await loadIdeas();
     } catch (error) {
       console.error('Error generating ideas:', error);
-      alert('Erreur: ' + (error.response?.data?.detail || error.message));
+      setToast({ 
+        type: 'error', 
+        message: error.response?.data?.detail || 'Erreur lors de la génération' 
+      });
     } finally {
       setGenerating(false);
     }
