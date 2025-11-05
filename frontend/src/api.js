@@ -11,7 +11,10 @@ const api = axios.create({
 
 // Ideas API
 export const ideasApi = {
-  generateIdeas: (count = 5) => api.post('/api/ideas/generate', { count }),
+  generateIdeas: (count = 5, keywords = null) => 
+    api.post('/api/ideas/generate', { count, keywords }),
+  createWithCustomScript: (data) => 
+    api.post('/api/ideas/custom-script', data),
   getAllIdeas: () => api.get('/api/ideas/'),
   getIdea: (id) => api.get(`/api/ideas/${id}`),
   validateIdea: (id, data) => api.patch(`/api/ideas/${id}/validate`, data),
@@ -25,6 +28,8 @@ export const scriptsApi = {
     api.post('/api/scripts/generate', { idea_id: ideaId, duration_seconds: durationSeconds }),
   getScript: (id) => api.get(`/api/scripts/${id}`),
   getScriptByIdea: (ideaId) => api.get(`/api/scripts/by-idea/${ideaId}`),
+  updateScript: (scriptId, data) => 
+    api.patch(`/api/scripts/${scriptId}`, null, { params: data }),
   adaptScript: (scriptId) => api.post(`/api/scripts/${scriptId}/adapt`),
 };
 
