@@ -4,6 +4,7 @@ import { Video, Lightbulb, Settings, Youtube } from 'lucide-react';
 import IdeasPage from './pages/IdeasPage';
 import VideosPage from './pages/VideosPage';
 import ConfigPage from './pages/ConfigPage';
+import ScriptDetailPage from './pages/ScriptDetailPage';
 import './App.css';
 
 function Navigation() {
