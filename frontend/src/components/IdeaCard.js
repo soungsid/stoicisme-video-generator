@@ -116,6 +116,16 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
 
         {/* Actions */}
         <div className="flex flex-col gap-2">
+          {hasScript && (
+            <button
+              onClick={() => navigate(`/script/${idea.id}`)}
+              className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Voir script
+            </button>
+          )}
+          
           {isPending && (
             <>
               <button
