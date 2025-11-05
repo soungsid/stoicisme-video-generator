@@ -62,6 +62,7 @@ function App() {
             <Route path="/" element={<IdeasPage />} />
             <Route path="/videos" element={<VideosPage />} />
             <Route path="/config" element={<ConfigPage />} />
+            <Route path="/script/:ideaId" element={<ScriptDetailPage />} />
           </Routes>
         </main>
       </div>
