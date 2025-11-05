@@ -177,3 +177,50 @@ async def delete_idea(idea_id: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting idea: {str(e)}"
         )
+
+@router.post("/custom-script", response_model=VideoIdea)
+async def create_idea_with_custom_script(request: CustomScriptRequest):
+    """
+    Créer une idée avec un script personnalisé
+    Le système génère juste un titre pour l'idée
+    """
+    try:
+        from agents.idea_generator_agent import IdeaGeneratorAgent
+        from database import get_scripts_collection
+        import uuid
+        
+        # Générer un titre basé sur le script
+        agent = IdeaGeneratorAgent()
+        title = await agent.generate_title_from_script(request.script_text, request.keywords or [])
+        
+        # Créer l'idée
+        idea = VideoIdea(
+            title=title,
+            keywords=request.keywords or [],
+            video_type=request.video_type,
+            duration_seconds=request.duration_seconds,
+            status=IdeaStatus.SCRIPT_GENERATED,
+            validated_at=datetime.now()
+        )
+        
+        # Créer le script directement
+        script = Script(
+            idea_id=idea.id,
+            title=title,
+            original_script=request.script_text
+        )
+        
+        # Sauvegarder
+        ideas_collection = get_ideas_collection()
+        scripts_collection = get_scripts_collection()
+        
+        await ideas_collection.insert_one(idea.model_dump())
+        await scripts_collection.insert_one(script.model_dump())
+        
+        return idea
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating custom idea: {str(e)}"
+        )
