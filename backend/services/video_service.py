@@ -62,12 +62,27 @@ class VideoService:
     
     def _create_subtitle_clips(self, phrases: list, video_width: int, video_height: int):
         """Créer les clips de sous-titres"""
+        import re
+        
         subtitle_clips = []
         
         for phrase in phrases:
+            # Nettoyer le texte des marqueurs ElevenLabs
+            clean_text = phrase["phrase_text"]
+            
+            # Supprimer tous les marqueurs entre crochets: [laughs], [excited], etc.
+            clean_text = re.sub(r'\[.*?\]', '', clean_text)
+            
+            # Nettoyer les espaces multiples
+            clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+            
+            # Ne créer un sous-titre que si du texte reste
+            if not clean_text:
+                continue
+            
             # Créer un TextClip pour chaque phrase
             txt_clip = TextClip(
-                phrase["phrase_text"],
+                clean_text,
                 fontsize=40,
                 color='white',
                 bg_color='black',
@@ -83,6 +98,7 @@ class VideoService:
             
             subtitle_clips.append(txt_clip)
         
+        print(f"📝 {len(subtitle_clips)} sous-titres créés (marqueurs ElevenLabs nettoyés)")
         return subtitle_clips
     
     async def generate_video(
