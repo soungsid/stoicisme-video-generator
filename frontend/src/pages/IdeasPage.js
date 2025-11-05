@@ -101,31 +101,51 @@ function IdeasPage() {
     try {
       await ideasApi.validateIdea(selectedIdea.id, validationData);
       setShowValidateModal(false);
+      setToast({ type: 'success', message: 'Idée validée avec succès !' });
       await loadIdeas();
     } catch (error) {
       console.error('Error validating:', error);
-      alert('Erreur: ' + (error.response?.data?.detail || error.message));
+      setToast({ type: 'error', message: error.response?.data?.detail || 'Erreur de validation' });
     }
   };
 
-  const handleRejectIdea = async (ideaId) => {
-    if (!window.confirm('Rejeter cette idée ?')) return;
-    try {
-      await ideasApi.rejectIdea(ideaId);
-      await loadIdeas();
-    } catch (error) {
-      console.error('Error rejecting:', error);
-    }
+  const handleRejectIdea = (ideaId) => {
+    setConfirmModal({
+      title: 'Rejeter cette idée ?',
+      message: 'L\'idée sera marquée comme rejetée.',
+      onConfirm: async () => {
+        try {
+          await ideasApi.rejectIdea(ideaId);
+          setToast({ type: 'success', message: 'Idée rejetée' });
+          await loadIdeas();
+        } catch (error) {
+          console.error('Error rejecting:', error);
+          setToast({ type: 'error', message: 'Erreur lors du rejet' });
+        }
+        setConfirmModal(null);
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
-  const handleDeleteIdea = async (ideaId) => {
-    if (!window.confirm('Supprimer cette idée ?')) return;
-    try {
-      await ideasApi.deleteIdea(ideaId);
-      await loadIdeas();
-    } catch (error) {
-      console.error('Error deleting:', error);
-    }
+  const handleDeleteIdea = (ideaId) => {
+    setConfirmModal({
+      title: 'Supprimer cette idée ?',
+      message: 'Cette action est irréversible.',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          await ideasApi.deleteIdea(ideaId);
+          setToast({ type: 'success', message: 'Idée supprimée' });
+          await loadIdeas();
+        } catch (error) {
+          console.error('Error deleting:', error);
+          setToast({ type: 'error', message: 'Erreur lors de la suppression' });
+        }
+        setConfirmModal(null);
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   const handleStartPipeline = async (ideaId, startFrom = 'script') => {
