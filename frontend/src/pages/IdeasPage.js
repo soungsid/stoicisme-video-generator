@@ -151,27 +151,34 @@ function IdeasPage() {
   const handleStartPipeline = async (ideaId, startFrom = 'script') => {
     try {
       await pipelineApi.startPipeline(ideaId, startFrom);
+      setToast({ type: 'info', message: 'Pipeline démarré' });
       await loadIdeas();
     } catch (error) {
       console.error('Error starting pipeline:', error);
-      alert('Erreur: ' + (error.response?.data?.detail || error.message));
+      setToast({ type: 'error', message: error.response?.data?.detail || 'Erreur pipeline' });
     }
   };
 
-  const handleBulkStart = async () => {
+  const handleBulkStart = () => {
     if (selectedIdeas.length === 0) {
-      alert('Sélectionnez au moins une idée');
+      setToast({ type: 'warning', message: 'Sélectionnez au moins une idée' });
       return;
     }
 
-    if (!window.confirm(`Lancer ${selectedIdeas.length} pipeline(s) ?`)) return;
-
-    for (const ideaId of selectedIdeas) {
-      await handleStartPipeline(ideaId);
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-    
-    setSelectedIdeas([]);
+    setConfirmModal({
+      title: `Lancer ${selectedIdeas.length} pipeline(s) ?`,
+      message: 'Les vidéos seront générées les unes après les autres.',
+      onConfirm: async () => {
+        for (const ideaId of selectedIdeas) {
+          await handleStartPipeline(ideaId);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        setSelectedIdeas([]);
+        setToast({ type: 'success', message: `${selectedIdeas.length} pipelines lancés` });
+        setConfirmModal(null);
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   const toggleSelectIdea = (ideaId) => {
