@@ -16,6 +16,9 @@ function IdeasPage() {
   const [selectedIdeas, setSelectedIdeas] = useState([]);
   const [selectedIdea, setSelectedIdea] = useState(null);
   const [showValidateModal, setShowValidateModal] = useState(false);
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     loadIdeas();
