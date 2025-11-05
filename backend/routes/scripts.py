@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from models import Script, ScriptGenerationRequest, IdeaStatus
+from typing import List
 from database import get_scripts_collection, get_ideas_collection
 from agents.script_generator_agent import ScriptGeneratorAgent
 from agents.script_adapter_agent import ScriptAdapterAgent
