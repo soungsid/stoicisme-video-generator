@@ -14,7 +14,15 @@ async def generate_ideas(request: IdeaGenerationRequest):
     """
     try:
         agent = IdeaGeneratorAgent()
-        ideas = await agent.generate_ideas(count=request.count)
+        
+        # Générer le prompt avec ou sans mots-clés
+        if request.keywords:
+            ideas = await agent.generate_ideas_with_keywords(
+                count=request.count, 
+                keywords=request.keywords
+            )
+        else:
+            ideas = await agent.generate_ideas(count=request.count)
         
         # Sauvegarder en base de données
         ideas_collection = get_ideas_collection()
