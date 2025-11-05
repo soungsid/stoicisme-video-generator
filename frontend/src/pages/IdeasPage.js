@@ -297,6 +297,31 @@ function IdeasPage() {
           onSubmit={handleValidateSubmit}
         />
       )}
+
+      {showGenerateModal && (
+        <GenerateIdeasModal
+          onClose={() => setShowGenerateModal(false)}
+          onSubmit={handleGenerateIdeas}
+        />
+      )}
+
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          danger={confirmModal.danger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
