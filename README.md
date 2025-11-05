@@ -70,6 +70,12 @@ sudo supervisorctl status
 # Redémarrer individuellement
 sudo supervisorctl restart backend
 sudo supervisorctl restart frontend
+
+# Script de redémarrage backend (Linux)
+./restart_backend.sh
+
+# Script de redémarrage backend (Windows)
+restart_backend.bat
 ```
 
 ### URLs d'accès
