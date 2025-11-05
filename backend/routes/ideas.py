@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
-from models import VideoIdea, IdeaStatus, IdeaGenerationRequest, ValidateIdeaRequest
+from models import VideoIdea, IdeaStatus, IdeaGenerationRequest, ValidateIdeaRequest, CustomScriptRequest, Script
 from database import get_ideas_collection
 from agents.idea_generator_agent import IdeaGeneratorAgent
 from datetime import datetime
