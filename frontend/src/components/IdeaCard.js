@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import ProgressBar from './ProgressBar';
 
 function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDelete, onStartPipeline }) {
+  const navigate = useNavigate();
+  
   const getStatusInfo = (status) => {
     const statusMap = {
       pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', progress: 0 },
