@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react';
 
-function Toast({ type = 'info', message, onClose }) {
+function Toast({ type = 'info', message, onClose, autoDismiss = true, duration = 5000 }) {
+  useEffect(() => {
+    if (autoDismiss && onClose) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, duration);
+      return () => clearTimeout(timer);
+    }
+  }, [autoDismiss, duration, onClose]);
   const configs = {
     success: {
       icon: CheckCircle,
