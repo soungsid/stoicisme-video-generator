@@ -199,6 +199,11 @@ class VideoService:
             print(f"✅ Vidéo générée avec succès: {output_path}")
             print(f"📊 Durée finale: {audio_duration_sec:.2f}s")
             
+            # Créer l'URL accessible pour le frontend
+            # Convertir /app/ressources/videos/slug/video.mp4 → /media/videos/slug/video.mp4
+            relative_path = os.path.relpath(output_path, self.resources_dir)
+            video_url = f"/media/{relative_path}"
+            
             # Créer l'objet Video
             video = Video(
                 idea_id=idea["id"],
@@ -206,7 +211,7 @@ class VideoService:
                 audio_id=script["id"],  # On utilise script_id comme audio_id
                 title=title,
                 video_type=video_type,
-                video_path=output_path,
+                video_path=video_url,  # URL accessible via /media
                 duration_seconds=audio_duration_sec
             )
             
