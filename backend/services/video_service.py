@@ -13,8 +13,13 @@ class VideoService:
     """
     
     def __init__(self):
-        self.template_dir = "../ressources/video-template"
-        self.videos_dir = "../ressources/videos"
+        self.resources_dir = os.getenv("RESOURCES_DIR", "/app/ressources")
+        self.template_dir = os.path.join(self.resources_dir, "video-template")
+        self.videos_dir = os.path.join(self.resources_dir, "videos")
+        
+        # Créer les dossiers si nécessaire
+        os.makedirs(self.template_dir, exist_ok=True)
+        os.makedirs(self.videos_dir, exist_ok=True)
     
     def get_video_directory(self, title: str, subdir: str = None) -> str:
         """Obtenir le répertoire pour une vidéo"""
