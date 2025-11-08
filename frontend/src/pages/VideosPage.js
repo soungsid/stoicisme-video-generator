@@ -48,6 +48,17 @@ function VideosPage() {
     }
   };
 
+  const handleUpdateMetadata = async (video, metadata) => {
+    try {
+      await youtubeApi.updateVideoMetadata(video.youtube_video_id, metadata);
+      alert('✅ Métadonnées mises à jour sur YouTube !');
+      await loadVideos();
+    } catch (error) {
+      console.error('Error updating metadata:', error);
+      throw error;
+    }
+  };
+
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
