@@ -16,7 +16,11 @@ class YouTubeService:
         self.client_id = os.getenv("YOUTUBE_CLIENT_ID")
         self.client_secret = os.getenv("YOUTUBE_CLIENT_SECRET")
         self.redirect_uri = os.getenv("YOUTUBE_REDIRECT_URI", "http://localhost:8001/api/youtube/oauth/callback")
-        self.scopes = ["https://www.googleapis.com/auth/youtube.upload"]
+        self.scopes = [
+            "https://www.googleapis.com/auth/youtube.upload",
+            "https://www.googleapis.com/auth/youtube.readonly",
+            "https://www.googleapis.com/auth/youtube.force-ssl"
+        ]
     
     def get_authorization_url(self) -> str:
         """Générer l'URL d'authentification OAuth"""
