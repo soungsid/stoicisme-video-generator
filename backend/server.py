@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
@@ -11,6 +12,11 @@ from database import connect_to_mongo, close_mongo_connection
 from routes import ideas, scripts, audio, videos, youtube_routes, config, pipeline
 
 load_dotenv()
+
+# Créer le dossier resources s'il n'existe pas
+RESOURCES_DIR = os.getenv("RESOURCES_DIR", "/app/ressources")
+os.makedirs(os.path.join(RESOURCES_DIR, "videos"), exist_ok=True)
+os.makedirs(os.path.join(RESOURCES_DIR, "video-template"), exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Servir les fichiers statiques (vidéos, audio, images)
+app.mount("/media", StaticFiles(directory=RESOURCES_DIR), name="media")
 
 # Health check
 @app.get("/api/health")
