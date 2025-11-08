@@ -181,6 +181,14 @@ function VideosPage() {
           </ul>
         </div>
       )}
+
+      {editingVideo && (
+        <EditVideoMetadataModal
+          video={editingVideo}
+          onClose={() => setEditingVideo(null)}
+          onUpdate={(metadata) => handleUpdateMetadata(editingVideo, metadata)}
+        />
+      )}
     </div>
   );
 }
