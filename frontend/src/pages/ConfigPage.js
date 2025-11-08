@@ -240,10 +240,59 @@ function ConfigPage() {
               )}
               
               {youtubeConfig.is_authenticated && (
-                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                  <p className="text-sm text-green-800">
-                    ✅ Votre compte YouTube est connecté. Vous pouvez maintenant uploader des vidéos.
-                  </p>
+                <div className="mt-4 space-y-4">
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-800">
+                      ✅ Votre compte YouTube est connecté. Vous pouvez maintenant uploader des vidéos.
+                    </p>
+                  </div>
+
+                  {loadingChannel ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader className="h-5 w-5 animate-spin text-blue-500" />
+                    </div>
+                  ) : channelInfo ? (
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <h4 className="text-sm font-medium text-gray-900 mb-3">Informations de la chaîne</h4>
+                      <div className="flex items-start space-x-4">
+                        {channelInfo.thumbnail && (
+                          <img 
+                            src={channelInfo.thumbnail} 
+                            alt={channelInfo.title}
+                            className="w-16 h-16 rounded-full"
+                          />
+                        )}
+                        <div className="flex-1 space-y-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{channelInfo.title}</p>
+                            {channelInfo.custom_url && (
+                              <p className="text-xs text-gray-500">{channelInfo.custom_url}</p>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="bg-white rounded p-2">
+                              <p className="text-xs text-gray-600">Abonnés</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {channelInfo.subscriber_count.toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="bg-white rounded p-2">
+                              <p className="text-xs text-gray-600">Vidéos</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {channelInfo.video_count.toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="bg-white rounded p-2">
+                              <p className="text-xs text-gray-600">Vues</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {channelInfo.view_count.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
