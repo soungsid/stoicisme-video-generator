@@ -6,7 +6,9 @@ function ConfigPage() {
   const [elevenLabsConfig, setElevenLabsConfig] = useState(null);
   const [llmConfig, setLlmConfig] = useState(null);
   const [youtubeConfig, setYoutubeConfig] = useState(null);
+  const [channelInfo, setChannelInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingChannel, setLoadingChannel] = useState(false);
 
   useEffect(() => {
     loadConfigs();
