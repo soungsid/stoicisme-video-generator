@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Loader, Youtube, ExternalLink } from 'lucide-react';
+import { Video, Loader, Youtube, ExternalLink, Edit } from 'lucide-react';
 import { videosApi, youtubeApi } from '../api';
+import EditVideoMetadataModal from '../components/EditVideoMetadataModal';
 
 function VideosPage() {
   const [videos, setVideos] = useState([]);
