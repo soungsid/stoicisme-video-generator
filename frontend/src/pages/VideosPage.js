@@ -7,6 +7,7 @@ function VideosPage() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(null);
+  const [editingVideo, setEditingVideo] = useState(null);
 
   useEffect(() => {
     loadVideos();
