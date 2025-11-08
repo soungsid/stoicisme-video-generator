@@ -97,7 +97,15 @@ When user reports issues:
 
 ## Known Issues
 
-None yet.
+**Minor Configuration Notes:**
+- YouTube credentials are currently placeholder values in .env (expected for testing)
+- OAuth redirect URI points to localhost:8001 (may need adjustment for production)
+
+**All Critical Functionality Working:**
+- No blocking issues found
+- All endpoint structures are correct
+- Error handling is appropriate
+- Response formats match expected schemas
 
 ---
 
