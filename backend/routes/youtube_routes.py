@@ -59,6 +59,21 @@ async def get_youtube_config():
             detail=f"Error fetching YouTube config: {str(e)}"
         )
 
+@router.get("/channel-info")
+async def get_channel_info():
+    """
+    Récupérer les informations de la chaîne YouTube connectée
+    """
+    try:
+        youtube_service = YouTubeService()
+        channel_info = await youtube_service.get_channel_info()
+        return channel_info
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching channel info: {str(e)}"
+        )
+
 @router.post("/upload/{video_id}")
 async def upload_video(video_id: str, title: str = None, description: str = None, tags: list = None):
     """
