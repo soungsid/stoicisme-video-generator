@@ -13,7 +13,9 @@ class ElevenLabsService:
     def __init__(self):
         self.api_keys = self._load_api_keys()
         self.current_key_index = 0
-        self.voice_id = os.getenv("ELEVENLABS_VOICE_ID", "Bj9UqZbhQsanLzgalpEG")
+        #t8BrjWUT5Z23DLLBzbuY
+        #Bj9UqZbhQsanLzgalpEG austin
+        self.voice_id = os.getenv("ELEVENLABS_VOICE_ID", "t8BrjWUT5Z23DLLBzbuY")
         
     def _load_api_keys(self) -> List[str]:
         """Charger toutes les clés API ElevenLabs disponibles"""
