@@ -37,10 +37,27 @@ function ConfigPage() {
       setElevenLabsConfig(elevenLabs.data);
       setLlmConfig(llm.data);
       setYoutubeConfig(youtube.data);
+
+      // Load channel info if authenticated
+      if (youtube.data.is_authenticated) {
+        loadChannelInfo();
+      }
     } catch (error) {
       console.error('Error loading configs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadChannelInfo = async () => {
+    try {
+      setLoadingChannel(true);
+      const response = await youtubeApi.getChannelInfo();
+      setChannelInfo(response.data);
+    } catch (error) {
+      console.error('Error loading channel info:', error);
+    } finally {
+      setLoadingChannel(false);
     }
   };
 
