@@ -115,6 +115,100 @@ class YouTubeService:
         
         return credentials
     
+    async def get_channel_info(self) -> dict:
+        """
+        Récupérer les informations de la chaîne YouTube connectée
+        """
+        try:
+            credentials = await self._get_credentials()
+            youtube = build('youtube', 'v3', credentials=credentials)
+            
+            # Récupérer les infos de la chaîne
+            request = youtube.channels().list(
+                part='snippet,statistics,brandingSettings',
+                mine=True
+            )
+            response = request.execute()
+            
+            if not response.get('items'):
+                raise ValueError("No channel found for this account")
+            
+            channel = response['items'][0]
+            
+            channel_info = {
+                'id': channel['id'],
+                'title': channel['snippet']['title'],
+                'description': channel['snippet']['description'],
+                'custom_url': channel['snippet'].get('customUrl', ''),
+                'published_at': channel['snippet']['publishedAt'],
+                'thumbnail': channel['snippet']['thumbnails']['default']['url'],
+                'subscriber_count': int(channel['statistics'].get('subscriberCount', 0)),
+                'video_count': int(channel['statistics'].get('videoCount', 0)),
+                'view_count': int(channel['statistics'].get('viewCount', 0)),
+                'country': channel['snippet'].get('country', ''),
+            }
+            
+            print(f"✅ Channel info retrieved: {channel_info['title']}")
+            return channel_info
+            
+        except Exception as e:
+            print(f"❌ Error getting channel info: {str(e)}")
+            raise
+    
+    async def update_video_metadata(
+        self,
+        youtube_video_id: str,
+        title: str = None,
+        description: str = None,
+        tags: list = None
+    ) -> dict:
+        """
+        Mettre à jour les métadonnées d'une vidéo YouTube
+        """
+        try:
+            credentials = await self._get_credentials()
+            youtube = build('youtube', 'v3', credentials=credentials)
+            
+            # Récupérer d'abord les infos actuelles de la vidéo
+            video_response = youtube.videos().list(
+                part='snippet',
+                id=youtube_video_id
+            ).execute()
+            
+            if not video_response.get('items'):
+                raise ValueError(f"Video {youtube_video_id} not found")
+            
+            current_snippet = video_response['items'][0]['snippet']
+            
+            # Mettre à jour seulement les champs fournis
+            update_snippet = {
+                'categoryId': current_snippet['categoryId'],
+                'title': title if title is not None else current_snippet['title'],
+                'description': description if description is not None else current_snippet['description'],
+                'tags': tags if tags is not None else current_snippet.get('tags', [])
+            }
+            
+            # Effectuer la mise à jour
+            update_response = youtube.videos().update(
+                part='snippet',
+                body={
+                    'id': youtube_video_id,
+                    'snippet': update_snippet
+                }
+            ).execute()
+            
+            print(f"✅ Video {youtube_video_id} metadata updated")
+            return {
+                'video_id': youtube_video_id,
+                'title': update_snippet['title'],
+                'description': update_snippet['description'],
+                'tags': update_snippet['tags']
+            }
+            
+        except Exception as e:
+            print(f"❌ Error updating video metadata: {str(e)}")
+            raise
+    
     async def upload_video(
         self,
         video_path: str,
