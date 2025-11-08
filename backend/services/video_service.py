@@ -179,8 +179,8 @@ class VideoService:
             output_path = os.path.join(video_dir, f"{slugify(title)}.mp4")
             
             # Exporter la vidéo
-            print(f"⏳ Exportation de la vidéo (cela peut prendre plusieurs minutes)...")
-            print(f"   Codec: libx264 | Audio: aac | FPS: 24 | Preset: medium")
+            print("⏳ Exportation de la vidéo (cela peut prendre plusieurs minutes)...")
+            print("   Codec: libx264 | Audio: aac | FPS: 24 | Preset: medium")
             final_video.write_videofile(
                 output_path,
                 codec='libx264',
