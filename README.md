@@ -180,6 +180,53 @@ Chaque vidéo créée a son propre dossier :
     └── titre-de-la-video-en-slug.mp4
 ```
 
+### 📂 Répertoire Ressources
+
+Le répertoire `/app/ressources/` est configuré via la variable d'environnement `RESOURCES_DIR` dans `/app/backend/.env` et contient :
+
+```
+/app/ressources/
+├── video-template/           # Templates vidéo de fond
+│   ├── 1.mp4                # 15 vidéos template au format MP4
+│   ├── 2.mp4
+│   └── ... (jusqu'à 15.mp4)
+│
+└── videos/                   # Vidéos générées (organisées par slug)
+    └── [slug-titre]/        # Un dossier par vidéo
+        ├── audio/           # Fichiers audio par phrase
+        │   ├── phrase_000.mp3
+        │   ├── phrase_001.mp3
+        │   └── ...
+        ├── combined_audio.mp3  # Audio combiné final
+        └── [slug-titre].mp4    # Vidéo finale
+```
+
+### 🌐 Accès aux Médias via API
+
+Les vidéos et fichiers audio générés sont accessibles via l'endpoint `/media` :
+
+**Format d'URL :**
+```
+http://localhost:8001/media/videos/{slug-titre}/{slug-titre}.mp4
+http://localhost:8001/media/videos/{slug-titre}/audio/phrase_000.mp3
+http://localhost:8001/media/videos/{slug-titre}/combined_audio.mp3
+```
+
+**Exemple :**
+```bash
+# Accéder à une vidéo générée
+curl http://localhost:8001/media/videos/les-3-principes-du-stoicisme/les-3-principes-du-stoicisme.mp4
+
+# Accéder à un fichier audio
+curl http://localhost:8001/media/videos/les-3-principes-du-stoicisme/audio/phrase_000.mp3
+```
+
+**Configuration :**
+- L'endpoint `/media` est configuré dans `/app/backend/server.py` 
+- Sert les fichiers statiques depuis le répertoire défini par `RESOURCES_DIR`
+- Les URLs sont automatiquement générées par `video_service.py` et `audio_service.py`
+- Les chemins sont relatifs à `RESOURCES_DIR` pour une portabilité maximale
+
 ## 🔧 API REST
 
 ### Endpoints Principaux
