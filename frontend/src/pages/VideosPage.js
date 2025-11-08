@@ -144,6 +144,16 @@ function VideosPage() {
                     </div>
                   </div>
                   <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
+                    {video.youtube_video_id && (
+                      <button
+                        onClick={() => setEditingVideo(video)}
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        data-testid={`edit-metadata-${video.id}`}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Modifier
+                      </button>
+                    )}
                     {!video.youtube_video_id && (
                       <button
                         onClick={() => handleUploadToYouTube(video)}
