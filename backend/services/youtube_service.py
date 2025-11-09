@@ -158,10 +158,18 @@ class YouTubeService:
             
             channel = response['items'][0]
             
-            # Récupérer l'email de l'utilisateur via Google OAuth2 API
-            from googleapiclient.discovery import build as google_build
-            oauth2_service = google_build('oauth2', 'v2', credentials=credentials)
-            user_info = oauth2_service.userinfo().get().execute()
+            # Essayer de récupérer l'email via l'API OAuth2
+            email = 'N/A'
+            verified_email = False
+            try:
+                from googleapiclient.discovery import build as google_build
+                oauth2_service = google_build('oauth2', 'v2', credentials=credentials)
+                user_info = oauth2_service.userinfo().get().execute()
+                email = user_info.get('email', 'N/A')
+                verified_email = user_info.get('verified_email', False)
+            except Exception as email_error:
+                # Si l'email n'est pas accessible, on continue sans
+                print(f"⚠️  Could not retrieve email: {email_error}")
             
             channel_info = {
                 'id': channel['id'],
@@ -174,8 +182,8 @@ class YouTubeService:
                 'video_count': int(channel['statistics'].get('videoCount', 0)),
                 'view_count': int(channel['statistics'].get('viewCount', 0)),
                 'country': channel['snippet'].get('country', ''),
-                'email': user_info.get('email', 'N/A'),
-                'verified_email': user_info.get('verified_email', False),
+                'email': email,
+                'verified_email': verified_email,
                 'hidden_subscriber_count': channel['statistics'].get('hiddenSubscriberCount', False),
             }
             
