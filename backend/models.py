@@ -85,6 +85,8 @@ class Video(BaseModel):
     youtube_video_id: Optional[str] = None
     youtube_url: Optional[str] = None
     uploaded_at: Optional[datetime] = None
+    scheduled_publish_date: Optional[datetime] = None  # Date de publication programmée
+    is_scheduled: bool = False  # Indique si la vidéo est planifiée
     created_at: datetime = Field(default_factory=datetime.now)
 
 class VideoJob(BaseModel):
