@@ -6,6 +6,7 @@ from googleapiclient.http import MediaFileUpload
 from database import get_config_collection
 from datetime import datetime, timedelta
 import json
+import traceback
 
 class YouTubeService:
     """
@@ -23,31 +24,45 @@ class YouTubeService:
             "https://www.googleapis.com/auth/userinfo.email"
         ]
     
+
     def get_authorization_url(self) -> str:
         """Générer l'URL d'authentification OAuth"""
-        client_config = {
-            "web": {
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [self.redirect_uri]
+        try:
+            client_config = {
+                "web": {
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [self.redirect_uri]
+                }
             }
-        }
-        
-        flow = Flow.from_client_config(
-            client_config,
-            scopes=self.scopes,
-            redirect_uri=self.redirect_uri
-        )
-        
-        auth_url, _ = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true',
-            prompt='consent'
-        )
-        
-        return auth_url
+            print("📁 Loaded env vars:")
+            print(f"CLIENT_ID: {self.client_id}")
+            print(f"REDIRECT_URI: {self.redirect_uri}")
+            print(f"SCOPES: {self.scopes}")
+            flow = Flow.from_client_config(
+                client_config,
+                scopes=self.scopes,
+                redirect_uri=self.redirect_uri
+            )
+            
+            auth_url, _ = flow.authorization_url(
+                access_type='offline',
+                include_granted_scopes='true',
+                prompt='consent'
+            )
+            
+            return auth_url
+
+        except Exception as e:
+            print("❌ Error generating authorization URL:")
+            print(f"Type: {type(e).__name__}")
+            print(f"Message: {str(e)}")
+            print("Traceback:")
+            traceback.print_exc()
+            raise e  # ou `raise` pour relancer l’erreur originale proprement
+
     
     async def handle_oauth_callback(self, code: str):
         """Gérer le callback OAuth et sauvegarder les tokens"""
@@ -60,15 +75,17 @@ class YouTubeService:
                 "redirect_uris": [self.redirect_uri]
             }
         }
-        
+        print("creation client flow")
         flow = Flow.from_client_config(
             client_config,
             scopes=self.scopes,
             redirect_uri=self.redirect_uri
         )
-        
+        print("flow fetch_token")
+
         flow.fetch_token(code=code)
         credentials = flow.credentials
+        print("flow get credential")
         
         # Sauvegarder les tokens en base de données
         config_collection = get_config_collection()

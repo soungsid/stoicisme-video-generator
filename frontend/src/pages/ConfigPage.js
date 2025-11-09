@@ -321,7 +321,18 @@ function ConfigPage() {
                   <div className="flex items-center text-green-600">
                     <CheckCircle className="h-5 w-5 mr-1" />
                     <span className="text-sm font-medium">Authentifié</span>
+
+                    <button
+                      onClick={handleAuthenticateYouTube}
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      data-testid="authenticate-youtube-btn"
+                    >
+                      <Youtube className="h-4 w-4 mr-2" />
+                      Se connecter avec un autre compte
+                    </button>
                   </div>
+
+                  
                 ) : (
                   <div className="flex items-center text-gray-400">
                     <XCircle className="h-5 w-5 mr-1" />

@@ -8,20 +8,26 @@ import os
 
 router = APIRouter()
 
+import traceback
+
 @router.get("/auth/url")
 async def get_auth_url():
     """
     Générer l'URL d'authentification OAuth YouTube
     """
     try:
+        print("je passe ici")
         youtube_service = YouTubeService()
         auth_url = youtube_service.get_authorization_url()
         return {"auth_url": auth_url}
     except Exception as e:
+        print("❌ Error generating auth URL:")
+        traceback.print_exc()  # ← affiche la pile complète dans la console
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating auth URL: {str(e)}"
         )
+
 
 @router.get("/oauth/callback")
 async def oauth_callback(code: str):
@@ -34,6 +40,7 @@ async def oauth_callback(code: str):
         
         return RedirectResponse(url="http://localhost:3000/config?auth=success")
     except Exception as e:
+        traceback.print_exc()  # ← affiche la pile complète dans la console
         return RedirectResponse(url="http://localhost:3000/config?auth=error")
 
 @router.get("/config", response_model=YouTubeConfig)
