@@ -263,6 +263,14 @@ function VideosPage() {
           onUpdate={(metadata) => handleUpdateMetadata(editingVideo, metadata)}
         />
       )}
+
+      {showScheduler && (
+        <BulkSchedulerModal
+          videos={videos.filter(v => !v.youtube_video_id)}
+          onClose={() => setShowScheduler(false)}
+          onSchedule={handleBulkSchedule}
+        />
+      )}
     </div>
   );
 }
