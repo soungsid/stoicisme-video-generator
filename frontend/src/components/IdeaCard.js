@@ -87,9 +87,10 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
   };
 
   const statusInfo = getStatusInfo(idea.status);
-  const nextStep = getNextStep(idea.status);
+  const nextStep = getNextStep(idea.status, idea.last_successful_step);
   const isPending = idea.status === 'pending';
   const isQueued = idea.status === 'queued';
+  const isError = idea.status === 'error';
   const isProcessing = ['processing', 'script_generating', 'script_adapting', 'audio_generating', 'video_generating'].includes(idea.status);
   const canResume = ['validated', 'script_generated', 'script_adapted', 'audio_generated', 'error'].includes(idea.status);
   const hasScript = ['script_generated', 'script_adapted', 'script_adapting', 'audio_generated', 'audio_generating', 'video_generated', 'video_generating', 'uploaded'].includes(idea.status);
