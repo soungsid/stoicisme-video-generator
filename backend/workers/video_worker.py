@@ -176,8 +176,19 @@ class VideoWorker:
             error_msg = f"{str(e)}\\n{traceback.format_exc()}"
             print(f"❌ Job {job.job_id} failed: {error_msg}")
             
-            # Mettre à jour l'idée avec l'erreur
-            await self.update_idea_progress(idea_id, IdeaStatus.ERROR, 0, "Erreur", error_msg[:500])
+            # Récupérer la dernière étape réussie
+            idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
+            last_successful = idea.get("last_successful_step", "aucune")
+            
+            # Mettre à jour l'idée avec l'erreur ET la dernière étape réussie
+            await self.update_idea_progress(
+                idea_id, 
+                IdeaStatus.ERROR, 
+                0, 
+                f"Erreur après '{last_successful}'",
+                error_msg[:500],
+                last_successful
+            )
             
             # Marquer le job comme échoué
             await self.queue_service.fail_job(job.job_id, error_msg[:500])
