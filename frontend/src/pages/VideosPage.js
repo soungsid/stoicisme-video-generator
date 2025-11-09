@@ -64,6 +64,22 @@ function VideosPage() {
     }
   };
 
+  const handleBulkSchedule = async (scheduleData) => {
+    try {
+      const response = await youtubeApi.scheduleBulk(
+        scheduleData.startDate,
+        scheduleData.videosPerDay,
+        scheduleData.publishTimes
+      );
+      
+      alert(`✅ ${response.data.scheduled_count} vidéo(s) planifiée(s) !`);
+      await loadVideos();
+    } catch (error) {
+      console.error('Error scheduling:', error);
+      throw error;
+    }
+  };
+
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
