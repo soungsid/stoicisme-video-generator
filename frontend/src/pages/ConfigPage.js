@@ -71,6 +71,25 @@ function ConfigPage() {
     }
   };
 
+  const handleDisconnectYouTube = async () => {
+    if (!window.confirm('Êtes-vous sûr de vouloir déconnecter ce compte YouTube ?')) {
+      return;
+    }
+    
+    try {
+      setDisconnecting(true);
+      await youtubeApi.disconnectYouTube();
+      alert('✅ Compte YouTube déconnecté avec succès');
+      await loadConfigs();
+      setChannelInfo(null);
+    } catch (error) {
+      console.error('Error disconnecting YouTube:', error);
+      alert('Erreur lors de la déconnexion: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setDisconnecting(false);
+    }
+  };
+
   const handleAuthenticateYouTube = async () => {
     try {
       const response = await youtubeApi.getAuthUrl();
