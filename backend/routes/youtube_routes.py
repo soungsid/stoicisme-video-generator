@@ -172,3 +172,154 @@ async def update_youtube_video(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating video: {str(e)}"
         )
+
+@router.post("/schedule/{video_id}")
+async def schedule_video(video_id: str, publish_date: str):
+    """
+    Planifier la publication d'une vidéo
+    """
+    try:
+        from datetime import datetime
+        from database import get_videos_collection
+        
+        videos_collection = get_videos_collection()
+        
+        # Parser la date
+        scheduled_date = datetime.fromisoformat(publish_date.replace('Z', '+00:00'))
+        
+        # Mettre à jour la vidéo
+        result = await videos_collection.update_one(
+            {"id": video_id},
+            {
+                "$set": {
+                    "scheduled_publish_date": scheduled_date,
+                    "is_scheduled": True
+                }
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Video {video_id} not found"
+            )
+        
+        return {
+            "success": True,
+            "message": "Video scheduled successfully",
+            "scheduled_date": scheduled_date.isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error scheduling video: {str(e)}"
+        )
+
+@router.post("/schedule/bulk")
+async def schedule_bulk(start_date: str, videos_per_day: int, publish_times: list):
+    """
+    Planifier plusieurs vidéos en masse
+    """
+    try:
+        from datetime import datetime, timedelta
+        from database import get_videos_collection
+        
+        videos_collection = get_videos_collection()
+        
+        # Récupérer les vidéos non publiées
+        unpublished_videos = await videos_collection.find({
+            "youtube_video_id": {"$exists": False}
+        }).to_list(length=1000)
+        
+        if not unpublished_videos:
+            return {
+                "success": True,
+                "message": "No videos to schedule",
+                "scheduled_count": 0
+            }
+        
+        # Parser la date de début
+        current_date = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        
+        # Planifier les vidéos
+        scheduled_count = 0
+        time_index = 0
+        
+        for video in unpublished_videos:
+            # Déterminer l'heure de publication
+            publish_time = publish_times[time_index % len(publish_times)]
+            hour, minute = map(int, publish_time.split(':'))
+            
+            # Créer la date complète
+            scheduled_datetime = current_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            
+            # Mettre à jour la vidéo
+            await videos_collection.update_one(
+                {"id": video["id"]},
+                {
+                    "$set": {
+                        "scheduled_publish_date": scheduled_datetime,
+                        "is_scheduled": True
+                    }
+                }
+            )
+            
+            scheduled_count += 1
+            time_index += 1
+            
+            # Si on a planifié videos_per_day vidéos, passer au jour suivant
+            if time_index % (videos_per_day * len(publish_times)) == 0:
+                current_date += timedelta(days=1)
+        
+        return {
+            "success": True,
+            "message": f"{scheduled_count} videos scheduled successfully",
+            "scheduled_count": scheduled_count
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error scheduling videos: {str(e)}"
+        )
+
+@router.delete("/schedule/{video_id}")
+async def unschedule_video(video_id: str):
+    """
+    Annuler la planification d'une vidéo
+    """
+    try:
+        from database import get_videos_collection
+        
+        videos_collection = get_videos_collection()
+        
+        result = await videos_collection.update_one(
+            {"id": video_id},
+            {
+                "$set": {
+                    "is_scheduled": False
+                },
+                "$unset": {
+                    "scheduled_publish_date": ""
+                }
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Video {video_id} not found"
+            )
+        
+        return {
+            "success": True,
+            "message": "Video unscheduled successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error unscheduling video: {str(e)}"
+        )
