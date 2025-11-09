@@ -642,13 +642,14 @@ def test_batch_action_reject():
     print("\n🔍 Testing Batch Action - Reject...")
     try:
         params = {
-            "idea_ids": ["00000000-0000-0000-0000-000000000000"],
             "action": "reject"
         }
         
         response = requests.post(
             f"{API_BASE}/ideas/batch-action",
             params=params,
+            json=["00000000-0000-0000-0000-000000000000"],
+            headers={"Content-Type": "application/json"},
             timeout=10
         )
         print(f"Status Code: {response.status_code}")
