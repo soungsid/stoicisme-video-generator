@@ -32,8 +32,9 @@ function ConfigPage() {
   const loadConfigs = async () => {
     try {
       setLoading(true);
-      const [elevenLabs, elevenStats, llm, youtube, ytStats] = await Promise.all([
+      const [elevenLabs, elevenKeys, elevenStats, llm, youtube, ytStats] = await Promise.all([
         configApi.getElevenLabsConfig(),
+        configApi.getElevenLabsKeysDetails(),
         configApi.getElevenLabsStats(),
         configApi.getLLMConfig(),
         youtubeApi.getConfig(),
@@ -41,6 +42,7 @@ function ConfigPage() {
       ]);
       
       setElevenLabsConfig(elevenLabs.data);
+      setElevenLabsKeys(elevenKeys.data);
       setElevenLabsStats(elevenStats.data);
       setLlmConfig(llm.data);
       setYoutubeConfig(youtube.data);
