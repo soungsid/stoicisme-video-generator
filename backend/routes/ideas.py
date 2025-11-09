@@ -178,6 +178,96 @@ async def delete_idea(idea_id: str):
             detail=f"Error deleting idea: {str(e)}"
         )
 
+@router.post("/batch-action")
+async def batch_action(idea_ids: List[str], action: str):
+    """
+    Effectuer une action sur plusieurs idées à la fois
+    Actions possibles: validate, reject, delete, generate
+    """
+    try:
+        from services.queue_service import QueueService
+        
+        ideas_collection = get_ideas_collection()
+        results = {
+            "success": [],
+            "failed": [],
+            "total": len(idea_ids)
+        }
+        
+        for idea_id in idea_ids:
+            try:
+                idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
+                
+                if not idea:
+                    results["failed"].append({
+                        "id": idea_id,
+                        "reason": "Idea not found"
+                    })
+                    continue
+                
+                if action == "validate":
+                    # Valider l'idée (mettre status à validated)
+                    await ideas_collection.update_one(
+                        {"id": idea_id},
+                        {
+                            "$set": {
+                                "status": IdeaStatus.VALIDATED,
+                                "validated_at": datetime.now()
+                            }
+                        }
+                    )
+                    results["success"].append(idea_id)
+                    
+                elif action == "reject":
+                    # Rejeter l'idée
+                    await ideas_collection.update_one(
+                        {"id": idea_id},
+                        {"$set": {"status": IdeaStatus.REJECTED}}
+                    )
+                    results["success"].append(idea_id)
+                    
+                elif action == "delete":
+                    # Supprimer l'idée
+                    await ideas_collection.delete_one({"id": idea_id})
+                    results["success"].append(idea_id)
+                    
+                elif action == "generate":
+                    # Ajouter à la queue de génération
+                    if idea["status"] != IdeaStatus.VALIDATED:
+                        results["failed"].append({
+                            "id": idea_id,
+                            "reason": "Idea must be validated first"
+                        })
+                        continue
+                    
+                    queue_service = QueueService()
+                    await queue_service.add_job(idea_id, start_from="script")
+                    results["success"].append(idea_id)
+                    
+                else:
+                    results["failed"].append({
+                        "id": idea_id,
+                        "reason": f"Unknown action: {action}"
+                    })
+                    
+            except Exception as e:
+                results["failed"].append({
+                    "id": idea_id,
+                    "reason": str(e)
+                })
+        
+        return {
+            "success": True,
+            "message": f"Batch action '{action}' completed",
+            "results": results
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error performing batch action: {str(e)}"
+        )
+
 @router.post("/custom-script", response_model=VideoIdea)
 async def create_idea_with_custom_script(request: CustomScriptRequest):
     """
