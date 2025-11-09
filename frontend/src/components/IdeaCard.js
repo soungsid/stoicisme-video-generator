@@ -162,11 +162,18 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
           )}
 
           {/* Error Message */}
-          {idea.status === 'error' && idea.error_message && (
+          {isError && idea.error_message && (
             <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-start">
                 <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800">{idea.error_message}</p>
+                <div className="flex-1">
+                  {idea.last_successful_step && (
+                    <p className="text-sm font-medium text-green-700 mb-2">
+                      ✅ Dernière étape réussie: {idea.last_successful_step}
+                    </p>
+                  )}
+                  <p className="text-sm text-red-800">{idea.error_message}</p>
+                </div>
               </div>
             </div>
           )}
