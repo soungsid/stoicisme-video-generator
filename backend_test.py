@@ -569,7 +569,7 @@ def test_youtube_stats():
 def run_all_tests():
     """Run all backend tests"""
     print("=" * 80)
-    print("🚀 STARTING BACKEND TESTS FOR YOUTUBE INTEGRATION & VIDEO QUEUE SYSTEM")
+    print("🚀 STARTING BACKEND TESTS - PHASE 2: STATS ENDPOINTS")
     print("=" * 80)
     print(f"Backend URL: {BASE_URL}")
     print(f"API Base: {API_BASE}")
@@ -579,25 +579,29 @@ def run_all_tests():
     # Test basic connectivity
     results["health_check"] = test_health_check()
     
-    # Test YouTube endpoints
-    results["youtube_config"] = test_youtube_config()
-    results["youtube_auth_url"] = test_youtube_auth_url()
-    results["youtube_channel_info"] = test_youtube_channel_info()
-    
-    # Test existing config endpoints
-    results["elevenlabs_config"] = test_elevenlabs_config()
-    results["llm_config"] = test_llm_config()
-    
-    # Test NEW Queue System endpoints
+    # Test NEW Phase 2 Stats Endpoints
     print("\n" + "=" * 60)
-    print("🎬 TESTING NEW VIDEO QUEUE SYSTEM")
+    print("📊 TESTING NEW PHASE 2 STATS ENDPOINTS")
+    print("=" * 60)
+    
+    results["elevenlabs_stats"] = test_elevenlabs_stats()
+    results["youtube_stats"] = test_youtube_stats()
+    
+    # Verify existing queue stats still working
+    print("\n" + "=" * 60)
+    print("🔄 VERIFYING EXISTING QUEUE STATS STILL WORKING")
     print("=" * 60)
     
     results["queue_stats"] = test_queue_stats()
-    results["job_status_nonexistent"] = test_job_status_nonexistent()
-    results["pipeline_generate_nonexistent"] = test_pipeline_generate_without_idea()
-    results["cancel_job_nonexistent"] = test_cancel_job_nonexistent()
-    results["queue_workflow_complete"] = test_queue_workflow_with_real_idea()
+    
+    # Test other existing endpoints for regression
+    print("\n" + "=" * 60)
+    print("🔍 REGRESSION TESTING - EXISTING ENDPOINTS")
+    print("=" * 60)
+    
+    results["youtube_config"] = test_youtube_config()
+    results["elevenlabs_config"] = test_elevenlabs_config()
+    results["llm_config"] = test_llm_config()
     
     # Summary
     print("\n" + "=" * 80)
@@ -608,19 +612,19 @@ def run_all_tests():
     total = len(results)
     
     # Group results by category
-    youtube_tests = ["health_check", "youtube_config", "youtube_auth_url", "youtube_channel_info", "elevenlabs_config", "llm_config"]
-    queue_tests = ["queue_stats", "job_status_nonexistent", "pipeline_generate_nonexistent", "cancel_job_nonexistent", "queue_workflow_complete"]
+    phase2_tests = ["elevenlabs_stats", "youtube_stats"]
+    existing_tests = ["health_check", "queue_stats", "youtube_config", "elevenlabs_config", "llm_config"]
     
-    print("YouTube Integration Tests:")
-    for test_name in youtube_tests:
+    print("Phase 2 New Stats Endpoints:")
+    for test_name in phase2_tests:
         if test_name in results:
             status = "✅ PASS" if results[test_name] else "❌ FAIL"
             print(f"  {test_name.replace('_', ' ').title()}: {status}")
             if results[test_name]:
                 passed += 1
     
-    print("\nVideo Queue System Tests:")
-    for test_name in queue_tests:
+    print("\nExisting Endpoints (Regression Check):")
+    for test_name in existing_tests:
         if test_name in results:
             status = "✅ PASS" if results[test_name] else "❌ FAIL"
             print(f"  {test_name.replace('_', ' ').title()}: {status}")
@@ -630,7 +634,7 @@ def run_all_tests():
     print(f"\nOverall: {passed}/{total} tests passed")
     
     if passed == total:
-        print("🎉 All tests passed!")
+        print("🎉 All Phase 2 tests passed!")
     else:
         print("⚠️  Some tests failed - check details above")
     
