@@ -525,7 +525,7 @@ def run_all_tests():
     
     # Group results by category
     youtube_tests = ["health_check", "youtube_config", "youtube_auth_url", "youtube_channel_info", "elevenlabs_config", "llm_config"]
-    queue_tests = ["queue_stats", "job_status_nonexistent", "pipeline_generate_nonexistent", "cancel_job_nonexistent"]
+    queue_tests = ["queue_stats", "job_status_nonexistent", "pipeline_generate_nonexistent", "cancel_job_nonexistent", "queue_workflow_complete"]
     
     print("YouTube Integration Tests:")
     for test_name in youtube_tests:
