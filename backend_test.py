@@ -715,13 +715,13 @@ def test_video_scheduling():
     try:
         # Test schedule single video (should fail with non-existent video)
         fake_video_id = "00000000-0000-0000-0000-000000000000"
-        schedule_payload = {
+        schedule_params = {
             "publish_date": "2025-01-20T10:00:00Z"
         }
         
         response = requests.post(
             f"{API_BASE}/youtube/schedule/{fake_video_id}",
-            params=schedule_payload,
+            params=schedule_params,
             timeout=10
         )
         print(f"Schedule single - Status Code: {response.status_code}")
