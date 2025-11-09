@@ -82,6 +82,17 @@ function VideosPage() {
     }
   };
 
+  const handleScheduleVideo = async (videoId, publishDate) => {
+    try {
+      await youtubeApi.scheduleVideo(videoId, publishDate);
+      alert('✅ Vidéo planifiée avec succès !');
+      await loadVideos();
+    } catch (error) {
+      console.error('Error scheduling video:', error);
+      throw error;
+    }
+  };
+
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
