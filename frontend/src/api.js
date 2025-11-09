@@ -59,7 +59,9 @@ export const youtubeApi = {
 // Config API
 export const configApi = {
   getElevenLabsConfig: () => api.get('/api/config/elevenlabs'),
+  getElevenLabsStats: () => api.get('/api/config/elevenlabs/stats'),
   getLLMConfig: () => api.get('/api/config/llm'),
+  getYouTubeStats: () => api.get('/api/config/youtube/stats'),
   updateYouTubeConfig: (credentials) => api.post('/api/config/youtube', credentials),
 };
 
