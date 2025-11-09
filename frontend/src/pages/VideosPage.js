@@ -3,6 +3,7 @@ import { Video, Loader, Youtube, ExternalLink, Edit, Calendar, Filter } from 'lu
 import { videosApi, youtubeApi } from '../api';
 import EditVideoMetadataModal from '../components/EditVideoMetadataModal';
 import BulkSchedulerModal from '../components/BulkSchedulerModal';
+import ScheduleVideoModal from '../components/ScheduleVideoModal';
 
 function VideosPage() {
   const [videos, setVideos] = useState([]);
