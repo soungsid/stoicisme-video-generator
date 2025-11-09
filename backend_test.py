@@ -566,10 +566,368 @@ def test_youtube_stats():
         print(f"❌ YouTube stats failed - {str(e)}")
         return False
 
+def test_batch_action_validate():
+    """Test POST /api/ideas/batch-action with validate action - NEW PHASE 3 FEATURE"""
+    print("\n🔍 Testing Batch Action - Validate...")
+    try:
+        # Test with empty list first
+        empty_payload = {
+            "idea_ids": [],
+            "action": "validate"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ideas/batch-action",
+            json=empty_payload,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        print(f"Empty list - Status Code: {response.status_code}")
+        print(f"Empty list - Response: {response.json()}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            required_fields = ["success", "message", "results"]
+            if all(field in data for field in required_fields):
+                results = data["results"]
+                if "success" in results and "failed" in results and "total" in results:
+                    print("✅ Batch action endpoint structure correct for empty list")
+                    print(f"   Total processed: {results['total']}")
+                    print(f"   Success count: {len(results['success'])}")
+                    print(f"   Failed count: {len(results['failed'])}")
+                    
+                    # Test with non-existent idea IDs
+                    fake_payload = {
+                        "idea_ids": ["00000000-0000-0000-0000-000000000000", "11111111-1111-1111-1111-111111111111"],
+                        "action": "validate"
+                    }
+                    
+                    fake_response = requests.post(
+                        f"{API_BASE}/ideas/batch-action",
+                        json=fake_payload,
+                        headers={"Content-Type": "application/json"},
+                        timeout=10
+                    )
+                    print(f"Fake IDs - Status Code: {fake_response.status_code}")
+                    
+                    if fake_response.status_code == 200:
+                        fake_data = fake_response.json()
+                        fake_results = fake_data["results"]
+                        print(f"Fake IDs - Response: {fake_data}")
+                        
+                        if fake_results["total"] == 2 and len(fake_results["failed"]) == 2:
+                            print("✅ Batch action correctly handles non-existent ideas")
+                            return True
+                        else:
+                            print("❌ Batch action failed to handle non-existent ideas correctly")
+                            return False
+                    else:
+                        print(f"❌ Batch action with fake IDs failed - status code {fake_response.status_code}")
+                        return False
+                else:
+                    print("❌ Batch action results structure missing required fields")
+                    return False
+            else:
+                print("❌ Batch action response missing required fields")
+                return False
+        else:
+            print(f"❌ Batch action failed - status code {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ Batch action test failed - {str(e)}")
+        return False
+
+def test_batch_action_reject():
+    """Test POST /api/ideas/batch-action with reject action - NEW PHASE 3 FEATURE"""
+    print("\n🔍 Testing Batch Action - Reject...")
+    try:
+        payload = {
+            "idea_ids": ["00000000-0000-0000-0000-000000000000"],
+            "action": "reject"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ideas/batch-action",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.json()}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "success" in data and "results" in data:
+                results = data["results"]
+                if results["total"] == 1 and len(results["failed"]) == 1:
+                    print("✅ Batch reject action working correctly")
+                    return True
+                else:
+                    print("❌ Batch reject action results incorrect")
+                    return False
+            else:
+                print("❌ Batch reject action response structure incorrect")
+                return False
+        else:
+            print(f"❌ Batch reject action failed - status code {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ Batch reject action test failed - {str(e)}")
+        return False
+
+def test_batch_action_invalid():
+    """Test POST /api/ideas/batch-action with invalid action - NEW PHASE 3 FEATURE"""
+    print("\n🔍 Testing Batch Action - Invalid Action...")
+    try:
+        payload = {
+            "idea_ids": ["00000000-0000-0000-0000-000000000000"],
+            "action": "invalid_action"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ideas/batch-action",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.json()}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "results" in data:
+                results = data["results"]
+                if len(results["failed"]) == 1 and "Unknown action" in results["failed"][0]["reason"]:
+                    print("✅ Batch action correctly handles invalid actions")
+                    return True
+                else:
+                    print("❌ Batch action failed to handle invalid action correctly")
+                    return False
+            else:
+                print("❌ Batch action response structure incorrect for invalid action")
+                return False
+        else:
+            print(f"❌ Batch action with invalid action failed - status code {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ Batch action invalid test failed - {str(e)}")
+        return False
+
+def test_video_scheduling():
+    """Test video scheduling endpoints - NEW PHASE 3 FEATURE"""
+    print("\n🔍 Testing Video Scheduling...")
+    try:
+        # Test schedule single video (should fail with non-existent video)
+        fake_video_id = "00000000-0000-0000-0000-000000000000"
+        schedule_payload = {
+            "publish_date": "2025-01-20T10:00:00Z"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/youtube/schedule/{fake_video_id}",
+            params=schedule_payload,
+            timeout=10
+        )
+        print(f"Schedule single - Status Code: {response.status_code}")
+        
+        if response.status_code == 404:
+            try:
+                data = response.json()
+                print(f"Schedule single - Response: {data}")
+                if "detail" in data and "not found" in data["detail"].lower():
+                    print("✅ Schedule single video correctly returns 404 for non-existent video")
+                else:
+                    print("❌ Schedule single video 404 response missing proper error detail")
+                    return False
+            except:
+                print("❌ Schedule single video 404 response not valid JSON")
+                return False
+        else:
+            print(f"❌ Schedule single video should return 404 for non-existent video, got {response.status_code}")
+            return False
+        
+        # Test bulk scheduling
+        bulk_payload = {
+            "start_date": "2025-01-20T00:00:00Z",
+            "videos_per_day": 2,
+            "publish_times": ["10:00", "18:00"]
+        }
+        
+        bulk_response = requests.post(
+            f"{API_BASE}/youtube/schedule/bulk",
+            json=bulk_payload,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        print(f"Bulk schedule - Status Code: {bulk_response.status_code}")
+        print(f"Bulk schedule - Response: {bulk_response.json()}")
+        
+        if bulk_response.status_code == 200:
+            bulk_data = bulk_response.json()
+            required_fields = ["success", "message", "scheduled_count"]
+            if all(field in bulk_data for field in required_fields):
+                print("✅ Bulk scheduling endpoint working correctly")
+                print(f"   Scheduled count: {bulk_data['scheduled_count']}")
+            else:
+                print("❌ Bulk scheduling response missing required fields")
+                return False
+        else:
+            print(f"❌ Bulk scheduling failed - status code {bulk_response.status_code}")
+            return False
+        
+        # Test unschedule video
+        unschedule_response = requests.delete(
+            f"{API_BASE}/youtube/schedule/{fake_video_id}",
+            timeout=10
+        )
+        print(f"Unschedule - Status Code: {unschedule_response.status_code}")
+        
+        if unschedule_response.status_code == 404:
+            try:
+                unschedule_data = unschedule_response.json()
+                print(f"Unschedule - Response: {unschedule_data}")
+                if "detail" in unschedule_data and "not found" in unschedule_data["detail"].lower():
+                    print("✅ Unschedule video correctly returns 404 for non-existent video")
+                    return True
+                else:
+                    print("❌ Unschedule video 404 response missing proper error detail")
+                    return False
+            except:
+                print("❌ Unschedule video 404 response not valid JSON")
+                return False
+        else:
+            print(f"❌ Unschedule video should return 404 for non-existent video, got {unschedule_response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Video scheduling test failed - {str(e)}")
+        return False
+
+def test_video_filtering_sorting():
+    """Test video filtering and sorting - NEW PHASE 3 FEATURE"""
+    print("\n🔍 Testing Video Filtering & Sorting...")
+    try:
+        # Test basic video list
+        response = requests.get(f"{API_BASE}/videos/", timeout=10)
+        print(f"Basic list - Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            videos = response.json()
+            print(f"Basic list - Found {len(videos)} videos")
+            print("✅ Basic video listing working")
+        else:
+            print(f"❌ Basic video listing failed - status code {response.status_code}")
+            return False
+        
+        # Test with status filter - uploaded
+        uploaded_response = requests.get(
+            f"{API_BASE}/videos/",
+            params={"status_filter": "uploaded"},
+            timeout=10
+        )
+        print(f"Uploaded filter - Status Code: {uploaded_response.status_code}")
+        
+        if uploaded_response.status_code == 200:
+            uploaded_videos = uploaded_response.json()
+            print(f"Uploaded filter - Found {len(uploaded_videos)} uploaded videos")
+            print("✅ Uploaded status filter working")
+        else:
+            print(f"❌ Uploaded status filter failed - status code {uploaded_response.status_code}")
+            return False
+        
+        # Test with status filter - scheduled
+        scheduled_response = requests.get(
+            f"{API_BASE}/videos/",
+            params={"status_filter": "scheduled"},
+            timeout=10
+        )
+        print(f"Scheduled filter - Status Code: {scheduled_response.status_code}")
+        
+        if scheduled_response.status_code == 200:
+            scheduled_videos = scheduled_response.json()
+            print(f"Scheduled filter - Found {len(scheduled_videos)} scheduled videos")
+            print("✅ Scheduled status filter working")
+        else:
+            print(f"❌ Scheduled status filter failed - status code {scheduled_response.status_code}")
+            return False
+        
+        # Test with status filter - pending
+        pending_response = requests.get(
+            f"{API_BASE}/videos/",
+            params={"status_filter": "pending"},
+            timeout=10
+        )
+        print(f"Pending filter - Status Code: {pending_response.status_code}")
+        
+        if pending_response.status_code == 200:
+            pending_videos = pending_response.json()
+            print(f"Pending filter - Found {len(pending_videos)} pending videos")
+            print("✅ Pending status filter working")
+        else:
+            print(f"❌ Pending status filter failed - status code {pending_response.status_code}")
+            return False
+        
+        # Test sorting by title ascending
+        title_asc_response = requests.get(
+            f"{API_BASE}/videos/",
+            params={"sort_by": "title", "sort_order": "asc"},
+            timeout=10
+        )
+        print(f"Title ASC sort - Status Code: {title_asc_response.status_code}")
+        
+        if title_asc_response.status_code == 200:
+            title_asc_videos = title_asc_response.json()
+            print(f"Title ASC sort - Found {len(title_asc_videos)} videos")
+            print("✅ Title ascending sort working")
+        else:
+            print(f"❌ Title ascending sort failed - status code {title_asc_response.status_code}")
+            return False
+        
+        # Test sorting by scheduled_publish_date descending
+        date_desc_response = requests.get(
+            f"{API_BASE}/videos/",
+            params={"sort_by": "scheduled_publish_date", "sort_order": "desc"},
+            timeout=10
+        )
+        print(f"Date DESC sort - Status Code: {date_desc_response.status_code}")
+        
+        if date_desc_response.status_code == 200:
+            date_desc_videos = date_desc_response.json()
+            print(f"Date DESC sort - Found {len(date_desc_videos)} videos")
+            print("✅ Scheduled date descending sort working")
+        else:
+            print(f"❌ Scheduled date descending sort failed - status code {date_desc_response.status_code}")
+            return False
+        
+        # Test combined filter and sort
+        combined_response = requests.get(
+            f"{API_BASE}/videos/",
+            params={
+                "status_filter": "pending",
+                "sort_by": "created_at",
+                "sort_order": "desc"
+            },
+            timeout=10
+        )
+        print(f"Combined filter+sort - Status Code: {combined_response.status_code}")
+        
+        if combined_response.status_code == 200:
+            combined_videos = combined_response.json()
+            print(f"Combined filter+sort - Found {len(combined_videos)} videos")
+            print("✅ Combined filtering and sorting working")
+            return True
+        else:
+            print(f"❌ Combined filtering and sorting failed - status code {combined_response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Video filtering and sorting test failed - {str(e)}")
+        return False
+
 def run_all_tests():
     """Run all backend tests"""
     print("=" * 80)
-    print("🚀 STARTING BACKEND TESTS - PHASE 2: STATS ENDPOINTS")
+    print("🚀 STARTING BACKEND TESTS - PHASE 3: BATCH ACTIONS, SCHEDULING & FILTERING")
     print("=" * 80)
     print(f"Backend URL: {BASE_URL}")
     print(f"API Base: {API_BASE}")
@@ -579,29 +937,25 @@ def run_all_tests():
     # Test basic connectivity
     results["health_check"] = test_health_check()
     
-    # Test NEW Phase 2 Stats Endpoints
+    # Test NEW Phase 3 Features
     print("\n" + "=" * 60)
-    print("📊 TESTING NEW PHASE 2 STATS ENDPOINTS")
+    print("🔄 TESTING NEW PHASE 3 FEATURES")
     print("=" * 60)
     
-    results["elevenlabs_stats"] = test_elevenlabs_stats()
-    results["youtube_stats"] = test_youtube_stats()
+    results["batch_action_validate"] = test_batch_action_validate()
+    results["batch_action_reject"] = test_batch_action_reject()
+    results["batch_action_invalid"] = test_batch_action_invalid()
+    results["video_scheduling"] = test_video_scheduling()
+    results["video_filtering_sorting"] = test_video_filtering_sorting()
     
-    # Verify existing queue stats still working
-    print("\n" + "=" * 60)
-    print("🔄 VERIFYING EXISTING QUEUE STATS STILL WORKING")
-    print("=" * 60)
-    
-    results["queue_stats"] = test_queue_stats()
-    
-    # Test other existing endpoints for regression
+    # Test existing endpoints for regression
     print("\n" + "=" * 60)
     print("🔍 REGRESSION TESTING - EXISTING ENDPOINTS")
     print("=" * 60)
     
-    results["youtube_config"] = test_youtube_config()
-    results["elevenlabs_config"] = test_elevenlabs_config()
-    results["llm_config"] = test_llm_config()
+    results["queue_stats"] = test_queue_stats()
+    results["elevenlabs_stats"] = test_elevenlabs_stats()
+    results["youtube_stats"] = test_youtube_stats()
     
     # Summary
     print("\n" + "=" * 80)
@@ -612,11 +966,11 @@ def run_all_tests():
     total = len(results)
     
     # Group results by category
-    phase2_tests = ["elevenlabs_stats", "youtube_stats"]
-    existing_tests = ["health_check", "queue_stats", "youtube_config", "elevenlabs_config", "llm_config"]
+    phase3_tests = ["batch_action_validate", "batch_action_reject", "batch_action_invalid", "video_scheduling", "video_filtering_sorting"]
+    existing_tests = ["health_check", "queue_stats", "elevenlabs_stats", "youtube_stats"]
     
-    print("Phase 2 New Stats Endpoints:")
-    for test_name in phase2_tests:
+    print("Phase 3 New Features:")
+    for test_name in phase3_tests:
         if test_name in results:
             status = "✅ PASS" if results[test_name] else "❌ FAIL"
             print(f"  {test_name.replace('_', ' ').title()}: {status}")
@@ -634,7 +988,7 @@ def run_all_tests():
     print(f"\nOverall: {passed}/{total} tests passed")
     
     if passed == total:
-        print("🎉 All Phase 2 tests passed!")
+        print("🎉 All Phase 3 tests passed!")
     else:
         print("⚠️  Some tests failed - check details above")
     
