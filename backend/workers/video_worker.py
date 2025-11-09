@@ -55,7 +55,7 @@ class VideoWorker:
             print(f"❌ Worker MongoDB connection failed: {e}")
             raise
     
-    async def update_idea_progress(self, idea_id: str, status_value: IdeaStatus, progress: int, step: str, error: str = None):
+    async def update_idea_progress(self, idea_id: str, status_value: IdeaStatus, progress: int, step: str, error: str = None, last_successful: str = None):
         """Mettre à jour la progression d'une idée"""
         ideas_collection = self.db.ideas
         update_data = {
@@ -65,6 +65,8 @@ class VideoWorker:
         }
         if error:
             update_data["error_message"] = error
+        if last_successful:
+            update_data["last_successful_step"] = last_successful
         
         await ideas_collection.update_one(
             {"id": idea_id},
