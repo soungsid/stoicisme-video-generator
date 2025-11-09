@@ -30,15 +30,19 @@ function ConfigPage() {
   const loadConfigs = async () => {
     try {
       setLoading(true);
-      const [elevenLabs, llm, youtube] = await Promise.all([
+      const [elevenLabs, elevenStats, llm, youtube, ytStats] = await Promise.all([
         configApi.getElevenLabsConfig(),
+        configApi.getElevenLabsStats(),
         configApi.getLLMConfig(),
-        youtubeApi.getConfig()
+        youtubeApi.getConfig(),
+        configApi.getYouTubeStats()
       ]);
       
       setElevenLabsConfig(elevenLabs.data);
+      setElevenLabsStats(elevenStats.data);
       setLlmConfig(llm.data);
       setYoutubeConfig(youtube.data);
+      setYoutubeStats(ytStats.data);
 
       // Load channel info if authenticated
       if (youtube.data.is_authenticated) {
