@@ -20,7 +20,7 @@ function VideosPage() {
   const loadVideos = async () => {
     try {
       setLoading(true);
-      const response = await videosApi.listVideos();
+      const response = await videosApi.listVideos(statusFilter, sortBy, sortOrder);
       setVideos(response.data);
     } catch (error) {
       console.error('Error loading videos:', error);
