@@ -17,12 +17,12 @@ class YouTubeService:
         self.client_id = os.getenv("YOUTUBE_CLIENT_ID", "1003461788594-hrti4l1lueto52iua8levktl7urdnjjd.apps.googleusercontent.com")
         self.client_secret = os.getenv("YOUTUBE_CLIENT_SECRET", "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")
         self.redirect_uri = os.getenv("YOUTUBE_REDIRECT_URI", "http://localhost:8001/api/youtube/oauth/callback")
-        # Scopes nécessaires pour YouTube (userinfo.email retiré car il cause des problèmes)
-        # L'email sera récupéré via l'API YouTube directement
         self.scopes = [
-            "https://www.googleapis.com/auth/youtube.upload",
-            "https://www.googleapis.com/auth/youtube.readonly",
-            "https://www.googleapis.com/auth/youtube.force-ssl"
+            'openid',  
+            'https://www.googleapis.com/auth/userinfo.email', 
+            'https://www.googleapis.com/auth/youtube.upload',
+            'https://www.googleapis.com/auth/youtube.readonly',
+            'https://www.googleapis.com/auth/youtube.force-ssl'
         ]
     
 
