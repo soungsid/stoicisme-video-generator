@@ -321,6 +321,35 @@ function ConfigPage() {
                       </div>
                     </div>
                   ) : null}
+                  
+                  {youtubeStats && (
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <h4 className="text-sm font-medium text-gray-900 mb-3">📊 Statistiques d'Upload</h4>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="bg-white rounded p-2">
+                          <p className="text-xs text-gray-600">Aujourd'hui</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {youtubeStats.uploads_today}
+                          </p>
+                        </div>
+                        <div className="bg-white rounded p-2">
+                          <p className="text-xs text-gray-600">Total</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {youtubeStats.total_uploads}
+                          </p>
+                        </div>
+                        <div className="bg-white rounded p-2">
+                          <p className="text-xs text-gray-600">En attente</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {youtubeStats.pending_uploads}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-3 text-center">
+                        Limite quotidienne: ~{youtubeStats.quota_info.daily_limit} uploads
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
