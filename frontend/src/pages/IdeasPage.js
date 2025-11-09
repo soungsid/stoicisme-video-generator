@@ -197,6 +197,51 @@ function IdeasPage() {
     }
   };
 
+  const handleBatchAction = async () => {
+    if (!batchAction || selectedIdeas.length === 0) {
+      setToast({ type: 'error', message: 'Sélectionnez une action et au moins une idée' });
+      return;
+    }
+
+    const actionLabels = {
+      'validate': 'Valider',
+      'reject': 'Rejeter',
+      'delete': 'Supprimer',
+      'generate': 'Générer'
+    };
+
+    setConfirmModal({
+      title: `${actionLabels[batchAction]} ${selectedIdeas.length} idée(s) ?`,
+      message: `Cette action sera appliquée à toutes les idées sélectionnées.`,
+      onConfirm: async () => {
+        try {
+          setProcessingBatch(true);
+          const response = await ideasApi.batchAction(selectedIdeas, batchAction);
+          
+          const successCount = response.data.results.success.length;
+          const failedCount = response.data.results.failed.length;
+          
+          let message = `${successCount} idée(s) traitée(s) avec succès`;
+          if (failedCount > 0) {
+            message += `, ${failedCount} échec(s)`;
+          }
+          
+          setToast({ type: successCount > 0 ? 'success' : 'error', message });
+          setSelectedIdeas([]);
+          setBatchAction('');
+          await loadIdeas();
+        } catch (error) {
+          setToast({ type: 'error', message: 'Erreur: ' + (error.response?.data?.detail || error.message) });
+        } finally {
+          setProcessingBatch(false);
+          setConfirmModal(null);
+        }
+      },
+      onCancel: () => setConfirmModal(null)
+    });
+  };
+
+
   if (loading && ideas.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
