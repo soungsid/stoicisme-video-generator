@@ -202,6 +202,12 @@ function VideosPage() {
                           <span className="text-xs text-gray-500">
                             {video.video_type === 'short' ? '9:16' : '16:9'}
                           </span>
+                          {video.is_scheduled && video.scheduled_publish_date && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {new Date(video.scheduled_publish_date).toLocaleString('fr-FR')}
+                            </span>
+                          )}
                           {video.youtube_url && (
                             <a
                               href={video.youtube_url}
