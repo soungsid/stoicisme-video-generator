@@ -801,7 +801,7 @@ def test_video_scheduling():
                 print(f"Unschedule - Response: {unschedule_data}")
                 if "detail" in unschedule_data and "not found" in unschedule_data["detail"].lower():
                     print("✅ Unschedule video correctly returns 404 for non-existent video")
-                    return True
+                    return bulk_working
                 else:
                     print("❌ Unschedule video 404 response missing proper error detail")
                     return False
