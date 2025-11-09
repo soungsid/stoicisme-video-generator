@@ -183,6 +183,62 @@ function ConfigPage() {
                   </div>
                 </div>
               )}
+              
+              {elevenLabsKeys && elevenLabsKeys.keys && elevenLabsKeys.keys.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">🔑 Détails des Clés API</h4>
+                  <div className="space-y-3">
+                    {elevenLabsKeys.keys.map((keyInfo) => (
+                      <div key={keyInfo.key_number} className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-gray-700">Clé #{keyInfo.key_number}</span>
+                          {keyInfo.status === 'error' ? (
+                            <span className="text-xs px-2 py-0.5 bg-red-100 text-red-800 rounded">Erreur</span>
+                          ) : (
+                            <span className="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded">{keyInfo.tier}</span>
+                          )}
+                        </div>
+                        {keyInfo.error ? (
+                          <p className="text-xs text-red-600">{keyInfo.error}</p>
+                        ) : (
+                          <>
+                            <div className="space-y-1 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Email:</span>
+                                <span className="font-medium text-gray-900">{keyInfo.email}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Clé:</span>
+                                <span className="font-mono text-gray-700">{keyInfo.key}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Utilisés ce mois:</span>
+                                <span className="font-medium text-gray-900">{keyInfo.character_count.toLocaleString()} car.</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Restants:</span>
+                                <span className="font-medium text-green-600">{keyInfo.characters_remaining.toLocaleString()} car.</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Limite:</span>
+                                <span className="font-medium text-gray-900">{keyInfo.character_limit.toLocaleString()} car.</span>
+                              </div>
+                            </div>
+                            <div className="mt-2">
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full ${keyInfo.characters_remaining < keyInfo.character_limit * 0.2 ? 'bg-red-600' : 'bg-blue-600'}`}
+                                  style={{ width: `${(keyInfo.character_count / keyInfo.character_limit) * 100}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
