@@ -250,7 +250,7 @@ async def schedule_bulk(data: dict):
             }
         
         # Parser la date de début
-        current_date = datetime.fromisoformat(publish_date.replace('Z', '+00:00'))
+        current_date = datetime.fromisoformat(start_date)
         
         # Planifier les vidéos
         scheduled_count = 0
