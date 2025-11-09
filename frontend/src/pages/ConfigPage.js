@@ -4,8 +4,10 @@ import { configApi, youtubeApi } from '../api';
 
 function ConfigPage() {
   const [elevenLabsConfig, setElevenLabsConfig] = useState(null);
+  const [elevenLabsStats, setElevenLabsStats] = useState(null);
   const [llmConfig, setLlmConfig] = useState(null);
   const [youtubeConfig, setYoutubeConfig] = useState(null);
+  const [youtubeStats, setYoutubeStats] = useState(null);
   const [channelInfo, setChannelInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingChannel, setLoadingChannel] = useState(false);
