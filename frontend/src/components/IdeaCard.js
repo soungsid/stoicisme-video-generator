@@ -220,7 +220,28 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
             </>
           )}
           
-          {canResume && nextStep && (
+          {/* En cas d'erreur: 2 boutons */}
+          {isError && idea.last_successful_step && nextStep && (
+            <>
+              <button
+                onClick={() => onStartPipeline(nextStep.step)}
+                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+              >
+                <Play className="h-4 w-4 mr-1" />
+                {nextStep.label}
+              </button>
+              <button
+                onClick={() => onStartPipeline('script')}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Recommencer
+              </button>
+            </>
+          )}
+          
+          {/* Pour les autres états qui peuvent reprendre */}
+          {!isError && canResume && nextStep && (
             <button
               onClick={() => onStartPipeline(nextStep.step)}
               disabled={isProcessing}
