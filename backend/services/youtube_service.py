@@ -129,7 +129,7 @@ class YouTubeService:
             
             # Récupérer les infos de la chaîne
             request = youtube.channels().list(
-                part='snippet,statistics,brandingSettings',
+                part='snippet,statistics,brandingSettings,contentDetails',
                 mine=True
             )
             response = request.execute()
@@ -138,6 +138,11 @@ class YouTubeService:
                 raise ValueError("No channel found for this account")
             
             channel = response['items'][0]
+            
+            # Récupérer l'email de l'utilisateur via Google OAuth2 API
+            from googleapiclient.discovery import build as google_build
+            oauth2_service = google_build('oauth2', 'v2', credentials=credentials)
+            user_info = oauth2_service.userinfo().get().execute()
             
             channel_info = {
                 'id': channel['id'],
@@ -150,9 +155,12 @@ class YouTubeService:
                 'video_count': int(channel['statistics'].get('videoCount', 0)),
                 'view_count': int(channel['statistics'].get('viewCount', 0)),
                 'country': channel['snippet'].get('country', ''),
+                'email': user_info.get('email', 'N/A'),
+                'verified_email': user_info.get('verified_email', False),
+                'hidden_subscriber_count': channel['statistics'].get('hiddenSubscriberCount', False),
             }
             
-            print(f"✅ Channel info retrieved: {channel_info['title']}")
+            print(f"✅ Channel info retrieved: {channel_info['title']} ({channel_info['email']})")
             return channel_info
             
         except Exception as e:
