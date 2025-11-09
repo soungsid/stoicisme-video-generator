@@ -743,7 +743,7 @@ def test_video_scheduling():
             return False
         
         # Test bulk scheduling
-        bulk_payload = {
+        bulk_params = {
             "start_date": "2025-01-20T00:00:00Z",
             "videos_per_day": 2,
             "publish_times": ["10:00", "18:00"]
@@ -751,8 +751,7 @@ def test_video_scheduling():
         
         bulk_response = requests.post(
             f"{API_BASE}/youtube/schedule/bulk",
-            json=bulk_payload,
-            headers={"Content-Type": "application/json"},
+            params=bulk_params,
             timeout=10
         )
         print(f"Bulk schedule - Status Code: {bulk_response.status_code}")
