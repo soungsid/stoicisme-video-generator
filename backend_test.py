@@ -482,6 +482,90 @@ def test_queue_workflow_with_real_idea():
         print(f"❌ Queue workflow test failed - {str(e)}")
         return False
 
+def test_elevenlabs_stats():
+    """Test GET /api/config/elevenlabs/stats endpoint - NEW PHASE 2 FEATURE"""
+    print("\n🔍 Testing ElevenLabs Stats Endpoint...")
+    try:
+        response = requests.get(f"{API_BASE}/config/elevenlabs/stats", timeout=10)
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.json()}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Check required fields
+            required_fields = ["keys_configured", "scripts_generated_today", "estimated_chars_today", "rotation_status", "quota_info"]
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                print(f"❌ ElevenLabs stats missing required fields: {missing_fields}")
+                return False
+            
+            # Validate rotation_status structure
+            rotation_status = data.get("rotation_status", {})
+            if not isinstance(rotation_status, dict) or "enabled" not in rotation_status or "total_keys" not in rotation_status:
+                print("❌ ElevenLabs stats rotation_status structure invalid")
+                return False
+            
+            # Validate quota_info structure
+            quota_info = data.get("quota_info", {})
+            if not isinstance(quota_info, dict):
+                print("❌ ElevenLabs stats quota_info structure invalid")
+                return False
+            
+            print("✅ ElevenLabs stats endpoint working")
+            print(f"   Keys configured: {data['keys_configured']}")
+            print(f"   Scripts generated today: {data['scripts_generated_today']}")
+            print(f"   Estimated chars today: {data['estimated_chars_today']}")
+            print(f"   Rotation enabled: {rotation_status.get('enabled')}")
+            print(f"   Total keys: {rotation_status.get('total_keys')}")
+            return True
+        else:
+            print(f"❌ ElevenLabs stats failed - status code {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ ElevenLabs stats failed - {str(e)}")
+        return False
+
+def test_youtube_stats():
+    """Test GET /api/config/youtube/stats endpoint - NEW PHASE 2 FEATURE"""
+    print("\n🔍 Testing YouTube Stats Endpoint...")
+    try:
+        response = requests.get(f"{API_BASE}/config/youtube/stats", timeout=10)
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.json()}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Check required fields
+            required_fields = ["authenticated", "uploads_today", "total_uploads", "pending_uploads", "quota_info"]
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                print(f"❌ YouTube stats missing required fields: {missing_fields}")
+                return False
+            
+            # Validate quota_info structure
+            quota_info = data.get("quota_info", {})
+            if not isinstance(quota_info, dict) or "daily_limit" not in quota_info:
+                print("❌ YouTube stats quota_info structure invalid")
+                return False
+            
+            print("✅ YouTube stats endpoint working")
+            print(f"   Authenticated: {data['authenticated']}")
+            print(f"   Uploads today: {data['uploads_today']}")
+            print(f"   Total uploads: {data['total_uploads']}")
+            print(f"   Pending uploads: {data['pending_uploads']}")
+            print(f"   Daily limit: {quota_info.get('daily_limit')}")
+            return True
+        else:
+            print(f"❌ YouTube stats failed - status code {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ YouTube stats failed - {str(e)}")
+        return False
+
 def run_all_tests():
     """Run all backend tests"""
     print("=" * 80)
