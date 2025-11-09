@@ -17,6 +17,7 @@ class VideoService:
         self.resources_dir = os.getenv("RESOURCES_DIR", "/app/ressources")
         self.template_dir = os.path.join(self.resources_dir, "video-template")
         self.videos_dir = os.path.join(self.resources_dir, "videos")
+        self.subtitle_service = SubtitleService()  # Service de sous-titres
         
         # Créer les dossiers si nécessaire
         os.makedirs(self.template_dir, exist_ok=True)
