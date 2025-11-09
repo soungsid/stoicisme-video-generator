@@ -37,6 +37,55 @@ async def update_youtube_config(credentials: YouTubeCredentials):
             detail=f"Error updating YouTube config: {str(e)}"
         )
 
+@router.get("/elevenlabs/stats")
+async def get_elevenlabs_stats():
+    """
+    Récupérer les statistiques d'utilisation ElevenLabs
+    """
+    try:
+        from services.elevenlabs_service import ElevenLabsService
+        from database import get_scripts_collection
+        from datetime import datetime, timedelta
+        
+        # Compter les caractères générés aujourd'hui
+        scripts_collection = get_scripts_collection()
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Compter les scripts générés aujourd'hui
+        scripts_today = await scripts_collection.count_documents({
+            "created_at": {"$gte": today_start}
+        })
+        
+        # Estimer les caractères (moyenne ~200 caractères par script)
+        estimated_chars_today = scripts_today * 200
+        
+        # Configuration des clés
+        configured_keys = []
+        for i in range(1, 6):
+            key = os.getenv(f"ELEVENLABS_API_KEY{i}")
+            if key and key.startswith("sk_"):
+                configured_keys.append(i)
+        
+        return {
+            "keys_configured": len(configured_keys),
+            "scripts_generated_today": scripts_today,
+            "estimated_chars_today": estimated_chars_today,
+            "quota_info": {
+                "estimated_chars_per_script": 200,
+                "free_tier_monthly": 10000,
+                "note": "Les quotas exacts nécessitent l'API ElevenLabs"
+            },
+            "rotation_status": {
+                "enabled": len(configured_keys) > 1,
+                "total_keys": len(configured_keys)
+            }
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching ElevenLabs stats: {str(e)}"
+        )
+
 @router.get("/elevenlabs")
 async def get_elevenlabs_config():
     """
