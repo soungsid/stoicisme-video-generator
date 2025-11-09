@@ -359,45 +359,71 @@ function ConfigPage() {
                       <Loader className="h-5 w-5 animate-spin text-blue-500" />
                     </div>
                   ) : channelInfo ? (
-                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                      <h4 className="text-sm font-medium text-gray-900 mb-3">Informations de la chaîne</h4>
-                      <div className="flex items-start space-x-4">
-                        {channelInfo.thumbnail && (
-                          <img 
-                            src={channelInfo.thumbnail} 
-                            alt={channelInfo.title}
-                            className="w-16 h-16 rounded-full"
-                          />
-                        )}
-                        <div className="flex-1 space-y-2">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{channelInfo.title}</p>
-                            {channelInfo.custom_url && (
-                              <p className="text-xs text-gray-500">{channelInfo.custom_url}</p>
+                    <div className="space-y-3">
+                      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h4 className="text-sm font-medium text-gray-900 mb-3">Informations de la chaîne</h4>
+                        <div className="flex items-start space-x-4">
+                          {channelInfo.thumbnail && (
+                            <img 
+                              src={channelInfo.thumbnail} 
+                              alt={channelInfo.title}
+                              className="w-16 h-16 rounded-full"
+                            />
+                          )}
+                          <div className="flex-1 space-y-2">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{channelInfo.title}</p>
+                              {channelInfo.custom_url && (
+                                <p className="text-xs text-gray-500">{channelInfo.custom_url}</p>
+                              )}
+                              {channelInfo.email && (
+                                <p className="text-xs text-blue-600 mt-1">📧 {channelInfo.email}</p>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-3 gap-3 text-center">
+                              <div className="bg-white rounded p-2">
+                                <p className="text-xs text-gray-600">Abonnés</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {channelInfo.subscriber_count.toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="bg-white rounded p-2">
+                                <p className="text-xs text-gray-600">Vidéos</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {channelInfo.video_count.toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="bg-white rounded p-2">
+                                <p className="text-xs text-gray-600">Vues</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {channelInfo.view_count.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                            {channelInfo.country && (
+                              <p className="text-xs text-gray-500">🌍 Pays: {channelInfo.country}</p>
                             )}
-                          </div>
-                          <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="bg-white rounded p-2">
-                              <p className="text-xs text-gray-600">Abonnés</p>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {channelInfo.subscriber_count.toLocaleString()}
-                              </p>
-                            </div>
-                            <div className="bg-white rounded p-2">
-                              <p className="text-xs text-gray-600">Vidéos</p>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {channelInfo.video_count.toLocaleString()}
-                              </p>
-                            </div>
-                            <div className="bg-white rounded p-2">
-                              <p className="text-xs text-gray-600">Vues</p>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {channelInfo.view_count.toLocaleString()}
-                              </p>
-                            </div>
                           </div>
                         </div>
                       </div>
+                      
+                      <button
+                        onClick={handleDisconnectYouTube}
+                        disabled={disconnecting}
+                        className="w-full inline-flex justify-center items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                      >
+                        {disconnecting ? (
+                          <>
+                            <Loader className="h-4 w-4 mr-2 animate-spin" />
+                            Déconnexion...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Se connecter avec un autre compte
+                          </>
+                        )}
+                      </button>
                     </div>
                   ) : null}
                   
