@@ -173,6 +173,16 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
             </button>
           )}
           
+          {isQueued && (
+            <button
+              onClick={handleCancelJob}
+              className="inline-flex items-center px-3 py-1.5 border border-orange-300 text-xs font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Annuler
+            </button>
+          )}
+          
           {isPending && (
             <>
               <button
@@ -209,7 +219,8 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
           
           <button
             onClick={onDelete}
-            className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-red-600 bg-white hover:bg-red-50"
+            disabled={isProcessing || isQueued}
+            className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50"
           >
             <Trash2 className="h-4 w-4 mr-1" />
             Supprimer
