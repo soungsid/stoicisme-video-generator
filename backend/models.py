@@ -42,6 +42,7 @@ class VideoIdea(BaseModel):
     error_message: Optional[str] = None
     progress_percentage: int = 0
     current_step: Optional[str] = None
+    last_successful_step: Optional[str] = None  # Dernière étape réussie avant erreur
     created_at: datetime = Field(default_factory=datetime.now)
     validated_at: Optional[datetime] = None
     
