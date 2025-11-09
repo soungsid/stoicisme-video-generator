@@ -513,6 +513,7 @@ def run_all_tests():
     results["job_status_nonexistent"] = test_job_status_nonexistent()
     results["pipeline_generate_nonexistent"] = test_pipeline_generate_without_idea()
     results["cancel_job_nonexistent"] = test_cancel_job_nonexistent()
+    results["queue_workflow_complete"] = test_queue_workflow_with_real_idea()
     
     # Summary
     print("\n" + "=" * 80)
