@@ -14,6 +14,7 @@ class VideoService:
     """
     
     def __init__(self):
+        self.host_backend = os.getenv("HOST_BACKEND", "http://localhost:8001")
         self.resources_dir = os.getenv("RESOURCES_DIR", "/app/ressources")
         self.template_dir = os.path.join(self.resources_dir, "video-template")
         self.videos_dir = os.path.join(self.resources_dir, "videos")
@@ -163,7 +164,7 @@ class VideoService:
             # Créer l'URL accessible pour le frontend
             # Convertir /app/ressources/videos/slug/video.mp4 → /media/videos/slug/video.mp4
             relative_path = os.path.relpath(output_path, self.resources_dir)
-            video_url = f"/media/{relative_path}"
+            video_url = f"{self.host_backend}/media/{relative_path}"
             
             # Créer l'objet Video
             video = Video(
