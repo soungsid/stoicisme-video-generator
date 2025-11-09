@@ -2,8 +2,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Charger le .env depuis le répertoire backend
+env_path = Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # MongoDB connection
 db_client = None
