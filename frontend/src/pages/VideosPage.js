@@ -15,7 +15,7 @@ function VideosPage() {
 
   useEffect(() => {
     loadVideos();
-  }, []);
+  }, [statusFilter, sortBy, sortOrder]);
 
   const loadVideos = async () => {
     try {
