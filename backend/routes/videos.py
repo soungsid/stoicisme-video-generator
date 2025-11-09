@@ -112,13 +112,40 @@ async def get_video(video_id: str):
         )
 
 @router.get("/")
-async def list_videos():
+async def list_videos(
+    status_filter: str = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc"
+):
     """
-    Lister toutes les vidéos générées
+    Lister toutes les vidéos générées avec tri et filtrage
+    status_filter: 'uploaded', 'scheduled', 'pending'
+    sort_by: 'created_at', 'title', 'scheduled_publish_date'
+    sort_order: 'asc', 'desc'
     """
     try:
         videos_collection = get_videos_collection()
-        videos = await videos_collection.find({}, {"_id": 0}).sort("created_at", -1).to_list(length=None)
+        
+        # Construire le filtre
+        query = {}
+        if status_filter:
+            if status_filter == "uploaded":
+                query["youtube_video_id"] = {"$exists": True, "$ne": None}
+            elif status_filter == "scheduled":
+                query["is_scheduled"] = True
+            elif status_filter == "pending":
+                query["youtube_video_id"] = {"$exists": False}
+                query["is_scheduled"] = False
+        
+        # Déterminer l'ordre de tri
+        sort_direction = -1 if sort_order == "desc" else 1
+        
+        # Récupérer les vidéos
+        videos = await videos_collection.find(
+            query,
+            {"_id": 0}
+        ).sort(sort_by, sort_direction).to_list(length=None)
+        
         return videos
     except Exception as e:
         raise HTTPException(
