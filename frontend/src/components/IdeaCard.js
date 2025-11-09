@@ -65,13 +65,23 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
     return statusMap[status] || statusMap.pending;
   };
 
-  const getNextStep = (status) => {
+  const getNextStep = (status, lastSuccessful) => {
+    if (status === 'error' && lastSuccessful) {
+      // Déterminer l'étape suivante basée sur la dernière étape réussie
+      const stepMap = {
+        'script_generated': { label: 'Continuer (Adapter)', step: 'adapt' },
+        'script_adapted': { label: 'Continuer (Audio)', step: 'audio' },
+        'audio_generated': { label: 'Continuer (Vidéo)', step: 'video' },
+      };
+      return stepMap[lastSuccessful] || { label: 'Continuer', step: 'script' };
+    }
+    
     const stepMap = {
       validated: { label: 'Générer', step: 'script' },
       script_generated: { label: 'Adapter', step: 'adapt' },
       script_adapted: { label: 'Audio', step: 'audio' },
       audio_generated: { label: 'Vidéo', step: 'video' },
-      error: { label: 'Réessayer', step: 'script' },
+      error: { label: 'Recommencer', step: 'script' },
     };
     return stepMap[status];
   };
