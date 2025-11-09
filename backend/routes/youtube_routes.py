@@ -218,7 +218,7 @@ async def schedule_video(video_id: str, publish_date: str):
         )
 
 @router.post("/schedule/bulk")
-async def schedule_bulk(start_date: str, videos_per_day: int, publish_times: list):
+async def schedule_bulk(publish_date: str, videos_per_day: int, publish_times: list):
     """
     Planifier plusieurs vidéos en masse
     """
