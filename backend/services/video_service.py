@@ -127,7 +127,7 @@ class VideoService:
                 
                 if full_script and full_script.get("audio_phrases"):
                     print(f"✍️ Génération de {len(full_script['audio_phrases'])} sous-titres...")
-                    subtitle_clips = self._create_subtitle_clips(
+                    subtitle_clips = self.subtitle_service.create_subtitle_clips(
                         full_script["audio_phrases"],
                         int(final_video.w),
                         int(final_video.h)
