@@ -55,6 +55,7 @@ export const youtubeApi = {
   getAuthUrl: () => api.get('/api/youtube/auth/url'),
   getConfig: () => api.get('/api/youtube/config'),
   getChannelInfo: () => api.get('/api/youtube/channel-info'),
+  disconnectYouTube: () => api.post('/api/youtube/disconnect'),
   uploadVideo: (videoId, data) => api.post(`/api/youtube/upload/${videoId}`, data),
   updateVideoMetadata: (youtubeVideoId, data) => api.patch(`/api/youtube/update/${youtubeVideoId}`, null, { params: data }),
   scheduleVideo: (videoId, publishDate) => api.post(`/api/youtube/schedule/${videoId}`, null, { params: { publish_date: publishDate } }),
