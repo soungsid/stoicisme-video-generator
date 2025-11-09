@@ -10,6 +10,7 @@ function VideosPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(null);
   const [editingVideo, setEditingVideo] = useState(null);
+  const [schedulingVideo, setSchedulingVideo] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
