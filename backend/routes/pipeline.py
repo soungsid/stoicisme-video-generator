@@ -1,10 +1,7 @@
-from fastapi import APIRouter, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, HTTPException, status
 from models import IdeaStatus
 from database import get_ideas_collection, get_scripts_collection
-from agents.script_generator_agent import ScriptGeneratorAgent
-from agents.script_adapter_agent import ScriptAdapterAgent
-from services.audio_service import AudioService
-from services.video_service import VideoService
+from services.queue_service import QueueService
 import traceback
 
 router = APIRouter()
