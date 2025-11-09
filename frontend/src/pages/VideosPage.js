@@ -114,8 +114,61 @@ function VideosPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Vidéos générées</h1>
         <p className="mt-2 text-sm text-gray-600">
-          Gérez et uploadez vos vidéos sur YouTube
+          {videos.length} vidéo(s)
         </p>
+      </div>
+
+      {/* Filtres et tri */}
+      <div className="mb-6 bg-white rounded-lg shadow p-4">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Filtres:</span>
+          </div>
+          
+          <select
+            value={statusFilter || ''}
+            onChange={(e) => setStatusFilter(e.target.value || null)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Toutes</option>
+            <option value="uploaded">Uploadées</option>
+            <option value="scheduled">Planifiées</option>
+            <option value="pending">En attente</option>
+          </select>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">Trier par:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="created_at">Date de création</option>
+              <option value="title">Titre</option>
+              <option value="scheduled_publish_date">Date de publication</option>
+            </select>
+            
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="desc">Descendant</option>
+              <option value="asc">Ascendant</option>
+            </select>
+          </div>
+          
+          <div className="ml-auto">
+            <button
+              onClick={() => setShowScheduler(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Planifier en masse
+            </button>
+          </div>
+        </div>
       </div>
 
       {videos.length === 0 ? (
