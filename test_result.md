@@ -165,3 +165,50 @@ When user reports issues:
 - YouTube OAuth flow structure properly implemented
 - Configuration endpoints (ElevenLabs, LLM) verified working
 - Backend URL confirmed: https://stoictubemaker.preview.emergentagent.com/api
+
+---
+
+### Phase 5: Stats Endpoints - Backend (Phase 2 Features)
+
+**Status:** ✅ COMPLETED - All New Stats Endpoints Working
+
+**Tested Endpoints:**
+- [x] ✅ ElevenLabs Stats (GET /api/config/elevenlabs/stats) - Working
+- [x] ✅ YouTube Stats (GET /api/config/youtube/stats) - Working
+- [x] ✅ Queue Stats (GET /api/queue/stats) - Still Working (Regression Check)
+
+**Test Results Summary:**
+- **ElevenLabs Stats**: Returns proper structure with keys_configured (1), scripts_generated_today (0), estimated_chars_today (0), rotation_status, and quota_info
+- **YouTube Stats**: Returns correct structure with authenticated (None), uploads_today (0), total_uploads (0), pending_uploads (15), and quota_info with daily_limit (6)
+- **Queue Stats**: Confirmed still working correctly after Phase 2 changes
+
+**Phase 2 Features Verified:**
+- ✅ ElevenLabs stats endpoint returns all required fields (keys_configured, scripts_generated_today, estimated_chars_today, rotation_status, quota_info)
+- ✅ YouTube stats endpoint returns all required fields (authenticated, uploads_today, total_uploads, pending_uploads, quota_info)
+- ✅ Rotation status properly indicates enabled/disabled based on configured keys
+- ✅ Quota information includes daily limits and usage estimates
+- ✅ All endpoints return proper JSON structure with 200 OK status
+- ✅ No regression issues with existing endpoints
+
+**Regression Testing Results:**
+- ✅ Health Check: Still working
+- ✅ YouTube Config: Still working  
+- ✅ ElevenLabs Config: Still working
+- ✅ LLM Config: Still working
+- ✅ Queue Stats: Still working
+
+**Backend URL Verified:** https://stoictubemaker.preview.emergentagent.com/api
+
+---
+
+## Testing Agent Communication
+
+**From Testing Agent (Backend) - Phase 2 Update:**
+- ✅ Completed comprehensive testing of NEW Phase 2 Stats Endpoints
+- ✅ Both ElevenLabs stats (/api/config/elevenlabs/stats) and YouTube stats (/api/config/youtube/stats) endpoints tested and working correctly
+- ✅ All required fields present in responses: keys_configured, scripts_generated_today, estimated_chars_today, rotation_status, quota_info for ElevenLabs
+- ✅ All required fields present in responses: authenticated, uploads_today, total_uploads, pending_uploads, quota_info for YouTube
+- ✅ Queue stats endpoint confirmed still working (regression check passed)
+- ✅ All existing endpoints verified working (no regression issues)
+- ✅ All 7/7 tests passed - Phase 2 implementation successful
+- ✅ No critical issues found in Phase 2 stats endpoints implementation
