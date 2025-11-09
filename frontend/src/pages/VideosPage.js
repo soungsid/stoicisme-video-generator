@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Loader, Youtube, ExternalLink, Edit } from 'lucide-react';
+import { Video, Loader, Youtube, ExternalLink, Edit, Calendar, Filter } from 'lucide-react';
 import { videosApi, youtubeApi } from '../api';
 import EditVideoMetadataModal from '../components/EditVideoMetadataModal';
+import BulkSchedulerModal from '../components/BulkSchedulerModal';
 
 function VideosPage() {
   const [videos, setVideos] = useState([]);
