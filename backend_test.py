@@ -223,6 +223,133 @@ def test_llm_config():
         print(f"❌ LLM config failed - {str(e)}")
         return False
 
+def test_queue_stats():
+    """Test GET /api/queue/stats endpoint"""
+    print("\n🔍 Testing Queue Stats...")
+    try:
+        response = requests.get(f"{API_BASE}/queue/stats", timeout=10)
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.json()}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Should have required fields
+            required_fields = ["queued", "processing", "completed_today", "max_concurrent", "available_slots"]
+            if all(field in data for field in required_fields):
+                print("✅ Queue stats endpoint working")
+                print(f"   Queued jobs: {data['queued']}")
+                print(f"   Processing jobs: {data['processing']}")
+                print(f"   Completed today: {data['completed_today']}")
+                print(f"   Max concurrent: {data['max_concurrent']}")
+                print(f"   Available slots: {data['available_slots']}")
+                return True
+            else:
+                missing_fields = [field for field in required_fields if field not in data]
+                print(f"❌ Queue stats missing required fields: {missing_fields}")
+                return False
+        else:
+            print(f"❌ Queue stats failed - status code {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ Queue stats failed - {str(e)}")
+        return False
+
+def test_job_status_nonexistent():
+    """Test GET /api/queue/status/{idea_id} for non-existent job"""
+    print("\n🔍 Testing Job Status for Non-existent Job...")
+    try:
+        # Use a random UUID that doesn't exist
+        fake_idea_id = "00000000-0000-0000-0000-000000000000"
+        response = requests.get(f"{API_BASE}/queue/status/{fake_idea_id}", timeout=10)
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.json()}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Should return has_job: false for non-existent job
+            if "has_job" in data and data["has_job"] == False and "idea_id" in data:
+                print("✅ Job status correctly returns no job for non-existent idea")
+                print(f"   Has job: {data['has_job']}")
+                print(f"   Idea ID: {data['idea_id']}")
+                return True
+            else:
+                print("❌ Job status response structure incorrect for non-existent job")
+                return False
+        else:
+            print(f"❌ Job status failed - status code {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ Job status failed - {str(e)}")
+        return False
+
+def test_pipeline_generate_without_idea():
+    """Test POST /api/pipeline/generate/{idea_id} with non-existent idea"""
+    print("\n🔍 Testing Pipeline Generate with Non-existent Idea...")
+    try:
+        # Use a random UUID that doesn't exist
+        fake_idea_id = "00000000-0000-0000-0000-000000000000"
+        response = requests.post(f"{API_BASE}/pipeline/generate/{fake_idea_id}", timeout=10)
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 404:
+            try:
+                data = response.json()
+                print(f"Response: {data}")
+                if "detail" in data and "not found" in data["detail"].lower():
+                    print("✅ Pipeline correctly returns 404 for non-existent idea")
+                    return True
+                else:
+                    print("❌ Pipeline 404 response missing proper error detail")
+                    return False
+            except:
+                print("❌ Pipeline 404 response not valid JSON")
+                return False
+        else:
+            print(f"❌ Pipeline should return 404 for non-existent idea, got {response.status_code}")
+            try:
+                print(f"Response: {response.json()}")
+            except:
+                print(f"Raw response: {response.text}")
+            return False
+    except Exception as e:
+        print(f"❌ Pipeline generate test failed - {str(e)}")
+        return False
+
+def test_cancel_job_nonexistent():
+    """Test POST /api/queue/cancel/{idea_id} with non-existent job"""
+    print("\n🔍 Testing Cancel Job for Non-existent Job...")
+    try:
+        # Use a random UUID that doesn't exist
+        fake_idea_id = "00000000-0000-0000-0000-000000000000"
+        response = requests.post(f"{API_BASE}/queue/cancel/{fake_idea_id}", timeout=10)
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 404:
+            try:
+                data = response.json()
+                print(f"Response: {data}")
+                if "detail" in data and "no job found" in data["detail"].lower():
+                    print("✅ Cancel job correctly returns 404 for non-existent job")
+                    return True
+                else:
+                    print("❌ Cancel job 404 response missing proper error detail")
+                    return False
+            except:
+                print("❌ Cancel job 404 response not valid JSON")
+                return False
+        else:
+            print(f"❌ Cancel job should return 404 for non-existent job, got {response.status_code}")
+            try:
+                print(f"Response: {response.json()}")
+            except:
+                print(f"Raw response: {response.text}")
+            return False
+    except Exception as e:
+        print(f"❌ Cancel job test failed - {str(e)}")
+        return False
+
 def run_all_tests():
     """Run all backend tests"""
     print("=" * 60)
