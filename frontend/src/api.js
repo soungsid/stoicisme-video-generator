@@ -20,6 +20,8 @@ export const ideasApi = {
   validateIdea: (id, data) => api.patch(`/api/ideas/${id}/validate`, data),
   rejectIdea: (id) => api.patch(`/api/ideas/${id}/reject`),
   deleteIdea: (id) => api.delete(`/api/ideas/${id}`),
+  batchAction: (ideaIds, action) => 
+    api.post('/api/ideas/batch-action', null, { params: { idea_ids: ideaIds, action } }),
 };
 
 // Scripts API
