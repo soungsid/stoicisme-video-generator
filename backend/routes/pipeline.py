@@ -116,9 +116,9 @@ async def run_pipeline(idea_id: str, start_from: str = "script"):
         await update_idea_progress(idea_id, IdeaStatus.ERROR, 0, "Erreur", error_msg[:500])
 
 @router.post("/generate/{idea_id}")
-async def start_pipeline(idea_id: str, background_tasks: BackgroundTasks, start_from: str = "script"):
+async def start_pipeline(idea_id: str, start_from: str = "script"):
     """
-    Démarrer le pipeline de génération
+    Ajouter une génération à la queue
     start_from: 'script', 'adapt', 'audio', 'video'
     """
     try:
@@ -137,13 +137,19 @@ async def start_pipeline(idea_id: str, background_tasks: BackgroundTasks, start_
                 detail="Idea must be validated first"
             )
         
-        # Lancer le pipeline en background
-        background_tasks.add_task(run_pipeline, idea_id, start_from)
+        # Ajouter à la queue au lieu de lancer en background
+        queue_service = QueueService()
+        job = await queue_service.add_job(idea_id, start_from)
+        
+        # Obtenir la position dans la queue
+        position = await queue_service.get_queue_position(idea_id)
         
         return {
             "success": True,
-            "message": "Pipeline started",
+            "message": "Job added to queue",
+            "job_id": job.job_id,
             "idea_id": idea_id,
+            "queue_position": position,
             "start_from": start_from
         }
         
@@ -152,7 +158,7 @@ async def start_pipeline(idea_id: str, background_tasks: BackgroundTasks, start_
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error starting pipeline: {str(e)}"
+            detail=f"Error adding to queue: {str(e)}"
         )
 
 @router.get("/status/{idea_id}")
