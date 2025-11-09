@@ -110,7 +110,7 @@ class VideoWorker:
                 await scripts_collection.insert_one(script.model_dump())
                 script_id = script.id
                 
-                await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_GENERATED, 25, "Script généré")
+                await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_GENERATED, 25, "Script généré", last_successful="script_generated")
             else:
                 # Récupérer le script existant
                 script = await scripts_collection.find_one({"idea_id": idea_id}, {"_id": 0})
@@ -133,7 +133,7 @@ class VideoWorker:
                     }}
                 )
                 
-                await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_ADAPTED, 50, "Script adapté")
+                await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_ADAPTED, 50, "Script adapté", last_successful="script_adapted")
             
             # Étape 3: Générer l'audio
             if start_from in ["script", "adapt", "audio"] and script_id:
@@ -153,7 +153,7 @@ class VideoWorker:
                     {"$set": {"audio_phrases": [phrase.model_dump() for phrase in audio_generation.phrases]}}
                 )
                 
-                await self.update_idea_progress(idea_id, IdeaStatus.AUDIO_GENERATED, 75, "Audio généré")
+                await self.update_idea_progress(idea_id, IdeaStatus.AUDIO_GENERATED, 75, "Audio généré", last_successful="audio_generated")
             
             # Étape 4: Générer la vidéo
             if start_from in ["script", "adapt", "audio", "video"] and script_id:
@@ -166,7 +166,7 @@ class VideoWorker:
                 videos_collection = self.db.videos
                 await videos_collection.insert_one(video.model_dump())
                 
-                await self.update_idea_progress(idea_id, IdeaStatus.VIDEO_GENERATED, 100, "Vidéo prête !")
+                await self.update_idea_progress(idea_id, IdeaStatus.VIDEO_GENERATED, 100, "Vidéo prête !", last_successful="video_generated")
             
             # Job complété avec succès
             await self.queue_service.complete_job(job.job_id)
