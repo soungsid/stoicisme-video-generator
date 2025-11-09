@@ -6,11 +6,50 @@ import { queueApi } from '../api';
 
 function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDelete, onStartPipeline }) {
   const navigate = useNavigate();
+  const [queueInfo, setQueueInfo] = useState(null);
+  
+  // Charger les informations de queue
+  useEffect(() => {
+    const loadQueueInfo = async () => {
+      if (idea.status === 'queued' || idea.status === 'processing') {
+        try {
+          const response = await queueApi.getJobStatus(idea.id);
+          setQueueInfo(response.data);
+        } catch (error) {
+          console.error('Error loading queue info:', error);
+        }
+      }
+    };
+    
+    loadQueueInfo();
+    
+    // Rafraîchir toutes les 5 secondes si en queue ou processing
+    const interval = setInterval(() => {
+      if (idea.status === 'queued' || idea.status === 'processing') {
+        loadQueueInfo();
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [idea.id, idea.status]);
+  
+  const handleCancelJob = async () => {
+    if (!window.confirm('Annuler la génération ?')) return;
+    
+    try {
+      await queueApi.cancelJob(idea.id);
+      window.location.reload();
+    } catch (error) {
+      alert('Erreur lors de l\'annulation: ' + (error.response?.data?.detail || error.message));
+    }
+  };
   
   const getStatusInfo = (status) => {
     const statusMap = {
       pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', progress: 0 },
       validated: { label: 'Validée', color: 'bg-blue-100 text-blue-800', progress: 5 },
+      queued: { label: 'En attente (queue)', color: 'bg-orange-100 text-orange-800', progress: 5 },
+      processing: { label: 'En traitement', color: 'bg-blue-500 text-white', progress: 10 },
       script_generating: { label: 'Génération script...', color: 'bg-indigo-100 text-indigo-800', progress: 15 },
       script_generated: { label: 'Script prêt', color: 'bg-indigo-200 text-indigo-900', progress: 25 },
       script_adapting: { label: 'Adaptation...', color: 'bg-purple-100 text-purple-800', progress: 40 },
