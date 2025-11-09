@@ -254,24 +254,42 @@ function VideosPage() {
                         Modifier
                       </button>
                     )}
-                    {!video.youtube_video_id && (
+                    {!video.youtube_video_id && !video.is_scheduled && (
+                      <>
+                        <button
+                          onClick={() => handleUploadToYouTube(video)}
+                          disabled={uploading === video.id}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                          data-testid={`upload-video-${video.id}`}
+                        >
+                          {uploading === video.id ? (
+                            <>
+                              <Loader className="h-4 w-4 mr-1 animate-spin" />
+                              Upload...
+                            </>
+                          ) : (
+                            <>
+                              <Youtube className="h-4 w-4 mr-1" />
+                              Upload YouTube
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setSchedulingVideo(video)}
+                          className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-xs font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Planifier
+                        </button>
+                      </>
+                    )}
+                    {!video.youtube_video_id && video.is_scheduled && (
                       <button
-                        onClick={() => handleUploadToYouTube(video)}
-                        disabled={uploading === video.id}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                        data-testid={`upload-video-${video.id}`}
+                        onClick={() => setSchedulingVideo(video)}
+                        className="inline-flex items-center px-3 py-1.5 border border-orange-300 text-xs font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                       >
-                        {uploading === video.id ? (
-                          <>
-                            <Loader className="h-4 w-4 mr-1 animate-spin" />
-                            Upload...
-                          </>
-                        ) : (
-                          <>
-                            <Youtube className="h-4 w-4 mr-1" />
-                            Upload YouTube
-                          </>
-                        )}
+                        <Calendar className="h-4 w-4 mr-1" />
+                        Replanifier
                       </button>
                     )}
                   </div>
