@@ -1,7 +1,8 @@
-import React from 'react';
-import { CheckCircle, XCircle, Trash2, Play, Loader, Square, CheckSquare, AlertCircle, FileText } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { CheckCircle, XCircle, Trash2, Play, Loader, Square, CheckSquare, AlertCircle, FileText, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProgressBar from './ProgressBar';
+import { queueApi } from '../api';
 
 function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDelete, onStartPipeline }) {
   const navigate = useNavigate();
