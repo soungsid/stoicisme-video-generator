@@ -107,6 +107,12 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
                   {statusInfo.label}
                 </span>
+                {isQueued && queueInfo && queueInfo.queue_position && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-200 text-orange-900">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Position: {queueInfo.queue_position}
+                  </span>
+                )}
                 {idea.video_type && (
                   <span className="text-xs text-gray-500">
                     {idea.video_type === 'short' ? '📱 Short' : '📺 Normal'} • {idea.duration_seconds}s
