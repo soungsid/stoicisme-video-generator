@@ -6,6 +6,7 @@ from slugify import slugify
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip, TextClip, CompositeVideoClip
 from pydub import AudioSegment
 import subprocess
+from services.subtitle_service import SubtitleService
 
 class VideoService:
     """
