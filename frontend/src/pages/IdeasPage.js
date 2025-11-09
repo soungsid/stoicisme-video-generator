@@ -19,6 +19,8 @@ function IdeasPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
   const [toast, setToast] = useState(null);
+  const [batchAction, setBatchAction] = useState('');
+  const [processingBatch, setProcessingBatch] = useState(false);
 
   useEffect(() => {
     loadIdeas();
