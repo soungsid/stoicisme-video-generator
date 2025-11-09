@@ -1,12 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 import os
-from dotenv import load_dotenv
-from pathlib import Path
-
-# Charger le .env depuis le répertoire backend
-env_path = Path(__file__).parent / '.env'
-load_dotenv(dotenv_path=env_path)
 
 # MongoDB connection
 db_client = None
@@ -15,11 +9,16 @@ db = None
 async def connect_to_mongo():
     global db_client, db
     
-    username = os.getenv("MONGO_USERNAME")
-    password = os.getenv("MONGO_PASSWORD")
-    cluster = os.getenv("MONGO_CLUSTER")
-    app_name = os.getenv("MONGO_APP_NAME")
-    db_name = os.getenv("DB_NAME", "interview_video_generator")
+    username = os.getenv("MONGO_USERNAME", "soungsid")
+    password = os.getenv("MONGO_PASSWORD", "MFBfO3IKdE4RqbRd")
+    cluster = os.getenv("MONGO_CLUSTER", "cluster0.tmklvts.mongodb.net")
+    app_name = os.getenv("MONGO_APP_NAME", "Cluster0")
+    db_name = os.getenv("DB_NAME", "stoicisme_video_generator_staging")
+    
+    print(f"📊 Connecting to MongoDB with:")
+    print(f"  - Username: {username}")
+    print(f"  - Cluster: {cluster}")
+    print(f"  - DB Name: {db_name}")
     
     # MongoDB connection string
     connection_string = f"mongodb+srv://{username}:{password}@{cluster}/?retryWrites=true&w=majority&appName={app_name}"
