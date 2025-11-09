@@ -70,4 +70,11 @@ export const pipelineApi = {
   getPipelineStatus: (ideaId) => api.get(`/api/pipeline/status/${ideaId}`),
 };
 
+// Queue API
+export const queueApi = {
+  getStats: () => api.get('/api/queue/stats'),
+  getJobStatus: (ideaId) => api.get(`/api/queue/status/${ideaId}`),
+  cancelJob: (ideaId) => api.post(`/api/queue/cancel/${ideaId}`),
+};
+
 export default api;
