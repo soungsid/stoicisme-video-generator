@@ -158,3 +158,52 @@ async def get_llm_config():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching LLM config: {str(e)}"
         )
+
+@router.get("/youtube/stats")
+async def get_youtube_stats():
+    """
+    Récupérer les statistiques d'utilisation YouTube
+    """
+    try:
+        from database import get_videos_collection, get_config_collection
+        from datetime import datetime
+        
+        videos_collection = get_videos_collection()
+        config_collection = get_config_collection()
+        
+        # Vérifier si YouTube est authentifié
+        youtube_config = await config_collection.find_one({"type": "youtube"})
+        is_authenticated = youtube_config and youtube_config.get("is_authenticated", False)
+        
+        # Compter les vidéos uploadées aujourd'hui
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        uploads_today = await videos_collection.count_documents({
+            "uploaded_at": {"$gte": today_start}
+        })
+        
+        # Compter total de vidéos uploadées
+        total_uploads = await videos_collection.count_documents({
+            "youtube_video_id": {"$exists": True, "$ne": None}
+        })
+        
+        # Compter vidéos en attente d'upload
+        pending_uploads = await videos_collection.count_documents({
+            "youtube_video_id": {"$exists": False}
+        })
+        
+        return {
+            "authenticated": is_authenticated,
+            "uploads_today": uploads_today,
+            "total_uploads": total_uploads,
+            "pending_uploads": pending_uploads,
+            "quota_info": {
+                "daily_limit": 6,
+                "note": "YouTube API quota: 10,000 unités/jour. Upload = ~1600 unités"
+            }
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching YouTube stats: {str(e)}"
+        )
+
