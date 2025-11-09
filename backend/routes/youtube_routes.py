@@ -173,6 +173,29 @@ async def update_youtube_video(
             detail=f"Error updating video: {str(e)}"
         )
 
+@router.post("/disconnect")
+async def disconnect_youtube():
+    """
+    Déconnecter le compte YouTube actuel
+    """
+    try:
+        from database import get_config_collection
+        
+        config_collection = get_config_collection()
+        
+        # Supprimer la configuration YouTube
+        await config_collection.delete_one({"type": "youtube"})
+        
+        return {
+            "success": True,
+            "message": "YouTube account disconnected successfully"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error disconnecting YouTube: {str(e)}"
+        )
+
 @router.post("/schedule/{video_id}")
 async def schedule_video(video_id: str, publish_date: str):
     """
