@@ -4,14 +4,17 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
+from pathlib import Path
+
+# Charger le .env avant tout
+env_path = Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path, override=True)
 
 # Import database
 from database import connect_to_mongo, close_mongo_connection
 
 # Import routes
 from routes import ideas, scripts, audio, videos, youtube_routes, config, pipeline, queue_routes
-
-load_dotenv()
 
 # Créer le dossier resources s'il n'existe pas
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "/app/ressources")
