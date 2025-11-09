@@ -191,16 +191,45 @@ async def disconnect_youtube():
         config_collection = get_config_collection()
         
         # Supprimer la configuration YouTube
-        await config_collection.delete_one({"type": "youtube"})
+        result = await config_collection.delete_one({"type": "youtube"})
+        
+        print(f"✅ YouTube tokens cleared: {result.deleted_count} document(s) deleted")
         
         return {
             "success": True,
-            "message": "YouTube account disconnected successfully"
+            "message": "YouTube account disconnected successfully",
+            "tokens_cleared": result.deleted_count
         }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error disconnecting YouTube: {str(e)}"
+        )
+
+@router.post("/clear-tokens")
+async def clear_youtube_tokens():
+    """
+    Nettoyer les tokens YouTube corrompus (utile en cas de problème OAuth)
+    """
+    try:
+        from database import get_config_collection
+        
+        config_collection = get_config_collection()
+        
+        # Supprimer tous les tokens YouTube
+        result = await config_collection.delete_many({"type": "youtube"})
+        
+        print(f"✅ All YouTube tokens cleared: {result.deleted_count} document(s) deleted")
+        
+        return {
+            "success": True,
+            "message": "All YouTube tokens cleared. Please re-authenticate.",
+            "tokens_cleared": result.deleted_count
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error clearing tokens: {str(e)}"
         )
 
 @router.post("/schedule/{video_id}")
