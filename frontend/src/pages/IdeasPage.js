@@ -285,13 +285,35 @@ function IdeasPage() {
           </div>
 
           {selectedIdeas.length > 0 && (
-            <button
-              onClick={handleBulkStart}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-            >
-              <Play className="h-4 w-4 mr-2" />
-              Générer ({selectedIdeas.length})
-            </button>
+            <div className="flex items-center gap-2">
+              <select
+                value={batchAction}
+                onChange={(e) => setBatchAction(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Sélectionner une action...</option>
+                <option value="validate">Valider</option>
+                <option value="reject">Rejeter</option>
+                <option value="generate">Générer</option>
+                <option value="delete">Supprimer</option>
+              </select>
+              <button
+                onClick={handleBatchAction}
+                disabled={!batchAction || processingBatch}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              >
+                {processingBatch ? (
+                  <>
+                    <Loader className="h-4 w-4 mr-2 animate-spin" />
+                    Traitement...
+                  </>
+                ) : (
+                  <>
+                    Exécuter ({selectedIdeas.length})
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
 
