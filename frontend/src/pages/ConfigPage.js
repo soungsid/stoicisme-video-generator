@@ -138,6 +138,28 @@ function ConfigPage() {
                   </span>
                 </div>
               </div>
+              
+              {elevenLabsStats && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">📊 Utilisation</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Scripts générés aujourd'hui:</span>
+                      <span className="font-medium text-gray-900">{elevenLabsStats.scripts_generated_today}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Caractères estimés:</span>
+                      <span className="font-medium text-gray-900">{elevenLabsStats.estimated_chars_today.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Rotation clés:</span>
+                      <span className={`font-medium ${elevenLabsStats.rotation_status.enabled ? 'text-green-600' : 'text-gray-500'}`}>
+                        {elevenLabsStats.rotation_status.enabled ? '✅ Activée' : '❌ Désactivée'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
