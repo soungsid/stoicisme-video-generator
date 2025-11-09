@@ -352,9 +352,9 @@ def test_cancel_job_nonexistent():
 
 def run_all_tests():
     """Run all backend tests"""
-    print("=" * 60)
-    print("🚀 STARTING BACKEND TESTS FOR YOUTUBE INTEGRATION")
-    print("=" * 60)
+    print("=" * 80)
+    print("🚀 STARTING BACKEND TESTS FOR YOUTUBE INTEGRATION & VIDEO QUEUE SYSTEM")
+    print("=" * 80)
     print(f"Backend URL: {BASE_URL}")
     print(f"API Base: {API_BASE}")
     
@@ -372,19 +372,43 @@ def run_all_tests():
     results["elevenlabs_config"] = test_elevenlabs_config()
     results["llm_config"] = test_llm_config()
     
-    # Summary
+    # Test NEW Queue System endpoints
     print("\n" + "=" * 60)
-    print("📊 TEST RESULTS SUMMARY")
+    print("🎬 TESTING NEW VIDEO QUEUE SYSTEM")
     print("=" * 60)
+    
+    results["queue_stats"] = test_queue_stats()
+    results["job_status_nonexistent"] = test_job_status_nonexistent()
+    results["pipeline_generate_nonexistent"] = test_pipeline_generate_without_idea()
+    results["cancel_job_nonexistent"] = test_cancel_job_nonexistent()
+    
+    # Summary
+    print("\n" + "=" * 80)
+    print("📊 TEST RESULTS SUMMARY")
+    print("=" * 80)
     
     passed = 0
     total = len(results)
     
-    for test_name, result in results.items():
-        status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{test_name.replace('_', ' ').title()}: {status}")
-        if result:
-            passed += 1
+    # Group results by category
+    youtube_tests = ["health_check", "youtube_config", "youtube_auth_url", "youtube_channel_info", "elevenlabs_config", "llm_config"]
+    queue_tests = ["queue_stats", "job_status_nonexistent", "pipeline_generate_nonexistent", "cancel_job_nonexistent"]
+    
+    print("YouTube Integration Tests:")
+    for test_name in youtube_tests:
+        if test_name in results:
+            status = "✅ PASS" if results[test_name] else "❌ FAIL"
+            print(f"  {test_name.replace('_', ' ').title()}: {status}")
+            if results[test_name]:
+                passed += 1
+    
+    print("\nVideo Queue System Tests:")
+    for test_name in queue_tests:
+        if test_name in results:
+            status = "✅ PASS" if results[test_name] else "❌ FAIL"
+            print(f"  {test_name.replace('_', ' ').title()}: {status}")
+            if results[test_name]:
+                passed += 1
     
     print(f"\nOverall: {passed}/{total} tests passed")
     
