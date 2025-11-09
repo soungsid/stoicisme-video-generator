@@ -94,6 +94,13 @@ function VideosPage() {
         </span>
       );
     }
+    if (video.is_scheduled) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+          Planifiée
+        </span>
+      );
+    }
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
         Prête
