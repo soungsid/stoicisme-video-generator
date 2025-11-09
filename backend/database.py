@@ -54,3 +54,7 @@ def get_videos_collection():
 
 def get_config_collection():
     return db.config
+
+def get_queue_collection():
+    """Collection pour la queue de jobs vidéo"""
+    return db.video_queue

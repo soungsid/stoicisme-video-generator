@@ -11,6 +11,8 @@ class VideoType(str, Enum):
 class IdeaStatus(str, Enum):
     PENDING = "pending"
     VALIDATED = "validated"
+    QUEUED = "queued"  # NEW: En attente dans la queue
+    PROCESSING = "processing"  # NEW: En cours de traitement
     SCRIPT_GENERATING = "script_generating"
     SCRIPT_GENERATED = "script_generated"
     SCRIPT_ADAPTING = "script_adapting"
@@ -22,6 +24,13 @@ class IdeaStatus(str, Enum):
     UPLOADED = "uploaded"
     REJECTED = "rejected"
     ERROR = "error"
+
+class JobStatus(str, Enum):
+    QUEUED = "queued"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 class VideoIdea(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -76,6 +85,20 @@ class Video(BaseModel):
     youtube_url: Optional[str] = None
     uploaded_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.now)
+
+class VideoJob(BaseModel):
+    """Job de génération vidéo dans la queue"""
+    job_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    idea_id: str
+    status: JobStatus = JobStatus.QUEUED
+    start_from: str = "script"  # script, adapt, audio, video
+    priority: int = 0  # Plus élevé = plus prioritaire
+    created_at: datetime = Field(default_factory=datetime.now)
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+    retry_count: int = 0
+    max_retries: int = 3
 
 class YouTubeConfig(BaseModel):
     client_id: Optional[str] = None
