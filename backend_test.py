@@ -571,15 +571,14 @@ def test_batch_action_validate():
     print("\n🔍 Testing Batch Action - Validate...")
     try:
         # Test with empty list first
-        empty_payload = {
+        params = {
             "idea_ids": [],
             "action": "validate"
         }
         
         response = requests.post(
             f"{API_BASE}/ideas/batch-action",
-            json=empty_payload,
-            headers={"Content-Type": "application/json"},
+            params=params,
             timeout=10
         )
         print(f"Empty list - Status Code: {response.status_code}")
@@ -597,15 +596,14 @@ def test_batch_action_validate():
                     print(f"   Failed count: {len(results['failed'])}")
                     
                     # Test with non-existent idea IDs
-                    fake_payload = {
+                    fake_params = {
                         "idea_ids": ["00000000-0000-0000-0000-000000000000", "11111111-1111-1111-1111-111111111111"],
                         "action": "validate"
                     }
                     
                     fake_response = requests.post(
                         f"{API_BASE}/ideas/batch-action",
-                        json=fake_payload,
-                        headers={"Content-Type": "application/json"},
+                        params=fake_params,
                         timeout=10
                     )
                     print(f"Fake IDs - Status Code: {fake_response.status_code}")
