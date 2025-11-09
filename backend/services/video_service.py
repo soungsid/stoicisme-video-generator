@@ -67,47 +67,6 @@ class VideoService:
         print(f"✅ Concatenated {len(audio_files)} audio files: {duration_ms/1000:.2f}s")
         return duration_ms
     
-    def _create_subtitle_clips(self, phrases: list, video_width: int, video_height: int):
-        """Créer les clips de sous-titres"""
-        import re
-        
-        subtitle_clips = []
-        
-        for phrase in phrases:
-            # Nettoyer le texte des marqueurs ElevenLabs
-            clean_text = phrase["phrase_text"]
-            
-            # Supprimer tous les marqueurs entre crochets: [laughs], [excited], etc.
-            clean_text = re.sub(r'\[.*?\]', '', clean_text)
-            
-            # Nettoyer les espaces multiples
-            clean_text = re.sub(r'\s+', ' ', clean_text).strip()
-            
-            # Ne créer un sous-titre que si du texte reste
-            if not clean_text:
-                continue
-            
-            # Créer un TextClip pour chaque phrase
-            txt_clip = TextClip(
-                clean_text,
-                fontsize=40,
-                color='white',
-                bg_color='black',
-                font='Arial-Bold',
-                size=(video_width - 40, None),
-                method='caption'
-            )
-            
-            # Positionner en bas de l'écran
-            txt_clip = txt_clip.set_position(('center', video_height - 100))
-            txt_clip = txt_clip.set_start(phrase["start_time_ms"] / 1000)
-            txt_clip = txt_clip.set_duration(phrase["duration_ms"] / 1000)
-            
-            subtitle_clips.append(txt_clip)
-        
-        print(f"📝 {len(subtitle_clips)} sous-titres créés (marqueurs ElevenLabs nettoyés)")
-        return subtitle_clips
-    
     async def generate_video(
         self,
         idea: Dict,
