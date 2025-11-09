@@ -350,6 +350,138 @@ def test_cancel_job_nonexistent():
         print(f"❌ Cancel job test failed - {str(e)}")
         return False
 
+def test_queue_workflow_with_real_idea():
+    """Test complete queue workflow with a real idea"""
+    print("\n🔍 Testing Complete Queue Workflow with Real Idea...")
+    
+    # First, get a pending idea to work with
+    try:
+        response = requests.get(f"{API_BASE}/ideas/", timeout=10)
+        if response.status_code != 200:
+            print("❌ Failed to fetch ideas for testing")
+            return False
+        
+        ideas = response.json()
+        pending_ideas = [idea for idea in ideas if idea["status"] == "pending"]
+        
+        if not pending_ideas:
+            print("⚠️  No pending ideas found for testing - skipping workflow test")
+            return True  # Not a failure, just no data to test with
+        
+        test_idea = pending_ideas[0]
+        idea_id = test_idea["id"]
+        print(f"   Using idea: {idea_id}")
+        print(f"   Title: {test_idea['title'][:50]}...")
+        
+        # Step 1: Validate the idea first
+        validate_payload = {
+            "video_type": "short",
+            "duration_seconds": 30
+        }
+        
+        validate_response = requests.patch(
+            f"{API_BASE}/ideas/{idea_id}/validate",
+            json=validate_payload,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if validate_response.status_code != 200:
+            print(f"❌ Failed to validate idea: {validate_response.status_code}")
+            try:
+                print(f"   Error: {validate_response.json()}")
+            except:
+                print(f"   Raw response: {validate_response.text}")
+            return False
+        
+        print("✅ Idea validated successfully")
+        
+        # Step 2: Add job to queue
+        queue_response = requests.post(f"{API_BASE}/pipeline/generate/{idea_id}", timeout=10)
+        
+        if queue_response.status_code != 200:
+            print(f"❌ Failed to add job to queue: {queue_response.status_code}")
+            try:
+                print(f"   Error: {queue_response.json()}")
+            except:
+                print(f"   Raw response: {queue_response.text}")
+            return False
+        
+        queue_data = queue_response.json()
+        print(f"✅ Job added to queue successfully")
+        print(f"   Job ID: {queue_data.get('job_id')}")
+        print(f"   Queue Position: {queue_data.get('queue_position')}")
+        
+        # Verify required fields in response
+        required_fields = ["success", "job_id", "idea_id", "queue_position"]
+        if not all(field in queue_data for field in required_fields):
+            missing = [f for f in required_fields if f not in queue_data]
+            print(f"❌ Queue response missing fields: {missing}")
+            return False
+        
+        # Step 3: Check job status
+        status_response = requests.get(f"{API_BASE}/queue/status/{idea_id}", timeout=10)
+        
+        if status_response.status_code != 200:
+            print(f"❌ Failed to get job status: {status_response.status_code}")
+            return False
+        
+        status_data = status_response.json()
+        print(f"✅ Job status retrieved successfully")
+        print(f"   Has Job: {status_data.get('has_job')}")
+        print(f"   Status: {status_data.get('status')}")
+        print(f"   Queue Position: {status_data.get('queue_position')}")
+        
+        # Verify job status structure
+        if not status_data.get("has_job"):
+            print("❌ Job status should show has_job: true")
+            return False
+        
+        if status_data.get("status") != "queued":
+            print(f"❌ Expected status 'queued', got '{status_data.get('status')}'")
+            return False
+        
+        # Step 4: Check updated queue stats
+        stats_response = requests.get(f"{API_BASE}/queue/stats", timeout=10)
+        if stats_response.status_code == 200:
+            stats_data = stats_response.json()
+            print(f"✅ Updated queue stats:")
+            print(f"   Queued: {stats_data.get('queued')}")
+            print(f"   Processing: {stats_data.get('processing')}")
+            print(f"   Available slots: {stats_data.get('available_slots')}")
+        
+        # Step 5: Cancel the job (to clean up)
+        cancel_response = requests.post(f"{API_BASE}/queue/cancel/{idea_id}", timeout=10)
+        
+        if cancel_response.status_code != 200:
+            print(f"❌ Failed to cancel job: {cancel_response.status_code}")
+            try:
+                print(f"   Error: {cancel_response.json()}")
+            except:
+                print(f"   Raw response: {cancel_response.text}")
+            return False
+        
+        cancel_data = cancel_response.json()
+        print(f"✅ Job cancelled successfully")
+        print(f"   Success: {cancel_data.get('success')}")
+        print(f"   Message: {cancel_data.get('message')}")
+        
+        # Step 6: Verify job is cancelled
+        final_status_response = requests.get(f"{API_BASE}/queue/status/{idea_id}", timeout=10)
+        if final_status_response.status_code == 200:
+            final_status = final_status_response.json()
+            if final_status.get("status") == "cancelled":
+                print("✅ Job status correctly shows as cancelled")
+            else:
+                print(f"⚠️  Job status after cancel: {final_status.get('status')}")
+        
+        print("✅ Complete queue workflow test passed")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Queue workflow test failed - {str(e)}")
+        return False
+
 def run_all_tests():
     """Run all backend tests"""
     print("=" * 80)
