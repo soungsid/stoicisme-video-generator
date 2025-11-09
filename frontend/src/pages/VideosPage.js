@@ -308,6 +308,14 @@ function VideosPage() {
         />
       )}
 
+      {schedulingVideo && (
+        <ScheduleVideoModal
+          video={schedulingVideo}
+          onClose={() => setSchedulingVideo(null)}
+          onSchedule={(datetime) => handleScheduleVideo(schedulingVideo.id, datetime)}
+        />
+      )}
+
       {showScheduler && (
         <BulkSchedulerModal
           videos={videos.filter(v => !v.youtube_video_id)}
