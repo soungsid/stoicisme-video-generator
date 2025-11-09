@@ -46,7 +46,8 @@ export const videosApi = {
   generateVideo: (scriptId) => api.post(`/api/videos/generate/${scriptId}`),
   getVideo: (id) => api.get(`/api/videos/${id}`),
   getVideoByIdea: (ideaId) => api.get(`/api/videos/by-idea/${ideaId}`),
-  listVideos: () => api.get('/api/videos/'),
+  listVideos: (statusFilter = null, sortBy = 'created_at', sortOrder = 'desc') => 
+    api.get('/api/videos/', { params: { status_filter: statusFilter, sort_by: sortBy, sort_order: sortOrder } }),
 };
 
 // YouTube API
@@ -56,6 +57,10 @@ export const youtubeApi = {
   getChannelInfo: () => api.get('/api/youtube/channel-info'),
   uploadVideo: (videoId, data) => api.post(`/api/youtube/upload/${videoId}`, data),
   updateVideoMetadata: (youtubeVideoId, data) => api.patch(`/api/youtube/update/${youtubeVideoId}`, null, { params: data }),
+  scheduleVideo: (videoId, publishDate) => api.post(`/api/youtube/schedule/${videoId}`, null, { params: { publish_date: publishDate } }),
+  scheduleBulk: (startDate, videosPerDay, publishTimes) => 
+    api.post('/api/youtube/schedule/bulk', null, { params: { start_date: startDate, videos_per_day: videosPerDay, publish_times: publishTimes } }),
+  unscheduleVideo: (videoId) => api.delete(`/api/youtube/schedule/${videoId}`),
 };
 
 // Config API
