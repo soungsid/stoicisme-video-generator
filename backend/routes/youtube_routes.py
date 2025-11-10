@@ -235,9 +235,19 @@ async def clear_youtube_tokens():
         )
 
 @router.post("/schedule/{video_id}")
-async def schedule_video(video_id: str, publish_date: str):
+async def schedule_video(video_id: str, request: ScheduleVideoRequest):
     """
     Planifier la publication d'une vidéo
+    
+    Args:
+        video_id: ID de la vidéo
+        request: Données de planification avec publish_date
+    
+    Returns:
+        Confirmation de planification avec la date programmée
+    
+    Note: Les dates sont en UTC par défaut. Pour utiliser un fuseau local,
+    ajoutez le offset dans la date (ex: 2025-11-10T09:00:00+01:00)
     """
     try:
         from datetime import datetime
@@ -246,7 +256,7 @@ async def schedule_video(video_id: str, publish_date: str):
         videos_collection = get_videos_collection()
         
         # Parser la date
-        scheduled_date = datetime.fromisoformat(publish_date.replace('Z', '+00:00'))
+        scheduled_date = datetime.fromisoformat(request.publish_date.replace('Z', '+00:00'))
         
         # Mettre à jour la vidéo
         result = await videos_collection.update_one(
@@ -265,14 +275,18 @@ async def schedule_video(video_id: str, publish_date: str):
                 detail=f"Video {video_id} not found"
             )
         
+        print(f"✅ Video {video_id} scheduled for {scheduled_date.isoformat()}")
+        
         return {
             "success": True,
             "message": "Video scheduled successfully",
-            "scheduled_date": scheduled_date.isoformat()
+            "scheduled_date": scheduled_date.isoformat(),
+            "timezone": "UTC"
         }
     except HTTPException:
         raise
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error scheduling video: {str(e)}"
