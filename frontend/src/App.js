@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react
 import { Video, Lightbulb, Settings, Youtube } from 'lucide-react';
 import IdeasPage from './pages/IdeasPage';
 import VideosPage from './pages/VideosPage';
+import VideoDetailPage from './pages/VideoDetailPage';
 import ConfigPage from './pages/ConfigPage';
 import ScriptDetailPage from './pages/ScriptDetailPage';
 import './App.css';
