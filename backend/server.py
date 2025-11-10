@@ -51,7 +51,12 @@ app.add_middleware(
 app.mount("/media", StaticFiles(directory=RESOURCES_DIR), name="media")
 
 # Health check
-@app.get("/api/health")
+@app.get("/health")
+async def health_check():
+    \"\"\"Health check endpoint for Docker and monitoring\"\"\"
+    return {\"status\": \"healthy\", \"service\": \"youtube-manager-backend\"}
+
+@app.get("/api/health\")
 async def health_check():
     return {"status": "healthy", "message": "YouTube Video Generator API is running"}
 
