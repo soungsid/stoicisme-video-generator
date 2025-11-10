@@ -45,6 +45,7 @@ export const audioApi = {
 export const videosApi = {
   generateVideo: (scriptId) => api.post(`/api/videos/generate/${scriptId}`),
   getVideo: (id) => api.get(`/api/videos/${id}`),
+  getVideoDetails: (id) => api.get(`/api/videos/${id}/details`),
   getVideoByIdea: (ideaId) => api.get(`/api/videos/by-idea/${ideaId}`),
   listVideos: (statusFilter = null, sortBy = 'created_at', sortOrder = 'desc') => 
     api.get('/api/videos/', { params: { status_filter: statusFilter, sort_by: sortBy, sort_order: sortOrder } }),
