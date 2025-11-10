@@ -234,6 +234,96 @@ async def clear_youtube_tokens():
             detail=f"Error clearing tokens: {str(e)}"
         )
 
+@router.post("/schedule/bulk")
+async def schedule_bulk(request: BulkScheduleRequest):
+    """
+    Planifier plusieurs vidéos en masse
+    
+    Args:
+        request: Configuration de planification
+            - start_date: Date de début (YYYY-MM-DD)
+            - videos_per_day: Nombre de vidéos par jour
+            - publish_times: Heures de publication (ex: ["09:00", "18:00"])
+    
+    Returns:
+        Nombre de vidéos planifiées
+    
+    Note: Les dates sont en UTC par défaut. Les heures dans publish_times
+    sont interprétées comme UTC.
+    """
+    try:
+        from datetime import datetime, timedelta
+        from database import get_videos_collection
+        print("📅 Planification en masse démarrée")
+        
+        start_date = request.start_date
+        videos_per_day = request.videos_per_day
+        publish_times = request.publish_times
+        
+        videos_collection = get_videos_collection()
+        
+        # Récupérer les vidéos non publiées
+        unpublished_videos = await videos_collection.find({
+            "youtube_video_id": {"$exists": False}
+        }).to_list(length=1000)
+        print(f"{len(unpublished_videos)} videos non encore publiées")
+        
+        if not unpublished_videos:
+            return {
+                "success": True,
+                "message": "No videos to schedule",
+                "scheduled_count": 0
+            }
+        
+        # Parser la date de début
+        current_date = datetime.fromisoformat(start_date)
+        
+        # Planifier les vidéos
+        scheduled_count = 0
+        time_index = 0
+        
+        for video in unpublished_videos:
+            # Déterminer l'heure de publication
+            publish_time = publish_times[time_index % len(publish_times)]
+            hour, minute = map(int, publish_time.split(':'))
+            
+            # Créer la date complète
+            scheduled_datetime = current_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            
+            # Mettre à jour la vidéo
+            await videos_collection.update_one(
+                {"id": video["id"]},
+                {
+                    "$set": {
+                        "scheduled_publish_date": scheduled_datetime,
+                        "is_scheduled": True
+                    }
+                }
+            )
+            
+            scheduled_count += 1
+            time_index += 1
+            
+            # Si on a planifié videos_per_day vidéos, passer au jour suivant
+            if time_index % (videos_per_day * len(publish_times)) == 0:
+                current_date += timedelta(days=1)
+        
+        print(f"✅ {scheduled_count} vidéos planifiées avec succès")
+        
+        return {
+            "success": True,
+            "message": f"{scheduled_count} videos scheduled successfully",
+            "scheduled_count": scheduled_count,
+            "start_date": start_date,
+            "timezone": "UTC"
+        }
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error scheduling videos: {str(e)}"
+        )
+
 @router.post("/schedule/{video_id}")
 async def schedule_video(video_id: str, request: ScheduleVideoRequest):
     """
