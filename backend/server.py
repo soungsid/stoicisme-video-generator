@@ -14,7 +14,7 @@ load_dotenv(dotenv_path=env_path, override=True)
 from database import connect_to_mongo, close_mongo_connection
 
 # Import routes
-from routes import ideas, scripts, audio, videos, youtube_routes, config, pipeline, queue_routes
+from routes import ideas, scripts, audio, videos, youtube_routes, config, pipeline, queue_routes, queue_management
 
 # Créer le dossier resources s'il n'existe pas
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "/app/ressources")
