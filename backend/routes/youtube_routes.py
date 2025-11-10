@@ -366,12 +366,17 @@ async def schedule_bulk(request: BulkScheduleRequest):
             if time_index % (videos_per_day * len(publish_times)) == 0:
                 current_date += timedelta(days=1)
         
+        print(f"✅ {scheduled_count} vidéos planifiées avec succès")
+        
         return {
             "success": True,
             "message": f"{scheduled_count} videos scheduled successfully",
-            "scheduled_count": scheduled_count
+            "scheduled_count": scheduled_count,
+            "start_date": start_date,
+            "timezone": "UTC"
         }
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error scheduling videos: {str(e)}"
