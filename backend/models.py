@@ -11,8 +11,8 @@ class VideoType(str, Enum):
 class IdeaStatus(str, Enum):
     PENDING = "pending"
     VALIDATED = "validated"
-    QUEUED = "queued"  # NEW: En attente dans la queue
-    PROCESSING = "processing"  # NEW: En cours de traitement
+    QUEUED = "queued"
+    PROCESSING = "processing"
     SCRIPT_GENERATING = "script_generating"
     SCRIPT_GENERATED = "script_generated"
     SCRIPT_ADAPTING = "script_adapting"
@@ -42,7 +42,7 @@ class VideoIdea(BaseModel):
     error_message: Optional[str] = None
     progress_percentage: int = 0
     current_step: Optional[str] = None
-    last_successful_step: Optional[str] = None  # Dernière étape réussie avant erreur
+    last_successful_step: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     validated_at: Optional[datetime] = None
     
@@ -85,8 +85,8 @@ class Video(BaseModel):
     youtube_video_id: Optional[str] = None
     youtube_url: Optional[str] = None
     uploaded_at: Optional[datetime] = None
-    scheduled_publish_date: Optional[datetime] = None  # Date de publication programmée
-    is_scheduled: bool = False  # Indique si la vidéo est planifiée
+    scheduled_publish_date: Optional[datetime] = None
+    is_scheduled: bool = False
     created_at: datetime = Field(default_factory=datetime.now)
 
 class VideoJob(BaseModel):
@@ -94,8 +94,8 @@ class VideoJob(BaseModel):
     job_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     idea_id: str
     status: JobStatus = JobStatus.QUEUED
-    start_from: str = "script"  # script, adapt, audio, video
-    priority: int = 0  # Plus élevé = plus prioritaire
+    start_from: str = "script"
+    priority: int = 0
     created_at: datetime = Field(default_factory=datetime.now)
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
@@ -129,3 +129,29 @@ class ValidateIdeaRequest(BaseModel):
     video_type: VideoType
     duration_seconds: int = Field(ge=10, le=600)
     keywords: Optional[List[str]] = None
+
+# ===== NOUVEAUX MODÈLES POUR LA GESTION YOUTUBE =====
+
+class ScheduleVideoRequest(BaseModel):
+    """Requête pour planifier une vidéo"""
+    publish_date: str = Field(..., description="Date de publication au format ISO (YYYY-MM-DDTHH:MM:SS)")
+
+class BulkScheduleRequest(BaseModel):
+    """Requête pour planifier plusieurs vidéos en masse"""
+    start_date: str = Field(..., description="Date de début au format YYYY-MM-DD")
+    videos_per_day: int = Field(default=2, ge=1, le=10, description="Nombre de vidéos par jour")
+    publish_times: List[str] = Field(..., description="Heures de publication (ex: ['09:00', '18:00'])")
+
+class UploadVideoRequest(BaseModel):
+    """Requête pour uploader une vidéo sur YouTube"""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+    category_id: str = Field(default="22", description="ID de catégorie YouTube")
+    privacy_status: str = Field(default="public", description="public, private, ou unlisted")
+
+class UpdateVideoMetadataRequest(BaseModel):
+    """Requête pour mettre à jour les métadonnées d'une vidéo YouTube"""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
