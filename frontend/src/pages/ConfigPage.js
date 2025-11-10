@@ -205,7 +205,7 @@ function ConfigPage() {
                             <div className="space-y-1 text-xs">
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Email:</span>
-                                <span className="font-medium text-gray-900">{keyInfo.email}</span>
+                                <span className="font-medium text-gray-900">{keyInfo.first_name} ({keyInfo.email})</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Clé:</span>

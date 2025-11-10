@@ -56,6 +56,7 @@ class YouTubeSchedulerWorker:
             
             # Trouver les vidéos planifiées dont la date est passée
             now = datetime.now(timezone.utc)
+            print(f"process_scheduled_videos lancé à {now}" )
             scheduled_videos = await videos_collection.find({
                 "is_scheduled": True,
                 "youtube_video_id": {"$exists": False},  # Pas encore uploadée
@@ -63,6 +64,7 @@ class YouTubeSchedulerWorker:
             }).to_list(length=100)
             
             if not scheduled_videos:
+                print("Aucune video planifié")
                 return
             
             print(f"📅 {len(scheduled_videos)} vidéo(s) à publier")

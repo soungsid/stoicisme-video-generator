@@ -63,6 +63,7 @@ async def get_elevenlabs_keys_details():
                         "key": f"{key[:8]}...{key[-4:]}",  # Masquer la clé
                         "full_key": key,  # Pour usage interne seulement
                         "email": getattr(user_info, 'email', 'N/A'),
+                        "first_name": getattr(user_info, 'first_name', 'N/A'),                
                         "character_count": subscription.character_count,
                         "character_limit": subscription.character_limit,
                         "characters_remaining": subscription.character_limit - subscription.character_count,
