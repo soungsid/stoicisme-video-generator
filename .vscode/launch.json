@@ -20,7 +20,8 @@
         "PYTHONPATH": "${workspaceFolder}/backend"
       },
       "console": "integratedTerminal",
-      "justMyCode": false
+      "justMyCode": false,
+      "logToFile": true
     },
     {
       "name": "Python: Publication Worker",

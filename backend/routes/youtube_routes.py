@@ -264,7 +264,10 @@ async def schedule_bulk(request: BulkScheduleRequest):
         
         # Récupérer les vidéos non publiées
         unpublished_videos = await videos_collection.find({
-            "youtube_video_id": {"$exists": False}
+            "$or": [
+                {"youtube_video_id": {"$exists": False}},
+                {"youtube_video_id": None}
+            ]
         }).to_list(length=1000)
         print(f"{len(unpublished_videos)} videos non encore publiées")
         
