@@ -263,6 +263,16 @@ function VideosPage() {
                     </div>
                   </div>
                   <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
+                    {/* Bouton Voir Détails (toujours visible) */}
+                    <button
+                      onClick={() => handleViewDetails(video.id)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      data-testid={`view-details-${video.id}`}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Détails
+                    </button>
+
                     {video.youtube_video_id && (
                       <button
                         onClick={() => setEditingVideo(video)}
@@ -296,6 +306,7 @@ function VideosPage() {
                         <button
                           onClick={() => setSchedulingVideo(video)}
                           className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-xs font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          data-testid={`schedule-video-${video.id}`}
                         >
                           <Calendar className="h-4 w-4 mr-1" />
                           Planifier
@@ -303,13 +314,24 @@ function VideosPage() {
                       </>
                     )}
                     {!video.youtube_video_id && video.is_scheduled && (
-                      <button
-                        onClick={() => setSchedulingVideo(video)}
-                        className="inline-flex items-center px-3 py-1.5 border border-orange-300 text-xs font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                      >
-                        <Calendar className="h-4 w-4 mr-1" />
-                        Replanifier
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setSchedulingVideo(video)}
+                          className="inline-flex items-center px-3 py-1.5 border border-orange-300 text-xs font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                          data-testid={`reschedule-video-${video.id}`}
+                        >
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Replanifier
+                        </button>
+                        <button
+                          onClick={() => handleUnscheduleVideo(video)}
+                          className="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          data-testid={`unschedule-video-${video.id}`}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Annuler planification
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
