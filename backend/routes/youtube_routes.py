@@ -293,23 +293,30 @@ async def schedule_video(video_id: str, request: ScheduleVideoRequest):
         )
 
 @router.post("/schedule/bulk")
-async def schedule_bulk(data: dict):
+async def schedule_bulk(request: BulkScheduleRequest):
     """
     Planifier plusieurs vidéos en masse
-    Body: {
-        "start_date": "2025-11-09",
-        "videos_per_day": 2,
-        "publish_times": ["09:00", "18:00"]
-    }
+    
+    Args:
+        request: Configuration de planification
+            - start_date: Date de début (YYYY-MM-DD)
+            - videos_per_day: Nombre de vidéos par jour
+            - publish_times: Heures de publication (ex: ["09:00", "18:00"])
+    
+    Returns:
+        Nombre de vidéos planifiées
+    
+    Note: Les dates sont en UTC par défaut. Les heures dans publish_times
+    sont interprétées comme UTC.
     """
     try:
         from datetime import datetime, timedelta
         from database import get_videos_collection
-        print("recuperation des parametres")
+        print("📅 Planification en masse démarrée")
         
-        start_date = data.get("start_date")
-        videos_per_day = data.get("videos_per_day", 2)
-        publish_times = data.get("publish_times", [])
+        start_date = request.start_date
+        videos_per_day = request.videos_per_day
+        publish_times = request.publish_times
         
         videos_collection = get_videos_collection()
         
