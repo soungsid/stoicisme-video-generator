@@ -1,14 +1,16 @@
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, status, Request, Body
 from fastapi.responses import RedirectResponse
-from models import YouTubeConfig
+from models import (
+    YouTubeConfig, ScheduleVideoRequest, BulkScheduleRequest,
+    UploadVideoRequest, UpdateVideoMetadataRequest
+)
 from database import get_config_collection, get_videos_collection, get_ideas_collection
 from services.youtube_service import YouTubeService
 from datetime import datetime
 import os
+import traceback
 
 router = APIRouter()
-
-import traceback
 
 @router.get("/auth/url")
 async def get_auth_url():
