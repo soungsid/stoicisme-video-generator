@@ -286,12 +286,14 @@ async def schedule_bulk(request: BulkScheduleRequest):
         time_index = 0
         
         for video in unpublished_videos:
-            # Déterminer l'heure de publication
+            # Déterminer l'heure de publication (cycle à travers publish_times)
             publish_time = publish_times[time_index % len(publish_times)]
             hour, minute = map(int, publish_time.split(':'))
             
-            # Créer la date complète
+            # Créer la date complète avec l'heure
             scheduled_datetime = current_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            
+            print(f"📌 Vidéo '{video.get('title', 'Sans titre')}' → {scheduled_datetime.isoformat()}")
             
             # Mettre à jour la vidéo
             await videos_collection.update_one(
@@ -307,9 +309,11 @@ async def schedule_bulk(request: BulkScheduleRequest):
             scheduled_count += 1
             time_index += 1
             
-            # Si on a planifié videos_per_day vidéos, passer au jour suivant
-            if time_index % (videos_per_day * len(publish_times)) == 0:
+            # Passer au jour suivant après avoir utilisé toutes les heures de publication
+            # Exemple: avec ["09:00", "18:00"], on change de jour après 2 vidéos
+            if time_index % len(publish_times) == 0:
                 current_date += timedelta(days=1)
+                print(f"📆 Passage au jour suivant: {current_date.strftime('%Y-%m-%d')}")
         
         print(f"✅ {scheduled_count} vidéos planifiées avec succès")
         
