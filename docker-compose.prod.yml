@@ -21,9 +21,16 @@ services:
       - YOUTUBE_REDIRECT_URI=${YOUTUBE_REDIRECT_URI}
       - TZ=${TZ:-UTC}
     volumes:
-      - ./ressources:/app/ressources
+      - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
     networks:
       - youtube-manager-network
+    labels:
+      - "traefik.http.services.STOICISME_BACKEND_DOMAINE.loadbalancer.server.port=80"
+      - traefik.enable=true
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.rule=Host(`${STOICISME_BACKEND_DOMAINE}`)
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls=false
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls.certresolver=myhttpchallenge
+      - "traefik.http.middlewares.STOICISME_BACKEND_DOMAINE-https-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
     healthcheck:
       test: curl --fail http://localhost:8001/health || exit 1
       interval: 30s
@@ -59,6 +66,8 @@ services:
         condition: service_healthy
     networks:
       - youtube-manager-network
+      - traefik_network # Utiliser aussi le réseau n8n_default
+
     logging:
       driver: "json-file"
       options:
@@ -75,11 +84,19 @@ services:
     ports:
       - "80:3000"
     environment:
-      - REACT_APP_BACKEND_URL=${BACKEND_URL:-http://localhost:8001}
+      - REACT_APP_BACKEND_URL=${BACKEND_URL:-stoicisme-backend.smartinterviewer.app}
     depends_on:
       - backend
     networks:
       - youtube-manager-network
+      - traefik_network # Utiliser aussi le réseau n8n_default
+    labels:
+      - "traefik.http.services.STOICISME_FRONTEND_DOMAINE.loadbalancer.server.port=80"
+      - traefik.enable=true
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`)
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls=false
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls.certresolver=myhttpchallenge
+      - "traefik.http.middlewares.STOICISME_FRONTEND_DOMAINE-https-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
     logging:
       driver: "json-file"
       options:
@@ -89,3 +106,5 @@ services:
 networks:
   youtube-manager-network:
     driver: bridge
+  traefik_network:
+    external: true # Indiquer que ce réseau est externe pour Traefik
