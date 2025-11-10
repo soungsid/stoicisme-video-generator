@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Loader, Youtube, ExternalLink, Edit, Calendar, Filter } from 'lucide-react';
+import { Video, Loader, Youtube, ExternalLink, Edit, Calendar, Filter, Eye, X } from 'lucide-react';
 import { videosApi, youtubeApi } from '../api';
+import { useNavigate } from 'react-router-dom';
 import EditVideoMetadataModal from '../components/EditVideoMetadataModal';
 import BulkSchedulerModal from '../components/BulkSchedulerModal';
 import ScheduleVideoModal from '../components/ScheduleVideoModal';
