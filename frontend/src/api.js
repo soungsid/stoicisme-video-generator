@@ -59,7 +59,7 @@ export const youtubeApi = {
   disconnectYouTube: () => api.post('/api/youtube/disconnect'),
   uploadVideo: (videoId, data) => api.post(`/api/youtube/upload/${videoId}`, data),
   updateVideoMetadata: (youtubeVideoId, data) => api.patch(`/api/youtube/update/${youtubeVideoId}`, null, { params: data }),
-  scheduleVideo: (videoId, publishDate) => api.post(`/api/youtube/schedule/${videoId}`, null, { params: { publish_date: publishDate } }),
+  scheduleVideo: (videoId, publishDate) => api.post(`/api/youtube/schedule/${videoId}`, { publish_date: publishDate }),
   scheduleBulk: (startDate, videosPerDay, publishTimes) => 
     api.post('/api/youtube/schedule/bulk', {
       start_date: startDate,
