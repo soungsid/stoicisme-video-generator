@@ -95,6 +95,23 @@ function VideosPage() {
     }
   };
 
+  const handleUnscheduleVideo = async (video) => {
+    if (!window.confirm(`Supprimer la planification de "${video.title}" ?`)) return;
+    
+    try {
+      await youtubeApi.unscheduleVideo(video.id);
+      alert('✅ Planification supprimée !');
+      await loadVideos();
+    } catch (error) {
+      console.error('Error unscheduling video:', error);
+      alert('Erreur lors de la suppression de la planification: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleViewDetails = (videoId) => {
+    navigate(`/videos/${videoId}`);
+  };
+
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
