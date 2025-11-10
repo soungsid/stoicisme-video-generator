@@ -289,6 +289,7 @@ async def schedule_bulk(data: dict):
     try:
         from datetime import datetime, timedelta
         from database import get_videos_collection
+        print("recuperation des parametres")
         
         start_date = data.get("start_date")
         videos_per_day = data.get("videos_per_day", 2)
@@ -300,6 +301,7 @@ async def schedule_bulk(data: dict):
         unpublished_videos = await videos_collection.find({
             "youtube_video_id": {"$exists": False}
         }).to_list(length=1000)
+        print(f"{len(unpublished_videos)} videos non encor publié")
         
         if not unpublished_videos:
             return {
