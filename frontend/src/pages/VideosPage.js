@@ -7,6 +7,7 @@ import BulkSchedulerModal from '../components/BulkSchedulerModal';
 import ScheduleVideoModal from '../components/ScheduleVideoModal';
 
 function VideosPage() {
+  const navigate = useNavigate();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(null);
