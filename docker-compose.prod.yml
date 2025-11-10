@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # Backend FastAPI
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: youtube-manager-backend-prod
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_CLUSTER=${MONGO_CLUSTER}
+      - MONGO_APP_NAME=${MONGO_APP_NAME}
+      - DB_NAME=${DB_NAME}
+      - YOUTUBE_CLIENT_ID=${YOUTUBE_CLIENT_ID}
+      - YOUTUBE_CLIENT_SECRET=${YOUTUBE_CLIENT_SECRET}
+      - YOUTUBE_REDIRECT_URI=${YOUTUBE_REDIRECT_URI}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./ressources:/app/ressources
+    networks:
+      - youtube-manager-network
+    healthcheck:
+      test: curl --fail http://localhost:8001/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Worker de publication
+  publication-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: youtube-manager-worker-prod
+    restart: always
+    command: python workers/publication_worker.py
+    environment:
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_CLUSTER=${MONGO_CLUSTER}
+      - MONGO_APP_NAME=${MONGO_APP_NAME}
+      - DB_NAME=${DB_NAME}
+      - YOUTUBE_CLIENT_ID=${YOUTUBE_CLIENT_ID}
+      - YOUTUBE_CLIENT_SECRET=${YOUTUBE_CLIENT_SECRET}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./ressources:/app/ressources
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - youtube-manager-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: youtube-manager-frontend-prod
+    restart: always
+    ports:
+      - "80:3000"
+    environment:
+      - REACT_APP_BACKEND_URL=${BACKEND_URL:-http://localhost:8001}
+    depends_on:
+      - backend
+    networks:
+      - youtube-manager-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  youtube-manager-network:
+    driver: bridge
