@@ -80,6 +80,7 @@ class Video(BaseModel):
     title: str
     video_type: VideoType
     video_path: str
+    video_relative_path: str
     thumbnail_path: Optional[str] = None
     duration_seconds: float
     youtube_video_id: Optional[str] = None
@@ -88,6 +89,7 @@ class Video(BaseModel):
     scheduled_publish_date: Optional[datetime] = None
     is_scheduled: bool = False
     created_at: datetime = Field(default_factory=datetime.now)
+    description: str
 
 class VideoJob(BaseModel):
     """Job de génération vidéo dans la queue"""

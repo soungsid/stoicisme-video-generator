@@ -250,7 +250,7 @@ class YouTubeService:
     
     async def upload_video(
         self,
-        video_path: str,
+        video_relative_path: str,
         title: str,
         description: str,
         tags: list,
@@ -279,7 +279,7 @@ class YouTubeService:
             }
             
             media = MediaFileUpload(
-                video_path,
+                video_relative_path,
                 chunksize=-1,
                 resumable=True,
                 mimetype='video/mp4'

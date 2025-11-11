@@ -88,7 +88,7 @@ class YouTubeSchedulerWorker:
                     
                     # Uploader sur YouTube
                     youtube_video_id, youtube_url = await youtube_service.upload_video(
-                        video_path=video["video_path"],
+                        video_relative_path=video["video_path"],
                         title=video["title"],
                         description=description,
                         tags=script.get("keywords", []) if script else ["stoicisme", "philosophie"],

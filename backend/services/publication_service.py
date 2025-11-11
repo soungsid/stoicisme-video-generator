@@ -45,7 +45,7 @@ class PublicationService:
             
             # Uploader sur YouTube
             youtube_video_id, youtube_url = await self.youtube_service.upload_video(
-                video_path=video['video_path'],
+                video_relative_path=video['video_path'],
                 title=video['title'],
                 description=f"Vidéo: {video['title']}",
                 tags=["video"],

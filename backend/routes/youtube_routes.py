@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Request, Body
 from fastapi.responses import RedirectResponse
+from numpy import empty
 from models import (
     YouTubeConfig, ScheduleVideoRequest, BulkScheduleRequest,
     UploadVideoRequest, UpdateVideoMetadataRequest
@@ -9,8 +10,10 @@ from services.youtube_service import YouTubeService
 from datetime import datetime
 import os
 import traceback
+from api import FRONTEND_URL
 
 router = APIRouter()
+username = os.getenv("MONGO_USERNAME", "soungsid")
 
 @router.get("/auth/url")
 async def get_auth_url():
@@ -40,10 +43,10 @@ async def oauth_callback(code: str):
         youtube_service = YouTubeService()
         await youtube_service.handle_oauth_callback(code)
         
-        return RedirectResponse(url="http://localhost:3000/config?auth=success")
+        return RedirectResponse(url=f"{FRONTEND_URL}/config?auth=success")
     except Exception as e:
         traceback.print_exc()  # ← affiche la pile complète dans la console
-        return RedirectResponse(url="http://localhost:3000/config?auth=error")
+        return RedirectResponse(url=f"{FRONTEND_URL}/config?auth=error")
 
 @router.get("/config", response_model=YouTubeConfig)
 async def get_youtube_config():
@@ -89,9 +92,13 @@ async def upload_video(video_id: str, title: str = None, description: str = None
     Uploader une vidéo sur YouTube
     """
     try:
+        
+       
+        print(f"upload de la video {video_id} sur youtube. description={description}")
         videos_collection = get_videos_collection()
         video = await videos_collection.find_one({"id": video_id}, {"_id": 0})
-        
+        #todo supprimer le parametre description
+        description = video.get("description")
         if not video:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -99,7 +106,7 @@ async def upload_video(video_id: str, title: str = None, description: str = None
             )
         
         # Générer une description optimisée si non fournie
-        if not description:
+        if not video.get("description"):
             from agents.youtube_description_agent import YouTubeDescriptionAgent
             from database import get_scripts_collection
             
@@ -113,16 +120,29 @@ async def upload_video(video_id: str, title: str = None, description: str = None
                     script=script.get("original_script", ""),
                     keywords=script.get("keywords", [])
                 )
+                
+                 # Mettre à jour la vidéo
+                await videos_collection.update_one(
+                    {"id": video_id},
+                    {
+                        "$set": {
+                            "description": description
+                        }
+                    }
+                )
         
         youtube_service = YouTubeService()
+        print("upload de la video en cours ...")
         youtube_video_id, youtube_url = await youtube_service.upload_video(
-            video_path=video["video_path"],
+            video_relative_path=video["video_relative_path"],
             title=title or video["title"],
             description=description or f"Vidéo sur le stoïcisme: {video['title']}",
             tags=tags or ["stoicisme", "philosophie", "sagesse"],
             category_id="22"  # People & Blogs
         )
         
+        print("L'upload a reussi!")
+
         # Mettre à jour la vidéo
         await videos_collection.update_one(
             {"id": video_id},
@@ -140,7 +160,7 @@ async def upload_video(video_id: str, title: str = None, description: str = None
         from models import IdeaStatus
         await ideas_collection.update_one(
             {"id": video["idea_id"]},
-            {"$set": {"status": IdeaStatus.UPLOADED}}
+            {"$set": {"status": IdeaStatus.UPLOADED, "description" : description}}
         )
         
         return {
@@ -168,6 +188,7 @@ async def update_youtube_video(
     Mettre à jour les métadonnées d'une vidéo YouTube déjà uploadée
     """
     try:
+        print("Mise à jour de la video")
         youtube_service = YouTubeService()
         result = await youtube_service.update_video_metadata(
             youtube_video_id=youtube_video_id,
