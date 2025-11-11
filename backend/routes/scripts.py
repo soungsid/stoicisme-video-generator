@@ -12,6 +12,8 @@ router = APIRouter()
 async def generate_script(request: ScriptGenerationRequest):
     """
     Générer un script à partir d'une idée validée
+    
+    Génère également automatiquement la description YouTube
     """
     try:
         # Vérifier que l'idée existe et est validée
@@ -39,6 +41,21 @@ async def generate_script(request: ScriptGenerationRequest):
         )
         script.idea_id = request.idea_id
         script.title = idea["title"]
+        
+        # Générer la description YouTube automatiquement
+        try:
+            from agents.youtube_description_agent import YouTubeDescriptionAgent
+            description_agent = YouTubeDescriptionAgent()
+            youtube_description = await description_agent.generate_description(
+                title=idea["title"],
+                script_content=script.original_script,
+                keywords=idea.get("keywords", [])
+            )
+            script.youtube_description = youtube_description
+            print(f"✅ Description YouTube générée: {len(youtube_description)} caractères")
+        except Exception as desc_error:
+            print(f"⚠️  Erreur lors de la génération de la description YouTube: {desc_error}")
+            script.youtube_description = f"{idea['title']}\n\n" + "\n".join([f"#{kw}" for kw in idea.get("keywords", [])])
         
         # Sauvegarder le script
         scripts_collection = get_scripts_collection()
