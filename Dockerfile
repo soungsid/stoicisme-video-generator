@@ -12,7 +12,9 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     curl \
-    imagemagick \
+    wget \
+    gnupg \
+    software-properties-common \
     fonts-liberation \
     fonts-dejavu-core \
     fonts-noto \
@@ -20,8 +22,19 @@ RUN apt-get update && apt-get install -y \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
-# Configurer ImageMagick pour permettre le traitement d'images (désactiver les restrictions de sécurité)
-RUN sed -i 's/<policy domain="path" rights="none" pattern="@\*"\/>/<!-- <policy domain="path" rights="none" pattern="@*"\/> -->/g' /etc/ImageMagick-6/policy.xml || true
+# Ajouter le dépôt ImageMagick et installer la dernière version
+RUN apt-get update && apt-get install -y imagemagick \
+    && rm -rf /var/lib/apt/lists/*
+
+# Vérifier la version installée et configurer ImageMagick
+RUN convert -version && \
+    # Trouver le fichier policy.xml (peut être dans ImageMagick-6 ou ImageMagick-7)
+    POLICY_FILE=$(find /etc -name policy.xml 2>/dev/null | head -n 1) && \
+    if [ -n "$POLICY_FILE" ]; then \
+    echo "Configuration de $POLICY_FILE" && \
+    sed -i 's/<policy domain="path" rights="none" pattern="@\*"/<policy domain="path" rights="read|write" pattern="@*"/g' "$POLICY_FILE" && \
+    sed -i 's/<policy domain="coder" rights="none" pattern="PDF"/<policy domain="coder" rights="read|write" pattern="PDF"/g' "$POLICY_FILE" || true; \
+    fi
 
 # Créer le répertoire de travail
 WORKDIR /app

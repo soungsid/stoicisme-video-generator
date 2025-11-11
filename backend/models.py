@@ -101,7 +101,7 @@ class VideoJob(BaseModel):
     completed_at: Optional[datetime] = None
     error_message: Optional[str] = None
     retry_count: int = 0
-    max_retries: int = 3
+    max_retries: int = 1
 
 class YouTubeConfig(BaseModel):
     client_id: Optional[str] = None
