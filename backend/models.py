@@ -89,7 +89,7 @@ class Video(BaseModel):
     scheduled_publish_date: Optional[datetime] = None
     is_scheduled: bool = False
     created_at: datetime = Field(default_factory=datetime.now)
-    description: str
+    description: Optional[str] = None
 
 class VideoJob(BaseModel):
     """Job de génération vidéo dans la queue"""
