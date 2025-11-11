@@ -37,6 +37,7 @@ services:
       - RESOURCES_DIR=${RESOURCES_DIR}
       - STOICISME_BACKEND_DOMAINE=${STOICISME_BACKEND_DOMAINE}
       - STOICISME_FRONTEND_DOMAINE=${STOICISME_FRONTEND_DOMAINE}
+      - HOST_BACKEND=${HOST_BACKEND}
 
     volumes:
       - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
@@ -142,6 +143,7 @@ services:
       - RESOURCES_DIR=${RESOURCES_DIR}
       - STOICISME_BACKEND_DOMAINE=${STOICISME_BACKEND_DOMAINE}
       - STOICISME_FRONTEND_DOMAINE=${STOICISME_FRONTEND_DOMAINE}
+      - HOST_BACKEND=${HOST_BACKEND}
     volumes:
       - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
     depends_on:
