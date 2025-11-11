@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, Video as VideoIcon, Youtube, Calendar, Clock, 
-  ExternalLink, Tag, Loader, Edit, X, Upload 
+import {
+  ArrowLeft,
+  Calendar, Clock,
+  ExternalLink,
+  Loader,
+  Tag,
+  Upload,
+  Video as VideoIcon,
+  X,
+  Youtube
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { videosApi, youtubeApi } from '../api';
 
 function VideoDetailPage() {
@@ -125,7 +132,7 @@ function VideoDetailPage() {
     );
   }
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'stoicisme-backend.manga-pics.com';
 
   return (
     <div className="max-w-7xl mx-auto">
