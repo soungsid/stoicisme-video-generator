@@ -214,14 +214,6 @@ function VideoDetailPage() {
             </video>
           </div>
 
-          {/* Description */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Description</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">
-              {video.description || 'Aucune description'}
-            </p>
-          </div>
-
           {/* Tags */}
           {video.tags && video.tags.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6">
