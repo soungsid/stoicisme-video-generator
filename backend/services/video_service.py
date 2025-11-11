@@ -206,8 +206,7 @@ class VideoService:
                 video_type=video_type,
                 video_path=video_url,  # URL accessible via /media
                 video_relative_path=f"{self.resources_dir}/{relative_path}",
-                duration_seconds=audio_duration_sec,
-                description=None
+                duration_seconds=audio_duration_sec
             )
             
             return video
