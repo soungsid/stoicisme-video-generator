@@ -5,13 +5,23 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    IMAGEMAGICK_BINARY=/usr/bin/convert
 
 # Installer les dépendances système
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     curl \
+    imagemagick \
+    fonts-liberation \
+    fonts-dejavu-core \
+    fonts-noto \
+    fonts-noto-color-emoji \
+    fontconfig \
     && rm -rf /var/lib/apt/lists/*
+
+# Configurer ImageMagick pour permettre le traitement d'images (désactiver les restrictions de sécurité)
+RUN sed -i 's/<policy domain="path" rights="none" pattern="@\*"\/>/<!-- <policy domain="path" rights="none" pattern="@*"\/> -->/g' /etc/ImageMagick-6/policy.xml || true
 
 # Créer le répertoire de travail
 WORKDIR /app
@@ -26,7 +36,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
 
 # Créer les répertoires nécessaires
-RUN mkdir -p /app/ressources/videos /app/ressources/audio
+RUN mkdir -p /app/ressources/videos /app/ressources/audio /app/ressources/thumbnails
 
 # Exposer le port
 EXPOSE 8001
