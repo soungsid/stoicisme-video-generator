@@ -97,12 +97,11 @@ services:
       - youtube-manager-network
       - traefik_network # Utiliser aussi le réseau n8n_default
     labels:
-      - "traefik.http.services.STOICISME_FRONTEND_DOMAINE.loadbalancer.server.port=3000"
-      - traefik.enable=true
-      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`)
-      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls=false
-      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls.certresolver=myhttpchallenge
-      - "traefik.http.middlewares.STOICISME_FRONTEND_DOMAINE-https-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
+      - "traefik.enable=true"
+      - "traefik.http.routers.STOICISME_FRONTEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`)"
+      - "traefik.http.routers.STOICISME_FRONTEND_DOMAINE.entrypoints=websecure"
+      - "traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls.certresolver=myhttpchallenge"
+      - "traefik.port=80"
     logging:
       driver: "json-file"
       options:
