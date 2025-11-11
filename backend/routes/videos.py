@@ -10,6 +10,11 @@ router = APIRouter()
 async def generate_video(script_id: str, background_tasks: BackgroundTasks):
     """
     Générer une vidéo complète avec audio et sous-titres
+    
+    Le service VideoService gère automatiquement:
+    - Récupération du script et de l'idée depuis MongoDB
+    - Validation du statut de l'idée
+    - Génération de la vidéo
     """
     try:
         scripts_collection = get_scripts_collection()
@@ -21,7 +26,14 @@ async def generate_video(script_id: str, background_tasks: BackgroundTasks):
                 detail=f"Script {script_id} not found"
             )
         
-        idea_id = script["idea_id"]
+        # Vérifier le statut de l'idée
+        idea_id = script.get("idea_id")
+        if not idea_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Script has no associated idea"
+            )
+        
         ideas_collection = get_ideas_collection()
         idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
         
@@ -37,12 +49,9 @@ async def generate_video(script_id: str, background_tasks: BackgroundTasks):
                 detail="Audio must be generated before video generation"
             )
         
-        # Générer la vidéo
+        # Générer la vidéo (le service récupère script et idea lui-même)
         video_service = VideoService()
-        video = await video_service.generate_video(
-            idea=idea,
-            script=script
-        )
+        video = await video_service.generate_video(script_id=script_id)
         
         # Sauvegarder la vidéo
         videos_collection = get_videos_collection()
