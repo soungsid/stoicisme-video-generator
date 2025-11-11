@@ -67,7 +67,7 @@ When user reports issues:
 - Video upload (requires authenticated user and video file)
 - Video metadata update (requires uploaded video ID)
 
-**Backend URL Verified:** https://youtube-api-error.preview.emergentagent.com/api
+**Backend URL Verified:** https://code-cleanup-63.preview.emergentagent.com/api
 
 ---
 
@@ -137,7 +137,7 @@ When user reports issues:
 - Job lifecycle management working correctly
 - Error handling appropriate for all edge cases
 
-**Backend URL Verified:** https://youtube-api-error.preview.emergentagent.com/api
+**Backend URL Verified:** https://code-cleanup-63.preview.emergentagent.com/api
 
 ---
 
@@ -164,7 +164,7 @@ When user reports issues:
 - All 6 core endpoints tested and working correctly
 - YouTube OAuth flow structure properly implemented
 - Configuration endpoints (ElevenLabs, LLM) verified working
-- Backend URL confirmed: https://youtube-api-error.preview.emergentagent.com/api
+- Backend URL confirmed: https://code-cleanup-63.preview.emergentagent.com/api
 
 ---
 
@@ -197,7 +197,7 @@ When user reports issues:
 - ✅ LLM Config: Still working
 - ✅ Queue Stats: Still working
 
-**Backend URL Verified:** https://youtube-api-error.preview.emergentagent.com/api
+**Backend URL Verified:** https://code-cleanup-63.preview.emergentagent.com/api
 
 ---
 
@@ -242,7 +242,7 @@ When user reports issues:
 - ✅ ElevenLabs Stats: Still working
 - ✅ YouTube Stats: Still working
 
-**Backend URL Verified:** https://youtube-api-error.preview.emergentagent.com/api
+**Backend URL Verified:** https://code-cleanup-63.preview.emergentagent.com/api
 
 ---
 
@@ -265,4 +265,4 @@ When user reports issues:
 - All 6 core endpoints tested and working correctly
 - YouTube OAuth flow structure properly implemented
 - Configuration endpoints (ElevenLabs, LLM) verified working
-- Backend URL confirmed: https://youtube-api-error.preview.emergentagent.com/api
+- Backend URL confirmed: https://code-cleanup-63.preview.emergentagent.com/api
