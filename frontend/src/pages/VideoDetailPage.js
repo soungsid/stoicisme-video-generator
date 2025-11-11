@@ -364,13 +364,32 @@ function VideoDetailPage() {
               </div>
               {video.idea && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Idée</p>
-                  <p className="text-sm text-gray-900">{video.idea.title}</p>
-                  {video.idea.keywords && video.idea.keywords.length > 0 && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Mots-clés: {video.idea.keywords.join(', ')}
-                    </p>
-                  )}
+                  <p className="text-sm font-medium text-gray-500 mb-2">Idée originale</p>
+                  <div className="bg-blue-50 border border-blue-100 rounded p-3">
+                    <p className="text-sm text-gray-900 font-medium">{video.idea.title}</p>
+                    {video.idea.keywords && video.idea.keywords.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500 mb-1">Mots-clés:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {video.idea.keywords.map((keyword, idx) => (
+                            <span key={idx} className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                              {keyword}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {video.idea.status && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Statut: <span className="font-medium">{video.idea.status}</span>
+                      </p>
+                    )}
+                    {video.idea.created_at && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Créée le {new Date(video.idea.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
