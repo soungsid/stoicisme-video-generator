@@ -11,6 +11,12 @@ router = APIRouter()
 async def generate_audio(script_id: str):
     """
     Générer l'audio pour un script adapté avec timestamps
+    
+    Le service AudioService gère automatiquement:
+    - Validation du script
+    - Génération de l'audio
+    - Sauvegarde des phrases audio dans le script
+    - Mise à jour du statut de l'idée
     """
     try:
         scripts_collection = get_scripts_collection()
@@ -28,28 +34,14 @@ async def generate_audio(script_id: str):
                 detail="Script must be adapted for ElevenLabs before audio generation"
             )
         
-        # Générer l'audio
+        # Générer l'audio (le service gère tout)
         audio_service = AudioService()
-        audio_generation = await audio_service.generate_audio_with_timestamps(
-            script_id=script_id,
-            idea_id=script["idea_id"],
-            phrases=script["phrases"]
-        )
-        
-        # Sauvegarder les phrases audio dans le script
-        await scripts_collection.update_one(
-            {"id": script_id},
-            {"$set": {"audio_phrases": [phrase.model_dump() for phrase in audio_generation.phrases]}}
-        )
-        
-        # Mettre à jour le statut de l'idée
-        ideas_collection = get_ideas_collection()
-        await ideas_collection.update_one(
-            {"id": script["idea_id"]},
-            {"$set": {"status": IdeaStatus.AUDIO_GENERATED}}
+        audio_generation = await audio_service.generate_audio_complete(
+            script_id=script_id
         )
         
         return audio_generation
+        
     except HTTPException:
         raise
     except Exception as e:
