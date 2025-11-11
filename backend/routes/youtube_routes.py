@@ -43,7 +43,7 @@ async def oauth_callback(code: str):
         await youtube_service.handle_oauth_callback(code)
         
         return RedirectResponse(url=f"{FRONTEND_URL}/config?auth=success")
-    except Exception as e:
+    except Exception:
         traceback.print_exc()  # ← affiche la pile complète dans la console
         return RedirectResponse(url=f"{FRONTEND_URL}/config?auth=error")
 
