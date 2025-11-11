@@ -250,25 +250,66 @@ class YouTubeService:
     
     async def upload_video(
         self,
-        video_relative_path: str,
-        title: str,
-        description: str,
-        tags: list,
-        category_id: str = "22",
+        video_id: str,
         privacy_status: str = "public"
-    ) -> tuple:
+    ) -> dict:
         """
         Uploader une vidéo sur YouTube
-        Retourne: (video_id, video_url)
+        
+        Args:
+            video_id: ID de la vidéo dans MongoDB
+            privacy_status: Statut de confidentialité (public, private, unlisted)
+            
+        Returns:
+            dict avec les informations de la vidéo uploadée
+            
+        Cette méthode:
+        1. Récupère la vidéo et son script depuis MongoDB
+        2. Upload la vidéo sur YouTube
+        3. Met à jour MongoDB avec les infos YouTube
         """
         try:
+            from database import get_videos_collection, get_scripts_collection
+            from datetime import datetime, timezone
+            
+            # 1. Récupérer la vidéo depuis MongoDB
+            videos_collection = get_videos_collection()
+            video = await videos_collection.find_one({"id": video_id}, {"_id": 0})
+            
+            if not video:
+                raise ValueError(f"Video {video_id} not found in database")
+            
+            if not video.get("video_path"):
+                raise ValueError(f"Video {video_id} has no file path")
+            
+            # 2. Récupérer le script pour la description YouTube
+            scripts_collection = get_scripts_collection()
+            script = None
+            youtube_description = f"Vidéo: {video.get('title', 'Sans titre')}"
+            
+            if video.get("script_id"):
+                script = await scripts_collection.find_one(
+                    {"id": video["script_id"]}, 
+                    {"_id": 0}
+                )
+                if script and script.get("youtube_description"):
+                    youtube_description = script["youtube_description"]
+                elif script:
+                    youtube_description = f"{video['title']}\n\n{script.get('original_script', '')[:500]}..."
+            
+            # 3. Préparer les métadonnées
+            title = video.get("title", "Vidéo sans titre")
+            tags = video.get("tags", ["video"])
+            category_id = video.get("category_id", "22")
+            
+            # 4. Upload sur YouTube via API
             credentials = await self._get_credentials()
             youtube = build('youtube', 'v3', credentials=credentials)
             
             body = {
                 'snippet': {
                     'title': title,
-                    'description': description,
+                    'description': youtube_description,
                     'tags': tags,
                     'categoryId': category_id
                 },
@@ -279,7 +320,7 @@ class YouTubeService:
             }
             
             media = MediaFileUpload(
-                video_relative_path,
+                video["video_path"],
                 chunksize=-1,
                 resumable=True,
                 mimetype='video/mp4'
@@ -295,13 +336,33 @@ class YouTubeService:
             while response is None:
                 status, response = request.next_chunk()
                 if status:
-                    print(f"Upload progress: {int(status.progress() * 100)}%")
+                    print(f"📤 Upload progress: {int(status.progress() * 100)}%")
             
-            video_id = response['id']
-            video_url = f"https://www.youtube.com/watch?v={video_id}"
+            youtube_video_id = response['id']
+            youtube_url = f"https://www.youtube.com/watch?v={youtube_video_id}"
             
-            print(f"✅ Video uploaded to YouTube: {video_url}")
-            return video_id, video_url
+            # 5. Mettre à jour MongoDB avec les infos YouTube
+            await videos_collection.update_one(
+                {"id": video_id},
+                {
+                    "$set": {
+                        "youtube_video_id": youtube_video_id,
+                        "youtube_url": youtube_url,
+                        "uploaded_at": datetime.now(timezone.utc),
+                        "is_scheduled": False  # N'est plus planifié
+                    }
+                }
+            )
+            
+            print(f"✅ Video uploaded to YouTube and saved in DB: {youtube_url}")
+            
+            return {
+                "video_id": video_id,
+                "youtube_video_id": youtube_video_id,
+                "youtube_url": youtube_url,
+                "title": title,
+                "uploaded_at": datetime.now(timezone.utc).isoformat()
+            }
             
         except Exception as e:
             print(f"❌ Error uploading to YouTube: {str(e)}")
