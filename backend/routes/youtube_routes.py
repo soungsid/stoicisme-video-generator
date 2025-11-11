@@ -90,8 +90,10 @@ async def upload_video_to_youtube(video_id: str):
     """
     Uploader une vidéo sur YouTube
     
-    Le service YouTube récupère automatiquement toutes les informations
-    nécessaires depuis MongoDB (vidéo, script, description, etc.)
+    Le service YouTube gère automatiquement:
+    - Récupération des informations depuis MongoDB
+    - Upload sur YouTube
+    - Mise à jour de la vidéo et de l'idée dans MongoDB
     """
     try:
         youtube_service = YouTubeService()
@@ -100,20 +102,6 @@ async def upload_video_to_youtube(video_id: str):
         result = await youtube_service.upload_video(video_id=video_id)
         
         print("✅ Upload réussi!")
-        
-        # Mettre à jour le statut de l'idée si nécessaire
-        from database import get_videos_collection, get_ideas_collection
-        from models import IdeaStatus
-        
-        videos_collection = get_videos_collection()
-        video = await videos_collection.find_one({"id": video_id}, {"_id": 0, "idea_id": 1})
-        
-        if video and video.get("idea_id"):
-            ideas_collection = get_ideas_collection()
-            await ideas_collection.update_one(
-                {"id": video["idea_id"]},
-                {"$set": {"status": IdeaStatus.UPLOADED}}
-            )
         
         return {
             "success": True,
