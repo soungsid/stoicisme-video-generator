@@ -216,78 +216,16 @@ async def schedule_bulk(request: BulkScheduleRequest):
     sont interprétées comme UTC.
     """
     try:
-        from datetime import datetime, timedelta
-        from database import get_videos_collection
-        print("📅 Planification en masse démarrée")
+        scheduling_service = YoutubeSchedulingService()
         
-        start_date = request.start_date
-        videos_per_day = request.videos_per_day
-        publish_times = request.publish_times
+        result = await scheduling_service.bulk_schedule(
+            start_date=request.start_date,
+            videos_per_day=request.videos_per_day,
+            publish_times=request.publish_times
+        )
         
-        videos_collection = get_videos_collection()
+        return result
         
-        # Récupérer les vidéos non publiées
-        unpublished_videos = await videos_collection.find({
-            "$or": [
-                {"youtube_video_id": {"$exists": False}},
-                {"youtube_video_id": None}
-            ]
-        }).to_list(length=1000)
-        print(f"{len(unpublished_videos)} videos non encore publiées")
-        
-        if not unpublished_videos:
-            return {
-                "success": True,
-                "message": "No videos to schedule",
-                "scheduled_count": 0
-            }
-        
-        # Parser la date de début
-        current_date = datetime.fromisoformat(start_date)
-        
-        # Planifier les vidéos
-        scheduled_count = 0
-        time_index = 0
-        
-        for video in unpublished_videos:
-            # Déterminer l'heure de publication (cycle à travers publish_times)
-            publish_time = publish_times[time_index % len(publish_times)]
-            hour, minute = map(int, publish_time.split(':'))
-            
-            # Créer la date complète avec l'heure
-            scheduled_datetime = current_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            
-            print(f"📌 Vidéo '{video.get('title', 'Sans titre')}' → {scheduled_datetime.isoformat()}")
-            
-            # Mettre à jour la vidéo
-            await videos_collection.update_one(
-                {"id": video["id"]},
-                {
-                    "$set": {
-                        "scheduled_publish_date": scheduled_datetime,
-                        "is_scheduled": True
-                    }
-                }
-            )
-            
-            scheduled_count += 1
-            time_index += 1
-            
-            # Passer au jour suivant après avoir utilisé toutes les heures de publication
-            # Exemple: avec ["09:00", "18:00"], on change de jour après 2 vidéos
-            if time_index % len(publish_times) == 0:
-                current_date += timedelta(days=1)
-                print(f"📆 Passage au jour suivant: {current_date.strftime('%Y-%m-%d')}")
-        
-        print(f"✅ {scheduled_count} vidéos planifiées avec succès")
-        
-        return {
-            "success": True,
-            "message": f"{scheduled_count} videos scheduled successfully",
-            "scheduled_count": scheduled_count,
-            "start_date": start_date,
-            "timezone": "UTC"
-        }
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(
