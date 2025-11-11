@@ -59,7 +59,11 @@ class YouTubeSchedulerWorker:
             print(f"process_scheduled_videos lancé à {now}" )
             scheduled_videos = await videos_collection.find({
                 "is_scheduled": True,
-                "youtube_video_id": {"$exists": False},  # Pas encore uploadée
+                "$or": [
+                    {"youtube_video_id": {"$exists": False}},  # champ inexistant
+                    {"youtube_video_id": None},                # champ nul
+                    {"youtube_video_id": ""}                   # champ vide
+                ],
                 "scheduled_publish_date": {"$lte": now}
             }).to_list(length=100)
             
@@ -88,7 +92,7 @@ class YouTubeSchedulerWorker:
                     
                     # Uploader sur YouTube
                     youtube_video_id, youtube_url = await youtube_service.upload_video(
-                        video_relative_path=video["video_path"],
+                        video_relative_path=video["video_relative_path"],
                         title=video["title"],
                         description=description,
                         tags=script.get("keywords", []) if script else ["stoicisme", "philosophie"],
