@@ -31,8 +31,8 @@ class YoutubeSchedulingService:
             if not video:
                 raise ValueError(f"Video {video_id} not found")
             
-            # Parser la date
-            scheduled_date = datetime.fromisoformat(publish_date.replace('Z', '+00:00'))
+            # Parser la date en UTC
+            scheduled_date = parse_iso_date(publish_date)
             
             # Mettre à jour la vidéo
             result = await videos_collection.update_one(
