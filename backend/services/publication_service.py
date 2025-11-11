@@ -47,37 +47,18 @@ class PublicationService:
         try:
             print(f"📤 Publication de la vidéo: {video['title']}")
             
-            # Uploader sur YouTube
-            youtube_video_id, youtube_url = await self.youtube_service.upload_video(
-                video_relative_path=video['video_relative_path'],
-                title=video['title'],
-                description=f"",
-                tags=["video"],
-                category_id="22",
-                privacy_status="public"
+            # Uploader sur YouTube (le service gère tout automatiquement)
+            result = await self.youtube_service.upload_video(
+                video_id=video['id']
             )
             
-            # Mettre à jour la vidéo dans la base
-            videos_collection = get_videos_collection()
-            await videos_collection.update_one(
-                {"id": video['id']},
-                {
-                    "$set": {
-                        "youtube_video_id": youtube_video_id,
-                        "youtube_url": youtube_url,
-                        "uploaded_at": datetime.now(timezone.utc),
-                        "is_scheduled": False
-                    }
-                }
-            )
-            
-            print(f"✅ Vidéo publiée: {youtube_url}")
+            print(f"✅ Vidéo publiée: {result['youtube_url']}")
             
             return {
                 "success": True,
                 "video_id": video['id'],
-                "youtube_video_id": youtube_video_id,
-                "youtube_url": youtube_url
+                "youtube_video_id": result['youtube_video_id'],
+                "youtube_url": result['youtube_url']
             }
             
         except Exception as e:
@@ -85,6 +66,7 @@ class PublicationService:
             traceback.print_exc()
             
             # Marquer la vidéo comme ayant une erreur
+            from database import get_videos_collection
             videos_collection = get_videos_collection()
             await videos_collection.update_one(
                 {"id": video['id']},
