@@ -281,34 +281,17 @@ async def unschedule_video(video_id: str):
     Annuler la planification d'une vidéo
     """
     try:
-        from database import get_videos_collection
+        scheduling_service = YoutubeSchedulingService()
         
-        videos_collection = get_videos_collection()
+        result = await scheduling_service.unschedule_video(video_id=video_id)
         
-        result = await videos_collection.update_one(
-            {"id": video_id},
-            {
-                "$set": {
-                    "is_scheduled": False
-                },
-                "$unset": {
-                    "scheduled_publish_date": ""
-                }
-            }
+        return result
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
         )
-        
-        if result.matched_count == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Video {video_id} not found"
-            )
-        
-        return {
-            "success": True,
-            "message": "Video unscheduled successfully"
-        }
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
