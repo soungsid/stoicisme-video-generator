@@ -73,6 +73,32 @@ class VideoWorker:
             {"$set": update_data}
         )
     
+    def determine_start_step(self, idea, start_from):
+        """
+        Déterminer l'étape de démarrage en fonction de:
+        1. La dernière étape réussie (last_successful_step)
+        2. Le paramètre start_from du job
+        
+        Retourne l'étape à partir de laquelle commencer
+        """
+        last_successful = idea.get("last_successful_step")
+        
+        # Si on a une dernière étape réussie, reprendre juste après
+        if last_successful:
+            step_order = {
+                "script_generated": "adapt",
+                "script_adapted": "audio", 
+                "audio_generated": "video",
+                "video_generated": None  # Déjà terminé
+            }
+            next_step = step_order.get(last_successful)
+            if next_step:
+                print(f"📍 Reprise après '{last_successful}' → Démarrage à '{next_step}'")
+                return next_step
+        
+        # Sinon, utiliser le paramètre start_from
+        return start_from
+    
     async def process_job(self, job):
         """Traiter un job de génération vidéo"""
         idea_id = job.idea_id
@@ -89,8 +115,16 @@ class VideoWorker:
             if not idea:
                 raise Exception(f"Idea {idea_id} not found")
             
+            # Déterminer l'étape de démarrage (reprise intelligente)
+            start_from = self.determine_start_step(idea, start_from)
+            
+            if not start_from:
+                print(f"✅ Idea {idea_id} already completed (last_successful: video_generated)")
+                await self.queue_service.complete_job(job.job_id)
+                return
+            
             # Mettre à jour le statut à PROCESSING
-            await self.update_idea_progress(idea_id, IdeaStatus.PROCESSING, 5, "Démarrage du traitement...")
+            await self.update_idea_progress(idea_id, IdeaStatus.PROCESSING, 5, f"Reprise du traitement à l'étape: {start_from}")
             
             script_id = None
             
