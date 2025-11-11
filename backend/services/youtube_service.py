@@ -5,6 +5,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from database import get_config_collection
 from datetime import datetime, timedelta
+from helpers.datetime_utils import now_utc
 import json
 import traceback
 
