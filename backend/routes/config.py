@@ -81,25 +81,9 @@ async def get_llm_config():
     Récupérer la configuration LLM
     """
     try:
-        provider = os.getenv("AI_PROVIDER", "deepseek")
+        service = LlmConfigService()
+        return await service.get_config()
         
-        config = {
-            "provider": provider,
-            "deepseek": {
-                "configured": bool(os.getenv("DEEPSEEK_API_KEY")),
-                "model": os.getenv("DEEPSEEK_MODEL")
-            },
-            "openai": {
-                "configured": bool(os.getenv("OPENAI_API_KEY")) and os.getenv("OPENAI_API_KEY") != "your-openai-api-key-here",
-                "model": os.getenv("OPENAI_MODEL")
-            },
-            "gemini": {
-                "configured": bool(os.getenv("GEMINI_API_KEY")) and os.getenv("GEMINI_API_KEY") != "your-gemini-api-key-here",
-                "model": os.getenv("GEMINI_MODEL")
-            }
-        }
-        
-        return config
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
