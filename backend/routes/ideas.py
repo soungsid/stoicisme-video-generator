@@ -133,24 +133,18 @@ async def reject_idea(idea_id: str):
     Rejeter une idée
     """
     try:
-        ideas_collection = get_ideas_collection()
+        from services.idea_service import IdeaService
         
-        result = await ideas_collection.find_one_and_update(
-            {"id": idea_id},
-            {"$set": {"status": IdeaStatus.REJECTED}},
-            return_document=True,
-            projection={"_id": 0}
-        )
-        
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Idea {idea_id} not found"
-            )
+        service = IdeaService()
+        result = await service.reject_idea(idea_id=idea_id)
         
         return result
-    except HTTPException:
-        raise
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
