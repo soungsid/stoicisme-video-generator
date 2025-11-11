@@ -373,7 +373,7 @@ class YouTubeService:
                 "youtube_video_id": youtube_video_id,
                 "youtube_url": youtube_url,
                 "title": title,
-                "uploaded_at": datetime.now(timezone.utc).isoformat()
+                "uploaded_at": now_utc().isoformat()
             }
             
         except Exception as e:
