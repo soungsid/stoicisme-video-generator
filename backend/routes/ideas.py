@@ -157,18 +157,18 @@ async def delete_idea(idea_id: str):
     Supprimer une idée
     """
     try:
-        ideas_collection = get_ideas_collection()
-        result = await ideas_collection.delete_one({"id": idea_id})
+        from services.idea_service import IdeaService
         
-        if result.deleted_count == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Idea {idea_id} not found"
-            )
+        service = IdeaService()
+        result = await service.delete_idea(idea_id=idea_id)
         
-        return {"success": True, "message": "Idea deleted successfully"}
-    except HTTPException:
-        raise
+        return result
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
