@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
-from database import get_config_collection
+from services.youtube_config_service import YoutubeConfigService
+from services.elevenlabs_config_service import ElevenLabsConfigService
+from services.llm_config_service import LlmConfigService
 import os
 
 router = APIRouter()
@@ -15,22 +17,13 @@ async def update_youtube_config(credentials: YouTubeCredentials):
     Mettre à jour les credentials YouTube
     """
     try:
-        config_collection = get_config_collection()
-        
-        await config_collection.update_one(
-            {"type": "youtube"},
-            {
-                "$set": {
-                    "type": "youtube",
-                    "client_id": credentials.client_id,
-                    "client_secret": credentials.client_secret,
-                    "is_authenticated": False
-                }
-            },
-            upsert=True
+        service = YoutubeConfigService()
+        result = await service.update_credentials(
+            client_id=credentials.client_id,
+            client_secret=credentials.client_secret
         )
+        return result
         
-        return {"success": True, "message": "YouTube credentials updated"}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
