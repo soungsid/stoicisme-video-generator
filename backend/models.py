@@ -51,6 +51,7 @@ class Script(BaseModel):
     idea_id: str
     title: str
     original_script: str
+    youtube_description: Optional[str] = Field(None, description="Description YouTube générée automatiquement")
     elevenlabs_adapted_script: Optional[str] = None
     phrases: Optional[List[str]] = []
     created_at: datetime = Field(default_factory=datetime.now)
