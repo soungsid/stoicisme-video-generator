@@ -86,91 +86,46 @@ async def get_channel_info():
         )
 
 @router.post("/upload/{video_id}")
-async def upload_video(video_id: str, title: str = None, description: str = None, tags: list = None):
+async def upload_video_to_youtube(video_id: str):
     """
     Uploader une vidéo sur YouTube
+    
+    Le service YouTube récupère automatiquement toutes les informations
+    nécessaires depuis MongoDB (vidéo, script, description, etc.)
     """
     try:
-        
-       
-        print(f"upload de la video {video_id} sur youtube. description={description}")
-        videos_collection = get_videos_collection()
-        video = await videos_collection.find_one({"id": video_id}, {"_id": 0})
-        #todo supprimer le parametre description
-        description = video.get("description")
-        if not video:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Video {video_id} not found"
-            )
-        
-        # Générer une description optimisée si non fournie
-        if not video.get("description"):
-            from agents.youtube_description_agent import YouTubeDescriptionAgent
-            from database import get_scripts_collection
-            
-            scripts_collection = get_scripts_collection()
-            script = await scripts_collection.find_one({"id": video["script_id"]}, {"_id": 0})
-            
-            if script:
-                agent = YouTubeDescriptionAgent()
-                description = await agent.generate_description(
-                    title=title or video["title"],
-                    script=script.get("original_script", ""),
-                    keywords=script.get("keywords", [])
-                )
-                
-                 # Mettre à jour la vidéo
-                await videos_collection.update_one(
-                    {"id": video_id},
-                    {
-                        "$set": {
-                            "description": description
-                        }
-                    }
-                )
-        
         youtube_service = YouTubeService()
-        print("upload de la video en cours ...")
-        youtube_video_id, youtube_url = await youtube_service.upload_video(
-            video_relative_path=video["video_relative_path"],
-            title=title or video["title"],
-            description=description or f"Vidéo sur le stoïcisme: {video['title']}",
-            tags=tags or ["stoicisme", "philosophie", "sagesse"],
-            category_id="22"  # People & Blogs
-        )
         
-        print("L'upload a reussi!")
-
-        # Mettre à jour la vidéo
-        await videos_collection.update_one(
-            {"id": video_id},
-            {
-                "$set": {
-                    "youtube_video_id": youtube_video_id,
-                    "youtube_url": youtube_url,
-                    "uploaded_at": datetime.now()
-                }
-            }
-        )
+        print(f"📤 Upload de la vidéo {video_id} sur YouTube...")
+        result = await youtube_service.upload_video(video_id=video_id)
         
-        # Mettre à jour l'idée
-        ideas_collection = get_ideas_collection()
+        print("✅ Upload réussi!")
+        
+        # Mettre à jour le statut de l'idée si nécessaire
+        from database import get_videos_collection, get_ideas_collection
         from models import IdeaStatus
-        await ideas_collection.update_one(
-            {"id": video["idea_id"]},
-            {"$set": {"status": IdeaStatus.UPLOADED, "description" : description}}
-        )
+        
+        videos_collection = get_videos_collection()
+        video = await videos_collection.find_one({"id": video_id}, {"_id": 0, "idea_id": 1})
+        
+        if video and video.get("idea_id"):
+            ideas_collection = get_ideas_collection()
+            await ideas_collection.update_one(
+                {"id": video["idea_id"]},
+                {"$set": {"status": IdeaStatus.UPLOADED}}
+            )
         
         return {
             "success": True,
-            "youtube_video_id": youtube_video_id,
-            "youtube_url": youtube_url,
-            "description_generated": description
+            "youtube_video_id": result["youtube_video_id"],
+            "youtube_url": result["youtube_url"],
+            "uploaded_at": result["uploaded_at"]
         }
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error uploading video: {str(e)}"
