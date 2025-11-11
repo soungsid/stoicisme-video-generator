@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import List, Dict
 from database import get_videos_collection
+from helpers.datetime_utils import parse_iso_date
 import traceback
 
 class YoutubeSchedulingService:
