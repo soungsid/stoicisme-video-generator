@@ -1,6 +1,5 @@
 import os
 import random
-from tkinter import NO
 from typing import Dict
 from models import Video, VideoType
 from slugify import slugify
