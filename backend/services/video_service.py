@@ -1,5 +1,6 @@
 import os
 import random
+from tkinter import NO
 from typing import Dict
 from models import Video, VideoType
 from slugify import slugify
@@ -175,7 +176,8 @@ class VideoService:
                 video_type=video_type,
                 video_path=video_url,  # URL accessible via /media
                 video_relative_path=relative_path,
-                duration_seconds=audio_duration_sec
+                duration_seconds=audio_duration_sec,
+                description=None
             )
             
             return video
