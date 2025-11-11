@@ -27,12 +27,11 @@ services:
       - traefik_network
 
     labels:
-      - "traefik.http.services.STOICISME_BACKEND_DOMAINE.loadbalancer.server.port=8001"
-      - traefik.enable=true
-      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.rule=Host(`${STOICISME_BACKEND_DOMAINE}`)
-      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls=false
-      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls.certresolver=myhttpchallenge
-      - "traefik.http.middlewares.STOICISME_BACKEND_DOMAINE-https-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
+      - "traefik.enable=true"
+      - "traefik.http.routers.STOICISME_BACKEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.STOICISME_BACKEND_DOMAINE.entrypoints=websecure"
+      - "traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls.certresolver=myhttpchallenge"
+      - "traefik.port=80"
     healthcheck:
       test: curl --fail http://localhost:8001/health || exit 1
       interval: 30s
