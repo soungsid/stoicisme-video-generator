@@ -245,11 +245,36 @@ function VideoDetailPage() {
           {/* Script associé */}
           {video.script && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Script</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Script</h2>
               <h3 className="font-medium text-gray-700 mb-2">{video.script.title}</h3>
-              <p className="text-gray-600 text-sm whitespace-pre-wrap line-clamp-6">
-                {video.script.original_script}
-              </p>
+              
+              {/* Script original */}
+              <div className="mb-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Script original</p>
+                <p className="text-gray-600 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto border border-gray-200 rounded p-3">
+                  {video.script.original_script}
+                </p>
+              </div>
+              
+              {/* Description YouTube */}
+              {video.script.youtube_description && (
+                <div className="mt-4 border-t pt-4">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 flex items-center">
+                    <Youtube className="h-3 w-3 mr-1" />
+                    Description YouTube
+                  </p>
+                  <p className="text-gray-600 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto bg-gray-50 border border-gray-200 rounded p-3">
+                    {video.script.youtube_description}
+                  </p>
+                </div>
+              )}
+              
+              {/* Date de création du script */}
+              {video.script.created_at && (
+                <div className="mt-4 text-xs text-gray-500">
+                  Script créé le {new Date(video.script.created_at).toLocaleString('fr-FR')}
+                </div>
+              )}
             </div>
           )}
         </div>
