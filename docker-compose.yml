@@ -1,33 +1,13 @@
 version: '3.8'
 
 services:
-  # Base de données MongoDB
-  mongodb:
-    image: mongo:7.0
-    container_name: youtube-manager-mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - youtube-manager-network
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # Backend FastAPI
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: youtube-manager-backend
-    restart: unless-stopped
+    container_name: youtube-manager-backend-prod
+    restart: always
     ports:
       - "8001:8001"
     environment:
@@ -41,26 +21,36 @@ services:
       - YOUTUBE_REDIRECT_URI=${YOUTUBE_REDIRECT_URI}
       - TZ=${TZ:-UTC}
     volumes:
-      - ./ressources:/app/ressources
-      - ./backend:/app
-    depends_on:
-      mongodb:
-        condition: service_healthy
+      - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
     networks:
       - youtube-manager-network
+      - traefik_network
+
+    labels:
+      - "traefik.http.services.STOICISME_BACKEND_DOMAINE.loadbalancer.server.port=8001"
+      - traefik.enable=true
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.rule=Host(`${STOICISME_BACKEND_DOMAINE}`)
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls=false
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls.certresolver=myhttpchallenge
+      - "traefik.http.middlewares.STOICISME_BACKEND_DOMAINE-https-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
     healthcheck:
       test: curl --fail http://localhost:8001/health || exit 1
       interval: 30s
       timeout: 10s
       retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Worker de publication
   publication-worker:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: youtube-manager-worker
-    restart: unless-stopped
+    container_name: youtube-manager-worker-prod
+    restart: always
     command: python workers/publication_worker.py
     environment:
       - MONGO_USERNAME=${MONGO_USERNAME}
@@ -72,34 +62,51 @@ services:
       - YOUTUBE_CLIENT_SECRET=${YOUTUBE_CLIENT_SECRET}
       - TZ=${TZ:-UTC}
     volumes:
-      - ./ressources:/app/ressources
-      - ./backend:/app
+      - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - youtube-manager-network
+      - traefik_network # Utiliser aussi le réseau n8n_default
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Frontend React
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: youtube-manager-frontend
-    restart: unless-stopped
+    container_name: youtube-manager-frontend-prod
+    restart: always
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_BACKEND_URL=http://localhost:8001
+      - REACT_APP_BACKEND_URL=stoicisme-backend.smartinterviewer.app
     depends_on:
       - backend
     networks:
       - youtube-manager-network
+      - traefik_network # Utiliser aussi le réseau n8n_default
+    labels:
+      - "traefik.http.services.STOICISME_FRONTEND_DOMAINE.loadbalancer.server.port=3000"
+      - traefik.enable=true
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`)
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls=false
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls.certresolver=myhttpchallenge
+      - "traefik.http.middlewares.STOICISME_FRONTEND_DOMAINE-https-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   youtube-manager-network:
     driver: bridge
-
-volumes:
-  mongodb_data:
-    driver: local
+  traefik_network:
+    external: true # Indiquer que ce réseau est externe pour Traefik
