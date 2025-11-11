@@ -132,7 +132,7 @@ function VideoDetailPage() {
     );
   }
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://stoicisme-backend.manga-pics.com';
 
   return (
     <div className="max-w-7xl mx-auto">

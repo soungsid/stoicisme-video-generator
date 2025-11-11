@@ -29,11 +29,12 @@ services:
       - traefik_network
 
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.STOICISME_BACKEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.STOICISME_BACKEND_DOMAINE.entrypoints=websecure"
-      - "traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls.certresolver=myhttpchallenge"
-      - "traefik.port=80"
+      - "traefik.http.services.STOICISME_BACKEND_DOMAINE.loadbalancer.server.port=8001"
+      - traefik.enable=true
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.rule=Host(`${STOICISME_BACKEND_DOMAINE}`)
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls=false
+      - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls.certresolver=myhttpchallenge
+      - "traefik.http.middlewares.STOICISME_BACKEND_DOMAINE-https-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
     healthcheck:
       test: curl --fail http://localhost:8001/health || exit 1
       interval: 30s
@@ -97,11 +98,12 @@ services:
       - youtube-manager-network
       - traefik_network # Utiliser aussi le réseau n8n_default
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.STOICISME_FRONTEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`)"
-      - "traefik.http.routers.STOICISME_FRONTEND_DOMAINE.entrypoints=websecure"
-      - "traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls.certresolver=myhttpchallenge"
-      - "traefik.port=80"
+      - "traefik.http.services.STOICISME_FRONTEND_DOMAINE.loadbalancer.server.port=3000"
+      - traefik.enable=true
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`)
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls=false
+      - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls.certresolver=myhttpchallenge
+      - "traefik.http.middlewares.STOICISME_FRONTEND_DOMAINE-https-headers.headers.customRequestHeaders.X-Forwarded-Proto=https"
     logging:
       driver: "json-file"
       options:
