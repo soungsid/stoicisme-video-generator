@@ -66,36 +66,9 @@ async def get_elevenlabs_config():
     Récupérer la configuration ElevenLabs
     """
     try:
-        # Compter les clés disponibles
-        api_keys = []
-        for i in range(1, 6):
-            key = os.getenv(f"ELEVENLABS_API_KEY{i}")
-            if key and key.startswith("sk_"):
-                api_keys.append({
-                    "index": i,
-                    "configured": True,
-                    "key_preview": key[:10] + "..." if len(key) > 10 else key
-                })
-            else:
-                api_keys.append({
-                    "index": i,
-                    "configured": False
-                })
+        service = ElevenLabsConfigService()
+        return await service.get_config()
         
-        voice_id = os.getenv("ELEVENLABS_VOICE_ID")
-        voice_name = os.getenv("ELEVENLABS_VOICE_NAME")
-        
-        return {
-            "api_keys": api_keys,
-            "voice_id": voice_id,
-            "voice_name": voice_name,
-            "total_keys": len([k for k in api_keys if k["configured"]]),
-            "voice_settings": {
-                "current_voice_id": voice_id,
-                "current_voice_name": voice_name,
-                "can_change": True
-            }
-        }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
