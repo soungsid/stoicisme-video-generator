@@ -8,13 +8,12 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     IMAGEMAGICK_BINARY=/usr/bin/convert
 
-# Installer les dépendances système
+# Installer les dépendances système incluant ImageMagick
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     curl \
     wget \
-    gnupg \
-    software-properties-common \
+    imagemagick \
     fonts-liberation \
     fonts-dejavu-core \
     fonts-noto \
@@ -22,18 +21,20 @@ RUN apt-get update && apt-get install -y \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
-# Ajouter le dépôt ImageMagick et installer la dernière version
-RUN apt-get update && apt-get install -y imagemagick \
-    && rm -rf /var/lib/apt/lists/*
-
-# Vérifier la version installée et configurer ImageMagick
-RUN convert -version && \
-    # Trouver le fichier policy.xml (peut être dans ImageMagick-6 ou ImageMagick-7)
+# Vérifier l'installation et configurer ImageMagick
+RUN echo "=== Version d'ImageMagick installée ===" && \
+    convert -version && \
+    echo "=== Configuration d'ImageMagick ===" && \
+    # Trouver et configurer le fichier policy.xml
     POLICY_FILE=$(find /etc -name policy.xml 2>/dev/null | head -n 1) && \
     if [ -n "$POLICY_FILE" ]; then \
-    echo "Configuration de $POLICY_FILE" && \
-    sed -i 's/<policy domain="path" rights="none" pattern="@\*"/<policy domain="path" rights="read|write" pattern="@*"/g' "$POLICY_FILE" && \
-    sed -i 's/<policy domain="coder" rights="none" pattern="PDF"/<policy domain="coder" rights="read|write" pattern="PDF"/g' "$POLICY_FILE" || true; \
+    echo "Fichier de politique trouvé: $POLICY_FILE" && \
+    # Autoriser la lecture/écriture pour les patterns courants
+    sed -i 's/rights="none" pattern="@\*"/rights="read|write" pattern="@*"/g' "$POLICY_FILE" && \
+    sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/g' "$POLICY_FILE" && \
+    sed -i 's/rights="none" pattern="XPS"/rights="read|write" pattern="XPS"/g' "$POLICY_FILE" || true; \
+    else \
+    echo "Aucun fichier policy.xml trouvé"; \
     fi
 
 # Créer le répertoire de travail
