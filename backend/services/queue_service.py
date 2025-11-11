@@ -97,7 +97,13 @@ class QueueService:
         print(f"✅ Job completed: {job_id}")
     
     async def fail_job(self, job_id: str, error_message: str):
-        """Marquer un job comme échoué"""
+        """
+        Marquer un job comme échoué avec reprise intelligente
+        
+        Si le job peut être retenté, il sera remis en queue avec un start_from
+        correspondant à la dernière étape réussie, évitant ainsi de refaire
+        tout le pipeline depuis le début.
+        """
         job_data = await self.queue_collection.find_one({"job_id": job_id})
         
         if not job_data:
@@ -106,7 +112,21 @@ class QueueService:
         job = VideoJob(**job_data)
         retry_count = job.retry_count + 1
         
-        # Si on peut retry, remettre en queue
+        # Récupérer la dernière étape réussie de l'idée
+        idea = await self.ideas_collection.find_one({"id": job.idea_id}, {"_id": 0})
+        last_successful = idea.get("last_successful_step") if idea else None
+        
+        # Mapper la dernière étape réussie vers l'étape de démarrage pour le retry
+        next_step_map = {
+            "script_generated": "adapt",
+            "script_adapted": "audio",
+            "audio_generated": "video",
+            None: "script"  # Aucune étape réussie, recommencer depuis le début
+        }
+        
+        next_step = next_step_map.get(last_successful, "script")
+        
+        # Si on peut retry, remettre en queue avec la bonne étape
         if retry_count < job.max_retries:
             await self.queue_collection.update_one(
                 {"job_id": job_id},
@@ -115,11 +135,13 @@ class QueueService:
                         "status": JobStatus.QUEUED,
                         "retry_count": retry_count,
                         "error_message": error_message,
-                        "started_at": None
+                        "started_at": None,
+                        "start_from": next_step  # ✨ REPRISE INTELLIGENTE
                     }
                 }
             )
             print(f"⚠️ Job {job_id} failed, retry {retry_count}/{job.max_retries}")
+            print(f"📍 Will resume from step: '{next_step}' (last successful: '{last_successful}')")
         else:
             # Max retries atteint
             await self.queue_collection.update_one(
