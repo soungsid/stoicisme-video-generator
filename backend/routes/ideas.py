@@ -104,34 +104,23 @@ async def validate_idea(idea_id: str, request: ValidateIdeaRequest):
     Valider une idée et définir ses paramètres (durée, type)
     """
     try:
-        ideas_collection = get_ideas_collection()
+        from services.idea_service import IdeaService
         
-        update_data = {
-            "status": IdeaStatus.VALIDATED,
-            "validated_at": datetime.now(),
-            "video_type": request.video_type,
-            "duration_seconds": request.duration_seconds
-        }
-        
-        if request.keywords:
-            update_data["keywords"] = request.keywords
-        
-        result = await ideas_collection.find_one_and_update(
-            {"id": idea_id},
-            {"$set": update_data},
-            return_document=True,
-            projection={"_id": 0}
+        service = IdeaService()
+        result = await service.validate_idea(
+            idea_id=idea_id,
+            video_type=request.video_type,
+            duration_seconds=request.duration_seconds,
+            keywords=request.keywords
         )
         
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Idea {idea_id} not found"
-            )
-        
         return result
-    except HTTPException:
-        raise
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
