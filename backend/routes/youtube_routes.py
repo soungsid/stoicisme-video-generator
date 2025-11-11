@@ -7,6 +7,7 @@ from models import (
 )
 from database import get_config_collection, get_videos_collection, get_ideas_collection
 from services.youtube_service import YouTubeService
+from services.youtube_scheduling_service import YoutubeSchedulingService
 from datetime import datetime
 import os
 import traceback
