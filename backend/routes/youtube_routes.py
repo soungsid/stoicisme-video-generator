@@ -249,41 +249,25 @@ async def schedule_video(video_id: str, request: ScheduleVideoRequest):
     ajoutez le offset dans la date (ex: 2025-11-10T09:00:00+01:00)
     """
     try:
-        from datetime import datetime
-        from database import get_videos_collection
+        scheduling_service = YoutubeSchedulingService()
         
-        videos_collection = get_videos_collection()
-        
-        # Parser la date
-        scheduled_date = datetime.fromisoformat(request.publish_date.replace('Z', '+00:00'))
-        
-        # Mettre à jour la vidéo
-        result = await videos_collection.update_one(
-            {"id": video_id},
-            {
-                "$set": {
-                    "scheduled_publish_date": scheduled_date,
-                    "is_scheduled": True
-                }
-            }
+        result = await scheduling_service.schedule_video(
+            video_id=video_id,
+            publish_date=request.publish_date
         )
-        
-        if result.matched_count == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Video {video_id} not found"
-            )
-        
-        print(f"✅ Video {video_id} scheduled for {scheduled_date.isoformat()}")
         
         return {
             "success": True,
             "message": "Video scheduled successfully",
-            "scheduled_date": scheduled_date.isoformat(),
-            "timezone": "UTC"
+            "scheduled_date": result["scheduled_date"],
+            "timezone": result["timezone"]
         }
-    except HTTPException:
-        raise
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(
