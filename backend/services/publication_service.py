@@ -23,10 +23,14 @@ class PublicationService:
         
         # Trouver les vidéos planifiées dont la date est passée
         scheduled_videos = await videos_collection.find({
-            "is_scheduled": True,
-            "youtube_video_id": {"$exists": False},
-            "scheduled_publish_date": {"$lte": current_time}
-        }).to_list(length=100)
+                "is_scheduled": True,
+                "$or": [
+                    {"youtube_video_id": {"$exists": False}},  # champ inexistant
+                    {"youtube_video_id": None},                # champ nul
+                    {"youtube_video_id": ""}                   # champ vide
+                ],
+                "scheduled_publish_date": {"$lte": current_time}
+            }).to_list(length=100)
         
         return scheduled_videos
     
@@ -45,9 +49,9 @@ class PublicationService:
             
             # Uploader sur YouTube
             youtube_video_id, youtube_url = await self.youtube_service.upload_video(
-                video_relative_path=video['video_path'],
+                video_relative_path=video['video_relative_path'],
                 title=video['title'],
-                description=f"Vidéo: {video['title']}",
+                description=f"",
                 tags=["video"],
                 category_id="22",
                 privacy_status="public"

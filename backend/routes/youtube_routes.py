@@ -13,7 +13,6 @@ import traceback
 from api import FRONTEND_URL
 
 router = APIRouter()
-username = os.getenv("MONGO_USERNAME", "soungsid")
 
 @router.get("/auth/url")
 async def get_auth_url():
