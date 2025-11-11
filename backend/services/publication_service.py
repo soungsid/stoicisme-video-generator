@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from database import get_videos_collection, get_config_collection
 from services.youtube_service import YouTubeService
+from helpers.datetime_utils import now_utc
 import traceback
 
 class PublicationService:
