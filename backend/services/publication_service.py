@@ -20,7 +20,7 @@ class PublicationService:
         Récupérer les vidéos planifiées dont l'heure est arrivée
         """
         videos_collection = get_videos_collection()
-        current_time = datetime.now(timezone.utc)
+        current_time = now_utc()
         
         # Trouver les vidéos planifiées dont la date est passée
         scheduled_videos = await videos_collection.find({
