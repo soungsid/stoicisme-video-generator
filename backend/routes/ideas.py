@@ -203,7 +203,10 @@ async def batch_action(idea_ids: List[str], action: str):
                     continue
                 
                 if action == "validate":
-                    # Valider l'idée (mettre status à validated)
+                    # Valider l'idée
+                    from services.idea_service import IdeaService
+                    idea_service = IdeaService()
+                    # Valider avec paramètres par défaut
                     await ideas_collection.update_one(
                         {"id": idea_id},
                         {
@@ -217,15 +220,16 @@ async def batch_action(idea_ids: List[str], action: str):
                     
                 elif action == "reject":
                     # Rejeter l'idée
-                    await ideas_collection.update_one(
-                        {"id": idea_id},
-                        {"$set": {"status": IdeaStatus.REJECTED}}
-                    )
+                    from services.idea_service import IdeaService
+                    idea_service = IdeaService()
+                    await idea_service.reject_idea(idea_id)
                     results["success"].append(idea_id)
                     
                 elif action == "delete":
                     # Supprimer l'idée
-                    await ideas_collection.delete_one({"id": idea_id})
+                    from services.idea_service import IdeaService
+                    idea_service = IdeaService()
+                    await idea_service.delete_idea(idea_id)
                     results["success"].append(idea_id)
                     
                 elif action == "generate":
