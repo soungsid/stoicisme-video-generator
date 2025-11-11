@@ -10,7 +10,6 @@ services:
     restart: always
     ports:
       - "8001:8001"
-    profiles: [ "default" ]
 
     environment:
       - MONGO_USERNAME=${MONGO_USERNAME}
@@ -99,21 +98,63 @@ services:
       - STOICISME_FRONTEND_DOMAINE=${STOICISME_FRONTEND_DOMAINE}
     volumes:
       - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
-    profiles: [ "worker" ]
-
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - youtube-manager-network
-      - traefik_network # Utiliser aussi le réseau n8n_default
+      - traefik_network
 
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
+  video-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: video-worker-prod
+    restart: always
+    command: python workers/video_worker.py
+    environment:
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_CLUSTER=${MONGO_CLUSTER}
+      - MONGO_APP_NAME=${MONGO_APP_NAME}
+      - DB_NAME=${DB_NAME}
+      - YOUTUBE_CLIENT_ID=${YOUTUBE_CLIENT_ID}
+      - YOUTUBE_CLIENT_SECRET=${YOUTUBE_CLIENT_SECRET}
+      - YOUTUBE_REDIRECT_URI=${YOUTUBE_REDIRECT_URI}
+      - TZ=${TZ:-UTC}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - ELEVENLABS_API_KEY1=${ELEVENLABS_API_KEY1}
+      - ELEVENLABS_API_KEY2=${ELEVENLABS_API_KEY2}
+      - ELEVENLABS_API_KEY3=${ELEVENLABS_API_KEY3}
+      - ELEVENLABS_API_KEY4=${ELEVENLABS_API_KEY4}
+      - ELEVENLABS_API_KEY5=${ELEVENLABS_API_KEY5}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
+      - GOOGLE_SEARCH_API_KEY=${GOOGLE_SEARCH_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - RESOURCES_DIR=${RESOURCES_DIR}
+      - STOICISME_BACKEND_DOMAINE=${STOICISME_BACKEND_DOMAINE}
+      - STOICISME_FRONTEND_DOMAINE=${STOICISME_FRONTEND_DOMAINE}
+    volumes:
+      - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
+    depends_on:
+      - backend
+    networks:
+      - youtube-manager-network
+      - traefik_network
 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
   # Frontend React
   frontend:
     build:
@@ -123,7 +164,6 @@ services:
     restart: always
     ports:
       - "3000:3000"
-    profiles: [ "default" ]
     environment:
       - REACT_APP_BACKEND_URL=stoicisme-backend.smartinterviewer.app
     depends_on:
