@@ -351,7 +351,7 @@ class YouTubeService:
                     "$set": {
                         "youtube_video_id": youtube_video_id,
                         "youtube_url": youtube_url,
-                        "uploaded_at": datetime.now(timezone.utc),
+                        "uploaded_at": now_utc(),
                         "is_scheduled": False  # N'est plus planifié
                     }
                 }
