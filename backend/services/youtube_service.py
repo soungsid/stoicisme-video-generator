@@ -267,9 +267,11 @@ class YouTubeService:
         1. Récupère la vidéo et son script depuis MongoDB
         2. Upload la vidéo sur YouTube
         3. Met à jour MongoDB avec les infos YouTube
+        4. Met à jour le statut de l'idée associée
         """
         try:
-            from database import get_videos_collection, get_scripts_collection
+            from database import get_videos_collection, get_scripts_collection, get_ideas_collection
+            from models import IdeaStatus
             from datetime import datetime, timezone
             
             # 1. Récupérer la vidéo depuis MongoDB
@@ -353,6 +355,15 @@ class YouTubeService:
                     }
                 }
             )
+            
+            # 6. Mettre à jour le statut de l'idée si nécessaire
+            if video.get("idea_id"):
+                ideas_collection = get_ideas_collection()
+                await ideas_collection.update_one(
+                    {"id": video["idea_id"]},
+                    {"$set": {"status": IdeaStatus.UPLOADED}}
+                )
+                print(f"✅ Idea status updated to UPLOADED")
             
             print(f"✅ Video uploaded to YouTube and saved in DB: {youtube_url}")
             
