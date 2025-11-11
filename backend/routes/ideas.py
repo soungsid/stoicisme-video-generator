@@ -11,12 +11,25 @@ router = APIRouter()
 async def generate_ideas(request: IdeaGenerationRequest):
     """
     Générer de nouvelles idées de vidéos sur le stoïcisme
+    
+    Si custom_title est fourni, une seule idée sera créée avec ce titre
+    et les mots-clés seront utilisés pour enrichir le script ultérieurement.
     """
     try:
         agent = IdeaGeneratorAgent()
         
-        # Générer le prompt avec ou sans mots-clés
-        if request.keywords:
+        # Si un titre personnalisé est fourni
+        if request.custom_title:
+            # Créer directement l'idée avec le titre personnalisé
+            idea = VideoIdea(
+                title=request.custom_title,
+                keywords=request.keywords or [],
+                status=IdeaStatus.PENDING
+            )
+            ideas = [idea]
+            print(f"✨ Idée créée avec titre personnalisé: {request.custom_title}")
+        # Sinon, générer via LLM
+        elif request.keywords:
             ideas = await agent.generate_ideas_with_keywords(
                 count=request.count, 
                 keywords=request.keywords
@@ -37,7 +50,8 @@ async def generate_ideas(request: IdeaGenerationRequest):
         return {
             "success": True,
             "count": len(ideas),
-            "ideas": ideas_dict
+            "ideas": ideas_dict,
+            "custom_title_used": bool(request.custom_title)
         }
     except Exception as e:
         raise HTTPException(
