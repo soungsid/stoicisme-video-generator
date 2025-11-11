@@ -3,22 +3,49 @@ Service dédié à la gestion des sous-titres
 Facilite la maintenance et les évolutions futures
 """
 import re
+import os
 from moviepy.editor import TextClip
 from typing import List, Dict
+
+# Configurer MoviePy pour ImageMagick
+try:
+    from config.moviepy_config import configure_moviepy
+    configure_moviepy()
+except Exception as e:
+    print(f"⚠️  MoviePy config import failed: {e}")
+    # Fallback: configuration directe
+    os.environ['IMAGEMAGICK_BINARY'] = os.getenv('IMAGEMAGICK_BINARY', '/usr/bin/convert')
 
 class SubtitleService:
     """Service de génération et gestion des sous-titres"""
     
     def __init__(self):
+        # Polices disponibles dans le conteneur Docker
+        # Ordre de préférence des polices
+        available_fonts = [
+            'DejaVu-Sans-Bold',
+            'Liberation-Sans-Bold',
+            'Noto-Sans-Bold',
+            'Arial-Bold',
+            'Helvetica-Bold'
+        ]
+        
+        # Sélectionner la première police disponible
+        selected_font = available_fonts[0]
+        
         # Configuration par défaut des sous-titres
         self.default_config = {
-            'fontsize': 40,
+            'fontsize': 50,
             'color': 'white',
             'bg_color': 'black',
-            'font': 'Arial-Bold',
-            'margin': 40,  # Marge horizontale
-            'bottom_offset': 100  # Distance du bas de l'écran
+            'font': selected_font,
+            'margin': 60,  # Marge horizontale augmentée
+            'bottom_offset': 120,  # Distance du bas de l'écran
+            'stroke_color': 'black',
+            'stroke_width': 2
         }
+        
+        print(f"🎨 Subtitle Service initialized with font: {selected_font}")
     
     def clean_text(self, text: str) -> str:
         """
