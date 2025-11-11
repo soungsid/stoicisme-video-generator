@@ -70,13 +70,44 @@ class VideoService:
     
     async def generate_video(
         self,
-        idea: Dict,
-        script: Dict
+        script_id: str
     ) -> Video:
         """
         Générer la vidéo finale avec audio et sous-titres
+        
+        Args:
+            script_id: ID du script dans MongoDB
+            
+        Returns:
+            Objet Video créé
+            
+        Cette méthode:
+        1. Récupère le script et l'idée depuis MongoDB
+        2. Génère la vidéo avec audio et sous-titres
+        3. Retourne l'objet Video (non sauvegardé en DB)
         """
         try:
+            from database import get_scripts_collection, get_ideas_collection
+            
+            # 1. Récupérer le script depuis MongoDB
+            scripts_collection = get_scripts_collection()
+            script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
+            
+            if not script:
+                raise ValueError(f"Script {script_id} not found")
+            
+            # 2. Récupérer l'idée associée
+            idea_id = script.get("idea_id")
+            if not idea_id:
+                raise ValueError(f"Script {script_id} has no associated idea")
+            
+            ideas_collection = get_ideas_collection()
+            idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
+            
+            if not idea:
+                raise ValueError(f"Idea {idea_id} not found")
+            
+            # 3. Générer la vidéo
             title = idea["title"]
             video_type = VideoType(idea["video_type"])
             
