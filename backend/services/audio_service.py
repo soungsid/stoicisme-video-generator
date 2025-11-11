@@ -85,3 +85,58 @@ class AudioService:
         except Exception as e:
             print(f"❌ Error generating audio: {str(e)}")
             raise
+    
+    async def generate_audio_complete(self, script_id: str) -> AudioGeneration:
+        """
+        Générer l'audio pour un script (méthode complète)
+        
+        Cette méthode:
+        1. Récupère le script depuis MongoDB
+        2. Génère l'audio avec timestamps
+        3. Sauvegarde les phrases audio dans le script
+        4. Met à jour le statut de l'idée
+        
+        Args:
+            script_id: ID du script
+            
+        Returns:
+            AudioGeneration: Objet contenant les infos audio
+        """
+        try:
+            from database import get_scripts_collection, get_ideas_collection
+            from models import IdeaStatus
+            
+            # 1. Récupérer le script
+            scripts_collection = get_scripts_collection()
+            script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
+            
+            if not script:
+                raise ValueError(f"Script {script_id} not found")
+            
+            # 2. Générer l'audio
+            audio_generation = await self.generate_audio_with_timestamps(
+                script_id=script_id,
+                idea_id=script["idea_id"],
+                phrases=script["phrases"]
+            )
+            
+            # 3. Sauvegarder les phrases audio dans le script
+            await scripts_collection.update_one(
+                {"id": script_id},
+                {"$set": {"audio_phrases": [phrase.model_dump() for phrase in audio_generation.phrases]}}
+            )
+            
+            # 4. Mettre à jour le statut de l'idée
+            ideas_collection = get_ideas_collection()
+            await ideas_collection.update_one(
+                {"id": script["idea_id"]},
+                {"$set": {"status": IdeaStatus.AUDIO_GENERATED}}
+            )
+            
+            print(f"✅ Audio generation complete for script {script_id}")
+            return audio_generation
+            
+        except Exception as e:
+            print(f"❌ Error in generate_audio_complete: {str(e)}")
+            raise
+
