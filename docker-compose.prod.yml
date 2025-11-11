@@ -24,8 +24,10 @@ services:
       - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
     networks:
       - youtube-manager-network
+      - traefik_network
+
     labels:
-      - "traefik.http.services.STOICISME_BACKEND_DOMAINE.loadbalancer.server.port=80"
+      - "traefik.http.services.STOICISME_BACKEND_DOMAINE.loadbalancer.server.port=8001"
       - traefik.enable=true
       - traefik.http.routers.STOICISME_BACKEND_DOMAINE.rule=Host(`${STOICISME_BACKEND_DOMAINE}`)
       - traefik.http.routers.STOICISME_BACKEND_DOMAINE.tls=false
@@ -60,7 +62,7 @@ services:
       - YOUTUBE_CLIENT_SECRET=${YOUTUBE_CLIENT_SECRET}
       - TZ=${TZ:-UTC}
     volumes:
-      - ./ressources:/app/ressources
+      - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
     depends_on:
       backend:
         condition: service_healthy
@@ -81,15 +83,17 @@ services:
       dockerfile: Dockerfile
     container_name: youtube-manager-frontend-prod
     restart: always
+    ports:
+      - "3000:3000"
     environment:
-      - REACT_APP_BACKEND_URL=${BACKEND_URL:-stoicisme-backend.smartinterviewer.app}
+      - REACT_APP_BACKEND_URL=stoicisme-backend.smartinterviewer.app
     depends_on:
       - backend
     networks:
       - youtube-manager-network
       - traefik_network # Utiliser aussi le réseau n8n_default
     labels:
-      - "traefik.http.services.STOICISME_FRONTEND_DOMAINE.loadbalancer.server.port=80"
+      - "traefik.http.services.STOICISME_FRONTEND_DOMAINE.loadbalancer.server.port=3000"
       - traefik.enable=true
       - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.rule=Host(`${STOICISME_FRONTEND_DOMAINE}`)
       - traefik.http.routers.STOICISME_FRONTEND_DOMAINE.tls=false
