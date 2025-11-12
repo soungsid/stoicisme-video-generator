@@ -21,7 +21,7 @@ class ScriptGeneratorAgent(BaseAIAgent):
         target_words = int((duration_seconds / 60) * words_per_minute)
         
         prompt = f"""
-Tu es un scénariste expert spécialisé dans le contenu YouTube sur le stoïcisme.
+Tu es un scénariste expert spécialisé dans le contenu YouTube sur le stoïcisme ou simplement une histoire emouvante et inspirante.
 
 Crée un script captivant pour une vidéo YouTube avec les paramètres suivants:
 
@@ -34,16 +34,16 @@ Le script doit:
 2. Être conversationnel et engageant (comme si tu parlais à un ami)
 3. Donner des conseils pratiques et actionnables
 4. Utiliser des exemples concrets du stoïcisme (Marc Aurèle, Sénèque, Épictète)
-5. Se terminer par un appel à l'action (like, subscribe, comment)
-6. Être rythmé avec des phrases courtes et percutantes
-7. Inclure des transitions naturelles
-8. Être précis et respecter la durée cible
+5. Être rythmé avec des phrases courtes et percutantes
+6. Inclure des transitions naturelles
+7. Être précis et respecter la durée cible
+8. Utiliser des mot simple à comprendre.
 
 Structure recommandée:
 - Hook (5-10 secondes): Accroche forte qui pose le problème
 - Introduction (10-15% du temps): Contexte et promesse
 - Développement (70-75% du temps): Contenu principal avec exemples
-- Conclusion (10-15% du temps): Résumé et appel à l'action
+- Conclusion (10-15% du temps): Résumé et appel à l'action. La conclusion doit etre  très sobre et succente.
 
 Écris UNIQUEMENT le script, sans annotations ni instructions de mise en scène.
 """
@@ -53,7 +53,7 @@ Structure recommandée:
                 system_prompt="Tu es un scénariste expert en contenu YouTube sur le stoïcisme.",
                 user_prompt=prompt,
                 temperature=0.7,
-                max_tokens=3000
+                max_tokens=8000
             )
             
             script = Script(

@@ -46,7 +46,7 @@ KEYWORDS: [mot1, mot2, mot3]
                 system_prompt="Tu es un expert en création de contenu YouTube spécialisé dans le stoïcisme.",
                 user_prompt=prompt,
                 temperature=0.8,
-                max_tokens=2000
+                max_tokens=4000
             )
             
             ideas = self._parse_ideas(content)
@@ -110,14 +110,14 @@ KEYWORDS: [mot1, mot2, mot3]
         prompt = f"""
 Tu es un expert en création de titres YouTube viraux.
 
-Voici un script de vidéo sur le stoïcisme:
+Voici un script de vidéo :
 
 {script_text[:500]}...
 
 Génère UN SEUL titre YouTube accrocheur qui:
 1. Résume le contenu du script
 2. Est engageant et incite au clic
-3. Utilise une formule qui fonctionne ("Ce secret...", "Quand...", "Comment...")
+3. Utilise une formule qui fonctionne ("3 Actions que vous regretterez toute votre vie", "4 Habitudes qui volent votre énergie sans que vous le sachiez", "Ce secret...", "Quand...", "Comment...")
 4. Est optimisé pour le SEO{keywords_instruction}
 
 Réponds UNIQUEMENT avec le titre, rien d'autre.
