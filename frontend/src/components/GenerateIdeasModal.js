@@ -261,6 +261,22 @@ function GenerateIdeasModal({ onClose, onSubmit }) {
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Titre (optionnel)
+                </label>
+                <input
+                  type="text"
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  placeholder="Laissez vide pour générer automatiquement"
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="mt-2 text-sm text-gray-500">
+                  Si non fourni, le système générera un titre à partir du script.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Votre script
                 </label>
                 <textarea
@@ -272,9 +288,6 @@ function GenerateIdeasModal({ onClose, onSubmit }) {
                   required
                   minLength={50}
                 />
-                <p className="mt-2 text-sm text-gray-500">
-                  Le système générera un titre automatiquement.
-                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
