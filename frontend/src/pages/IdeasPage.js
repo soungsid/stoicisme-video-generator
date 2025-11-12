@@ -65,16 +65,28 @@ function IdeasPage() {
 
       if (data.type === 'auto') {
         // Option 1: Génération automatique
-        await ideasApi.generateIdeas(data.count);
+        await ideasApi.generateIdeas({
+          count: data.count,
+          video_type: data.videoType,
+          duration_seconds: data.duration,
+          sections_count: data.sectionsCount
+        });
         setToast({ type: 'success', message: `${data.count} idées générées avec succès !` });
       } else if (data.type === 'keywords') {
         // Option 2: Avec mots-clés
-        await ideasApi.generateIdeas(data.count, data.keywords);
+        await ideasApi.generateIdeas({
+          count: data.count,
+          keywords: data.keywords,
+          video_type: data.videoType,
+          duration_seconds: data.duration,
+          sections_count: data.sectionsCount
+        });
         setToast({ type: 'success', message: `${data.count} idées générées avec les mots-clés !` });
       } else if (data.type === 'custom') {
         // Option 3: Script custom
         await ideasApi.createWithCustomScript({
           script_text: data.script,
+          custom_title: data.customTitle,
           keywords: data.keywords,
           video_type: data.videoType,
           duration_seconds: data.duration
