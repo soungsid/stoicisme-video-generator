@@ -206,6 +206,54 @@ function GenerateIdeasModal({ onClose, onSubmit }) {
                   Les idées générées seront basées sur ces mots-clés.
                 </p>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Type de vidéo
+                  </label>
+                  <select
+                    value={videoType}
+                    onChange={(e) => setVideoType(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="short">Short (9:16)</option>
+                    <option value="normal">Normal (16:9)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Durée (secondes)
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    max="600"
+                    value={duration}
+                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {videoType === 'normal' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre de sections
+                  </label>
+                  <input
+                    type="number"
+                    min="2"
+                    max="10"
+                    value={sectionsCount}
+                    onChange={(e) => setSectionsCount(parseInt(e.target.value))}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    Pour les vidéos longues, le contenu sera structuré en sections thématiques.
+                  </p>
+                </div>
+              )}
             </>
           )}
 
