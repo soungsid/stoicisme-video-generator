@@ -13,6 +13,9 @@ async def generate_script(request: ScriptGenerationRequest):
     """
     Générer un script à partir d'une idée validée
     
+    - Pour vidéos SHORT: Génère un script classique
+    - Pour vidéos NORMAL avec sections: Génère un script avec sections séquentielles + conclusion intelligente
+    
     Génère également automatiquement la description YouTube
     """
     try:
@@ -32,13 +35,59 @@ async def generate_script(request: ScriptGenerationRequest):
                 detail="Idea must be validated before generating script"
             )
         
-        # Générer le script
-        agent = ScriptGeneratorAgent()
-        script = await agent.generate_script(
-            title=idea["title"],
-            keywords=idea.get("keywords", []),
-            duration_seconds=request.duration_seconds
-        )
+        video_type = idea.get("video_type", "short")
+        sections_count = idea.get("sections_count")
+        section_titles = idea.get("section_titles", [])
+        
+        # Vérifier si c'est une vidéo longue avec sections
+        is_long_video = (video_type == "normal" and sections_count and 
+                        sections_count > 0 and len(section_titles) > 0)
+        
+        if is_long_video:
+            # Générer un script long avec sections
+            print(f"🎬 Génération d'un script LONG avec {sections_count} sections")
+            
+            from agents.long_video_script_agent import LongVideoScriptAgent
+            from services.conclusion_script_service import ConclusionScriptService
+            
+            long_agent = LongVideoScriptAgent()
+            conclusion_service = ConclusionScriptService()
+            
+            # Générer introduction + sections
+            script_text, sections = await long_agent.generate_full_script_with_sections(
+                title=idea["title"],
+                keywords=idea.get("keywords", []),
+                section_titles=section_titles,
+                total_duration_seconds=request.duration_seconds
+            )
+            
+            # Ajouter la conclusion avec recommandation de vidéo
+            # Note: On ne peut pas utiliser l'ID de la vidéo car elle n'existe pas encore
+            # On générera la conclusion sans recommandation pour le moment
+            conclusion = await conclusion_service._generate_simple_conclusion(
+                title=idea["title"],
+                keywords=idea.get("keywords", [])
+            )
+            
+            script_text += "\n\n=== CONCLUSION ===\n" + conclusion
+            
+            script = Script(
+                idea_id=request.idea_id,
+                title=idea["title"],
+                original_script=script_text
+            )
+            
+        else:
+            # Générer un script classique (short ou normal sans sections)
+            print(f"📝 Génération d'un script CLASSIQUE")
+            
+            agent = ScriptGeneratorAgent()
+            script = await agent.generate_script(
+                title=idea["title"],
+                keywords=idea.get("keywords", []),
+                duration_seconds=request.duration_seconds
+            )
+        
         script.idea_id = request.idea_id
         script.title = idea["title"]
         
@@ -71,6 +120,8 @@ async def generate_script(request: ScriptGenerationRequest):
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating script: {str(e)}"
