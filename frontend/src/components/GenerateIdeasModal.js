@@ -107,22 +107,72 @@ function GenerateIdeasModal({ onClose, onSubmit }) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {activeTab === 'auto' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre d'idées à générer
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={count}
-                onChange={(e) => setCount(parseInt(e.target.value))}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <p className="mt-2 text-sm text-gray-500">
-                Le système génèrera automatiquement des titres et mots-clés optimisés.
-              </p>
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre d'idées à générer
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={count}
+                  onChange={(e) => setCount(parseInt(e.target.value))}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="mt-2 text-sm text-gray-500">
+                  Le système génèrera automatiquement des titres et mots-clés optimisés.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Type de vidéo
+                  </label>
+                  <select
+                    value={videoType}
+                    onChange={(e) => setVideoType(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="short">Short (9:16)</option>
+                    <option value="normal">Normal (16:9)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Durée (secondes)
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    max="600"
+                    value={duration}
+                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {videoType === 'normal' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre de sections
+                  </label>
+                  <input
+                    type="number"
+                    min="2"
+                    max="10"
+                    value={sectionsCount}
+                    onChange={(e) => setSectionsCount(parseInt(e.target.value))}
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    Pour les vidéos longues, le contenu sera structuré en sections thématiques.
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           {activeTab === 'keywords' && (
