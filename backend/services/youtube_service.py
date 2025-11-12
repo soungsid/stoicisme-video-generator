@@ -282,7 +282,7 @@ class YouTubeService:
             if not video:
                 raise ValueError(f"Video {video_id} not found in database")
             
-            if not video.get("video_path"):
+            if not video.get("video_relative_path"):
                 raise ValueError(f"Video {video_id} has no file path")
             
             # 2. Récupérer le script pour la description YouTube

@@ -149,9 +149,8 @@ async def get_video_details(video_id: str):
             
             # Fichiers
             "video_path": video.get("video_path"),
+            "video_relative_path" : video.get("video_relative_path"),
             "thumbnail_path": video.get("thumbnail_path"),
-            "video_url": f"/media/videos/{os.path.basename(video.get('video_path', ''))}" if video.get("video_path") else None,
-            "thumbnail_url": f"/media/thumbnails/{os.path.basename(video.get('thumbnail_path', ''))}" if video.get("thumbnail_path") else None,
             
             # Métadonnées vidéo
             "duration_seconds": video.get("duration_seconds"),

@@ -205,7 +205,7 @@ class VideoService:
                 title=title,
                 video_type=video_type,
                 video_path=video_url,  # URL accessible via /media
-                video_relative_path=f"{self.resources_dir}/{relative_path}",
+                video_relative_path=output_path,
                 duration_seconds=audio_duration_sec
             )
             
