@@ -38,6 +38,8 @@ class VideoIdea(BaseModel):
     keywords: List[str] = []
     video_type: VideoType = VideoType.SHORT
     duration_seconds: Optional[int] = 30
+    sections_count: Optional[int] = None  # Nombre de sections pour vidéos longues (normal)
+    section_titles: Optional[List[str]] = None  # Titres des sections générés
     status: IdeaStatus = IdeaStatus.PENDING
     error_message: Optional[str] = None
     progress_percentage: int = 0
