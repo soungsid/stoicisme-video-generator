@@ -150,6 +150,15 @@ function VideoDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Modal d'édition */}
+      {showEditModal && (
+        <EditVideoDetailsModal
+          video={video}
+          onClose={() => setShowEditModal(false)}
+          onSave={handleSaveVideo}
+        />
+      )}
+
       {/* Header avec bouton retour */}
       <div className="mb-6">
         <button
