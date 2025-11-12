@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   Calendar, Clock,
+  Edit,
   ExternalLink,
   Loader,
   Tag,
@@ -12,6 +13,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { videosApi, youtubeApi } from '../api';
+import EditVideoDetailsModal from '../components/EditVideoDetailsModal';
 
 function VideoDetailPage() {
   const { videoId } = useParams();
