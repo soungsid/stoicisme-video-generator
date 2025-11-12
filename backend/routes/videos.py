@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks
-from models import Video, IdeaStatus
+from models import Video, IdeaStatus, UpdateVideoRequest
 from database import get_videos_collection, get_scripts_collection, get_ideas_collection
 from services.video_service import VideoService
+from datetime import datetime
 import os
 
 router = APIRouter()
