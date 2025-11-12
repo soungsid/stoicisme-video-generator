@@ -24,6 +24,9 @@ async def generate_ideas(request: IdeaGenerationRequest):
             idea = VideoIdea(
                 title=request.custom_title,
                 keywords=request.keywords or [],
+                video_type=request.video_type,
+                duration_seconds=request.duration_seconds,
+                sections_count=request.sections_count if request.video_type.value == "normal" else None,
                 status=IdeaStatus.PENDING
             )
             ideas = [idea]
@@ -34,8 +37,38 @@ async def generate_ideas(request: IdeaGenerationRequest):
                 count=request.count, 
                 keywords=request.keywords
             )
+            # Appliquer video_type, duration et sections_count aux idées générées
+            for idea in ideas:
+                idea.video_type = request.video_type
+                idea.duration_seconds = request.duration_seconds
+                if request.video_type.value == "normal" and request.sections_count:
+                    idea.sections_count = request.sections_count
         else:
             ideas = await agent.generate_ideas(count=request.count)
+            # Appliquer video_type, duration et sections_count aux idées générées
+            for idea in ideas:
+                idea.video_type = request.video_type
+                idea.duration_seconds = request.duration_seconds
+                if request.video_type.value == "normal" and request.sections_count:
+                    idea.sections_count = request.sections_count
+        
+        # Générer les titres de sections si nécessaire
+        if request.video_type.value == "normal" and request.sections_count and request.sections_count > 0:
+            from agents.section_title_generator_agent import SectionTitleGeneratorAgent
+            section_agent = SectionTitleGeneratorAgent()
+            
+            for idea in ideas:
+                try:
+                    section_titles = await section_agent.generate_section_titles(
+                        title=idea.title,
+                        keywords=idea.keywords,
+                        sections_count=request.sections_count
+                    )
+                    idea.section_titles = section_titles
+                    print(f"✅ Titres de sections générés pour: {idea.title}")
+                except Exception as e:
+                    print(f"⚠️  Erreur génération sections pour {idea.title}: {e}")
+                    idea.section_titles = []
         
         # Sauvegarder en base de données
         ideas_collection = get_ideas_collection()
