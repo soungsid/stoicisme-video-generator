@@ -224,6 +224,87 @@ async def get_video(video_id: str):
             detail=f"Error fetching video: {str(e)}"
         )
 
+@router.patch("/{video_id}", response_model=Video)
+async def update_video(video_id: str, update_data: UpdateVideoRequest):
+    """
+    Mettre à jour les détails d'une vidéo
+    
+    Permet de modifier: title, video_type, paths, duration, YouTube info, scheduling
+    """
+    try:
+        videos_collection = get_videos_collection()
+        
+        # Vérifier que la vidéo existe
+        video = await videos_collection.find_one({"id": video_id}, {"_id": 0})
+        
+        if not video:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Video {video_id} not found"
+            )
+        
+        # Préparer les données à mettre à jour (seulement les champs fournis)
+        update_fields = {}
+        
+        if update_data.title is not None:
+            update_fields["title"] = update_data.title
+        
+        if update_data.video_type is not None:
+            update_fields["video_type"] = update_data.video_type
+        
+        if update_data.video_path is not None:
+            update_fields["video_path"] = update_data.video_path
+        
+        if update_data.video_relative_path is not None:
+            update_fields["video_relative_path"] = update_data.video_relative_path
+        
+        if update_data.thumbnail_path is not None:
+            update_fields["thumbnail_path"] = update_data.thumbnail_path
+        
+        if update_data.duration_seconds is not None:
+            update_fields["duration_seconds"] = update_data.duration_seconds
+        
+        if update_data.youtube_video_id is not None:
+            update_fields["youtube_video_id"] = update_data.youtube_video_id
+        
+        if update_data.youtube_url is not None:
+            update_fields["youtube_url"] = update_data.youtube_url
+        
+        if update_data.scheduled_publish_date is not None:
+            update_fields["scheduled_publish_date"] = update_data.scheduled_publish_date
+        
+        if update_data.is_scheduled is not None:
+            update_fields["is_scheduled"] = update_data.is_scheduled
+        
+        # Si rien à mettre à jour, retourner la vidéo telle quelle
+        if not update_fields:
+            return video
+        
+        # Mettre à jour la vidéo
+        result = await videos_collection.find_one_and_update(
+            {"id": video_id},
+            {"$set": update_fields},
+            return_document=True
+        )
+        
+        # Retirer le _id de MongoDB
+        if result and "_id" in result:
+            del result["_id"]
+        
+        print(f"✅ Vidéo {video_id} mise à jour: {list(update_fields.keys())}")
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating video: {str(e)}"
+        )
+
 @router.get("/")
 async def list_videos(
     status_filter: str = None,
