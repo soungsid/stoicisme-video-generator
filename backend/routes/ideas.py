@@ -356,23 +356,31 @@ async def generate_section_titles(idea_id: str, sections_count: int):
 async def create_idea_with_custom_script(request: CustomScriptRequest):
     """
     Créer une idée avec un script personnalisé
-    Le système génère juste un titre pour l'idée
+    Le système génère un titre si non fourni, sinon utilise le titre custom
+    Note: Pour les scripts custom, on ignore complètement le système de sections
     """
     try:
         from agents.idea_generator_agent import IdeaGeneratorAgent
         from database import get_scripts_collection
         import uuid
         
-        # Générer un titre basé sur le script
-        agent = IdeaGeneratorAgent()
-        title = await agent.generate_title_from_script(request.script_text, request.keywords or [])
+        # Utiliser le titre fourni ou en générer un basé sur le script
+        if request.custom_title:
+            title = request.custom_title
+            print(f"✨ Utilisation du titre personnalisé: {title}")
+        else:
+            agent = IdeaGeneratorAgent()
+            title = await agent.generate_title_from_script(request.script_text, request.keywords or [])
+            print(f"✨ Titre généré: {title}")
         
-        # Créer l'idée
+        # Créer l'idée (SANS sections car script custom)
         idea = VideoIdea(
             title=title,
             keywords=request.keywords or [],
             video_type=request.video_type,
             duration_seconds=request.duration_seconds,
+            sections_count=None,  # Pas de sections pour script custom
+            section_titles=None,  # Pas de sections pour script custom
             status=IdeaStatus.SCRIPT_GENERATED,
             validated_at=datetime.now()
         )
