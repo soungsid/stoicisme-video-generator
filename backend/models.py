@@ -119,6 +119,9 @@ class IdeaGenerationRequest(BaseModel):
     count: int = Field(default=5, ge=1, le=20)
     keywords: Optional[List[str]] = None
     custom_title: Optional[str] = Field(None, description="Titre personnalisé pour l'idée (ex: '5 Habitudes terribles qui ruinent votre matinée!')")
+    video_type: VideoType = VideoType.SHORT
+    duration_seconds: int = Field(default=30, ge=10, le=600)
+    sections_count: Optional[int] = Field(None, ge=2, le=10, description="Nombre de sections pour vidéos longues (type normal)")
 
 class CustomScriptRequest(BaseModel):
     script_text: str = Field(..., min_length=50)
