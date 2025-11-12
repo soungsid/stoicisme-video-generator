@@ -21,6 +21,7 @@ function VideoDetailPage() {
   const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     loadVideoDetails();
