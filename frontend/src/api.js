@@ -11,8 +11,8 @@ const api = axios.create({
 
 // Ideas API
 export const ideasApi = {
-  generateIdeas: (count = 5, keywords = null) => 
-    api.post('/api/ideas/generate', { count, keywords }),
+  generateIdeas: (data) => 
+    api.post('/api/ideas/generate', data),
   createWithCustomScript: (data) => 
     api.post('/api/ideas/custom-script', data),
   getAllIdeas: () => api.get('/api/ideas/'),
@@ -22,6 +22,8 @@ export const ideasApi = {
   deleteIdea: (id) => api.delete(`/api/ideas/${id}`),
   batchAction: (ideaIds, action) => 
     api.post('/api/ideas/batch-action', null, { params: { idea_ids: ideaIds, action } }),
+  generateSectionTitles: (ideaId, sectionsCount) => 
+    api.post(`/api/ideas/${ideaId}/generate-section-titles`, null, { params: { sections_count: sectionsCount } }),
 };
 
 // Scripts API
