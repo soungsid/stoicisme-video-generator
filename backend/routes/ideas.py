@@ -302,6 +302,56 @@ async def batch_action(idea_ids: List[str], action: str):
             detail=f"Error performing batch action: {str(e)}"
         )
 
+@router.post("/{idea_id}/generate-section-titles")
+async def generate_section_titles(idea_id: str, sections_count: int):
+    """
+    Générer ou régénérer les titres de sections pour une idée
+    """
+    try:
+        ideas_collection = get_ideas_collection()
+        idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
+        
+        if not idea:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Idea {idea_id} not found"
+            )
+        
+        from agents.section_title_generator_agent import SectionTitleGeneratorAgent
+        agent = SectionTitleGeneratorAgent()
+        
+        section_titles = await agent.generate_section_titles(
+            title=idea["title"],
+            keywords=idea.get("keywords", []),
+            sections_count=sections_count
+        )
+        
+        # Mettre à jour l'idée
+        await ideas_collection.update_one(
+            {"id": idea_id},
+            {
+                "$set": {
+                    "section_titles": section_titles,
+                    "sections_count": sections_count
+                }
+            }
+        )
+        
+        return {
+            "success": True,
+            "idea_id": idea_id,
+            "section_titles": section_titles,
+            "sections_count": sections_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating section titles: {str(e)}"
+        )
+
 @router.post("/custom-script", response_model=VideoIdea)
 async def create_idea_with_custom_script(request: CustomScriptRequest):
     """
