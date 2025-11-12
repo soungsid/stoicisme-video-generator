@@ -164,3 +164,25 @@ class UpdateVideoMetadataRequest(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = None
+
+class UpdateVideoRequest(BaseModel):
+    """Requête pour mettre à jour les détails d'une vidéo locale"""
+    title: Optional[str] = None
+    video_type: Optional[VideoType] = None
+    video_path: Optional[str] = None
+    video_relative_path: Optional[str] = None
+    thumbnail_path: Optional[str] = None
+    duration_seconds: Optional[float] = None
+    youtube_video_id: Optional[str] = None
+    youtube_url: Optional[str] = None
+    scheduled_publish_date: Optional[datetime] = None
+    is_scheduled: Optional[bool] = None
+
+class VideoSection(BaseModel):
+    """Représente une section d'une vidéo longue"""
+    section_number: int
+    title: str
+    script: str
+    duration_seconds: float
+    start_time: float = 0.0
+    end_time: float = 0.0
