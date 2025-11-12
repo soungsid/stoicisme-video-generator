@@ -6,8 +6,10 @@ function GenerateIdeasModal({ onClose, onSubmit }) {
   const [count, setCount] = useState(5);
   const [keywords, setKeywords] = useState('');
   const [customScript, setCustomScript] = useState('');
+  const [customTitle, setCustomTitle] = useState('');
   const [videoType, setVideoType] = useState('short');
   const [duration, setDuration] = useState(30);
+  const [sectionsCount, setSectionsCount] = useState(3);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -16,15 +18,29 @@ function GenerateIdeasModal({ onClose, onSubmit }) {
 
     try {
       if (activeTab === 'auto') {
-        await onSubmit({ type: 'auto', count });
+        await onSubmit({ 
+          type: 'auto', 
+          count,
+          videoType,
+          duration,
+          sectionsCount: videoType === 'normal' ? sectionsCount : null
+        });
       } else if (activeTab === 'keywords') {
         const keywordList = keywords.split(',').map(k => k.trim()).filter(k => k);
-        await onSubmit({ type: 'keywords', count, keywords: keywordList });
+        await onSubmit({ 
+          type: 'keywords', 
+          count, 
+          keywords: keywordList,
+          videoType,
+          duration,
+          sectionsCount: videoType === 'normal' ? sectionsCount : null
+        });
       } else if (activeTab === 'custom') {
         const keywordList = keywords.split(',').map(k => k.trim()).filter(k => k);
         await onSubmit({ 
           type: 'custom', 
-          script: customScript, 
+          script: customScript,
+          customTitle: customTitle || null,
           keywords: keywordList,
           videoType,
           duration
