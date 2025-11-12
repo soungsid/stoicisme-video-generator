@@ -323,7 +323,7 @@ class YouTubeService:
             }
             
             media = MediaFileUpload(
-                video["video_path"],
+                video["video_relative_path"],
                 chunksize=-1,
                 resumable=True,
                 mimetype='video/mp4'
