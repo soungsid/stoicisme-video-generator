@@ -75,6 +75,17 @@ function VideoDetailPage() {
     }
   };
 
+  const handleSaveVideo = async (updateData) => {
+    try {
+      await videosApi.updateVideo(video.id, updateData);
+      alert('✅ Vidéo mise à jour avec succès !');
+      await loadVideoDetails();
+    } catch (error) {
+      console.error('Error updating video:', error);
+      throw error;
+    }
+  };
+
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
