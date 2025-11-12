@@ -93,6 +93,25 @@ function ValidateIdeaModal({ idea, onClose, onSubmit }) {
               data-testid="keywords-input"
             />
           </div>
+
+          {/* Afficher les titres de sections si présents */}
+          {idea.section_titles && idea.section_titles.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <h4 className="text-sm font-medium text-blue-900 mb-2">
+                📋 Sections de la vidéo ({idea.section_titles.length})
+              </h4>
+              <ol className="list-decimal list-inside space-y-1">
+                {idea.section_titles.map((title, index) => (
+                  <li key={index} className="text-sm text-blue-800">
+                    {title}
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-2 text-xs text-blue-700">
+                Ces sections structureront le contenu de votre vidéo longue.
+              </p>
+            </div>
+          )}
           
           <div className="flex space-x-3 pt-4">
             <button
