@@ -49,6 +49,7 @@ export const videosApi = {
   getVideoByIdea: (ideaId) => api.get(`/api/videos/by-idea/${ideaId}`),
   listVideos: (statusFilter = null, sortBy = 'created_at', sortOrder = 'desc') => 
     api.get('/api/videos/', { params: { status_filter: statusFilter, sort_by: sortBy, sort_order: sortOrder } }),
+  updateVideo: (id, data) => api.patch(`/api/videos/${id}`, data),
 };
 
 // YouTube API
