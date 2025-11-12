@@ -122,6 +122,7 @@ class IdeaGenerationRequest(BaseModel):
 
 class CustomScriptRequest(BaseModel):
     script_text: str = Field(..., min_length=50)
+    custom_title: Optional[str] = Field(None, description="Titre optionnel pour le script custom")
     keywords: Optional[List[str]] = None
     video_type: VideoType = VideoType.SHORT
     duration_seconds: int = Field(default=30, ge=10, le=600)
