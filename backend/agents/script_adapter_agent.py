@@ -61,16 +61,29 @@ Retourne UNIQUEMENT le script adapté avec les marqueurs, sans explications.
             )
             
             # Diviser en phrases en préservant les marqueurs
-            phrases = self._split_into_phrases(adapted_script)
+            phrases = self._split_into_phrases(original_script)
             
             print(f"✅ Adapted script: {len(phrases)} phrases with emotion markers")
-            return adapted_script, phrases
+            return original_script, phrases
             
         except Exception as e:
             print(f"❌ Error adapting script: {str(e)}")
             raise
     
     def _split_into_phrases(self, script: str) -> List[str]:
+        """
+        Diviser le script en phrases tout en préservant les marqueurs
+        """
+        # Patterns pour split: . ! ? suivi d'un espace ou fin de ligne
+        # Mais on garde les marqueurs avec leur phrase
+        
+        # Nettoyer les espaces multiples
+        script = re.sub(r'\s+', ' ', script).strip()
+        
+        return [script]
+        #return self._do_the_split(script)
+    
+    def _do_the_split(self, script: str) -> List[str]:
         """
         Diviser le script en phrases tout en préservant les marqueurs
         """
