@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks
-from models import Video, IdeaStatus, UpdateVideoRequest
+from models import Video, UpdateVideoRequest
 from database import get_videos_collection, get_scripts_collection, get_ideas_collection
 from services.video_service import VideoService
 from datetime import datetime
@@ -18,48 +18,10 @@ async def generate_video(script_id: str, background_tasks: BackgroundTasks):
     - Génération de la vidéo
     """
     try:
-        scripts_collection = get_scripts_collection()
-        script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
-        
-        if not script:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Script {script_id} not found"
-            )
-        
-        # Vérifier le statut de l'idée
-        idea_id = script.get("idea_id")
-        if not idea_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Script has no associated idea"
-            )
-        
-        ideas_collection = get_ideas_collection()
-        idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
-        
-        if not idea:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Idea {idea_id} not found"
-            )
-        
-        if idea["status"] != IdeaStatus.AUDIO_GENERATED:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Audio must be generated before video generation"
-            )
         
         # Générer la vidéo (le service récupère script et idea lui-même)
         video_service = VideoService()
         video = await video_service.generate_video(script_id=script_id)
-        
-        # Mettre à jour le statut de l'idée
-        await ideas_collection.update_one(
-            {"id": idea_id},
-            {"$set": {"status": IdeaStatus.VIDEO_GENERATED}}
-        )
-        
         return video
     except HTTPException:
         raise

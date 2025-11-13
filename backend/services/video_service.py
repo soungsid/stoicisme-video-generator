@@ -2,11 +2,10 @@ import os
 import random
 from typing import Dict
 from database import get_videos_collection
-from models import Video, VideoType
+from models import Video, VideoType, IdeaStatus
 from slugify import slugify
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip, TextClip, CompositeVideoClip
+from moviepy.editor import VideoFileClip, AudioFileClip,  CompositeVideoClip
 from pydub import AudioSegment
-import subprocess
 from services.subtitle_service import SubtitleService
 
 class VideoService:
@@ -213,6 +212,11 @@ class VideoService:
             # Sauvegarder la vidéo
             videos_collection = get_videos_collection()
             await videos_collection.insert_one(video.model_dump())
+             # Mettre à jour le statut de l'idée
+            await ideas_collection.update_one(
+                {"id": idea_id},
+                {"$set": {"status": IdeaStatus.VIDEO_GENERATED}}
+            )
             
             return video
             
