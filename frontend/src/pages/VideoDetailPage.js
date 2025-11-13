@@ -141,6 +141,7 @@ function VideoDetailPage() {
     return (
       <div className="text-center py-12">
         <VideoIcon className="mx-auto h-12 w-12 text-gray-400" />
+        
         <h3 className="mt-2 text-sm font-medium text-gray-900">Vidéo non trouvée</h3>
       </div>
     );
@@ -235,14 +236,10 @@ function VideoDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Lecteur vidéo */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <video
-              controls
-              className="w-full"
-              poster={video.thumbnail_url ? `${BACKEND_URL}${video.thumbnail_url}` : undefined}
-              src={video.video_url ? `${BACKEND_URL}${video.video_url}` : undefined}
-            >
-              Votre navigateur ne supporte pas la lecture de vidéos.
-            </video>
+          <video controls class="w-full">
+            <source src={video.video_url ? `${BACKEND_URL}${video.video_url}` : undefined} type="video/mp4" />
+            Votre navigateur ne supporte pas la lecture de vidéos.
+          </video>
           </div>
 
           {/* Tags */}
