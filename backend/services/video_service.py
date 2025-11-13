@@ -1,7 +1,7 @@
 import os
 import random
 from typing import Dict
-from backend.database import get_videos_collection
+from database import get_videos_collection
 from models import Video, VideoType
 from slugify import slugify
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip, TextClip, CompositeVideoClip
