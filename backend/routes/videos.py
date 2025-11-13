@@ -54,10 +54,6 @@ async def generate_video(script_id: str, background_tasks: BackgroundTasks):
         video_service = VideoService()
         video = await video_service.generate_video(script_id=script_id)
         
-        # Sauvegarder la vidéo
-        videos_collection = get_videos_collection()
-        await videos_collection.insert_one(video.model_dump())
-        
         # Mettre à jour le statut de l'idée
         await ideas_collection.update_one(
             {"id": idea_id},

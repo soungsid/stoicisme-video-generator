@@ -193,12 +193,8 @@ class VideoWorker:
             if start_from in ["script", "adapt", "audio", "video"] and script_id:
                 await self.update_idea_progress(idea_id, IdeaStatus.VIDEO_GENERATING, 85, "Génération vidéo...")
                 
-                script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
                 video_service = VideoService()
-                video = await video_service.generate_video(idea=idea, script=script)
-                
-                videos_collection = self.db.videos
-                await videos_collection.insert_one(video.model_dump())
+                video = await video_service.generate_video(script_id=script_id)
                 
                 await self.update_idea_progress(idea_id, IdeaStatus.VIDEO_GENERATED, 100, "Vidéo prête !", last_successful="video_generated")
             

@@ -1,6 +1,7 @@
 import os
 import random
 from typing import Dict
+from backend.database import get_videos_collection
 from models import Video, VideoType
 from slugify import slugify
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip, TextClip, CompositeVideoClip
@@ -208,6 +209,10 @@ class VideoService:
                 video_relative_path=output_path,
                 duration_seconds=audio_duration_sec
             )
+            
+            # Sauvegarder la vidéo
+            videos_collection = get_videos_collection()
+            await videos_collection.insert_one(video.model_dump())
             
             return video
             
