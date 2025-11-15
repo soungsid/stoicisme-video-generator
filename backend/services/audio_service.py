@@ -1,7 +1,7 @@
 import os
 from typing import List
 from models import AudioGeneration, AudioPhrase
-from services.elevenlabs_service import ElevenLabsService
+from backend.services.elevenlabs_custom_service import ElevenLabsService
 from slugify import slugify
 
 class AudioService:

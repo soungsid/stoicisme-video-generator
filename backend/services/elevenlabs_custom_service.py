@@ -1,4 +1,5 @@
 import os
+import elevenlabs
 from elevenlabs.client import ElevenLabs
 from elevenlabs import save
 from typing import List, Tuple
@@ -55,6 +56,7 @@ class ElevenLabsService:
                 model_id="eleven_v3",
                 output_format="mp3_44100_128"  
             )
+            print("l'audio a été generé avec succes. Nex step sauvegarde de l'audio")
             
             # Sauvegarder l'audio
             save(audio, output_path)
@@ -87,3 +89,15 @@ class ElevenLabsService:
             await asyncio.sleep(0.5)
         
         return results
+    
+async def main():
+    elevenlabs_service = ElevenLabsService()
+    text = """
+    Un jeune couple venait d’emménager. Un matin, en prenant leur petit-déjeuner, la jeune femme vit sa voisine étendre son linge. « Son linge n’est pas propre, » dit-elle. « Elle ne sait pas bien laver. Elle devrait utiliser une meilleure lessive. » Son mari resta silencieux. Chaque fois que la voisine suspendait son linge, la jeune femme répétait les mêmes critiques. Un mois plus tard, elle fut étonnée de voir le linge parfaitement propre. « Regarde ! Elle a enfin appris à laver correctement. Qui a bien pu lui montrer ? » Son mari répondit calmement : « Je me suis levé tôt et j’ai nettoyé nos fenêtres. » La vie fonctionne ainsi : ce que nous percevons chez les autres dépend de la clarté de notre propre regard. Ne juge pas trop vite, surtout si ta vision est obscurcie par la colère, la jalousie ou la négativité. Juger quelqu’un ne dit pas qui il est, mais qui tu es.
+    """
+    await elevenlabs_service.generate_audio(text, "sss.mp3")
+    
+if __name__ == "__main__":
+    asyncio.run(main())
+    
+    
