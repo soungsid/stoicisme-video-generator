@@ -24,7 +24,6 @@ from services.queue_service import QueueService
 from agents.script_adapter_agent import ScriptAdapterAgent
 from services.audio_service import AudioService
 from services.video_service import VideoService
-from services.script_service import ScriptService
 
 
 class VideoWorker:
@@ -248,6 +247,8 @@ class VideoWorker:
                 await asyncio.sleep(self.poll_interval)
     
     async def start(self):
+        from services.script_service import ScriptService
+
         """Démarrer le worker"""
         await self.connect_to_mongo()
         
