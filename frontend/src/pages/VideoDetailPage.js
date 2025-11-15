@@ -13,6 +13,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { videosApi, youtubeApi } from '../api';
+import { API_URL } from '../config';
 import EditVideoDetailsModal from '../components/EditVideoDetailsModal';
 
 function VideoDetailPage() {
@@ -147,8 +148,6 @@ function VideoDetailPage() {
     );
   }
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://stoicisme-backend.manga-pics.com';
-
   return (
     <div className="max-w-7xl mx-auto">
       {/* Modal d'édition */}
@@ -237,7 +236,7 @@ function VideoDetailPage() {
           {/* Lecteur vidéo */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <video controls class="w-full">
-            <source src={video.video_url ? `${BACKEND_URL}${video.video_url}` : undefined} type="video/mp4" />
+            <source src={video.video_url ? `${API_URL}${video.video_url}` : undefined} type="video/mp4" />
             Votre navigateur ne supporte pas la lecture de vidéos.
           </video>
           </div>
