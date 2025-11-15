@@ -149,7 +149,7 @@ class VideoService:
             final_video = video_clip.set_audio(audio_clip)
             
             # Ajouter les sous-titres si disponibles
-            if script.get("phrases"):
+            """ if script.get("phrases"):
                 print("📝 Préparation des sous-titres...")
                 from database import get_scripts_collection
                 scripts_collection = get_scripts_collection()
@@ -166,7 +166,7 @@ class VideoService:
                     )
                     if subtitle_clips:
                         final_video = CompositeVideoClip([final_video] + subtitle_clips)
-                        print(f"✅ {len(subtitle_clips)} sous-titres ajoutés")
+                        print(f"✅ {len(subtitle_clips)} sous-titres ajoutés") """
             
             # Chemin de sortie
             output_path = os.path.join(video_dir, f"{slugify(title)}.mp4")
