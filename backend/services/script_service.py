@@ -1,3 +1,5 @@
+import traceback
+from traceback import print_exception, print_stack
 from fastapi import HTTPException, status
 from database import get_scripts_collection, get_ideas_collection
 from models import Script, ScriptGenerationRequest, IdeaStatus
@@ -63,7 +65,7 @@ class ScriptService:
             script = await agent.generate_script(
                 title=idea["title"],
                 keywords=idea.get("keywords", []),
-                duration_seconds=idea.duration_seconds
+                duration_seconds=idea.get("duration_seconds", 30)
             )
 
         # Description YouTube
@@ -79,7 +81,7 @@ class ScriptService:
 
         except Exception:
             print(f"Erreur lors de la generation de la description youtube")
-
+            traceback.print_exc()
             script.youtube_description = idea["title"]
 
         # Sauvegarde en DB

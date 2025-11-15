@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Loader, Search, Play, CheckSquare, Square } from 'lucide-react';
+import { CheckSquare, Loader, Plus, Search, Square } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { ideasApi, pipelineApi } from '../api';
-import IdeaCard from '../components/IdeaCard';
-import ValidateIdeaModal from '../components/ValidateIdeaModal';
-import GenerateIdeasModal from '../components/GenerateIdeasModal';
 import ConfirmModal from '../components/ConfirmModal';
+import GenerateIdeasModal from '../components/GenerateIdeasModal';
+import IdeaCard from '../components/IdeaCard';
 import Toast from '../components/Toast';
+import ValidateIdeaModal from '../components/ValidateIdeaModal';
 
 function IdeasPage() {
   const [ideas, setIdeas] = useState([]);
@@ -24,7 +24,7 @@ function IdeasPage() {
 
   useEffect(() => {
     loadIdeas();
-    const interval = setInterval(loadIdeas, 3000);
+    const interval = setInterval(loadIdeas, 60000);
     return () => clearInterval(interval);
   }, []);
 

@@ -131,7 +131,7 @@ class VideoWorker:
             # Étape 1: Générer le script
             if start_from == "script":
                 await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_GENERATING, 10, "Génération du script...")
-                self.script_service.generate_script(idea_id)
+                await self.script_service.generate_script(idea_id)
                 
                 await scripts_collection.insert_one(script.model_dump())
                 script_id = script.id

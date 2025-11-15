@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import os
+import asyncio
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -16,6 +17,10 @@ from database import connect_to_mongo, close_mongo_connection
 # Import routes
 from routes import ideas, scripts, audio, videos, youtube_routes, config, pipeline, queue_routes, queue_management
 
+# Import helpers and workers
+from helpers.environment import is_local
+from workers.video_worker import main as video_worker_main
+
 # Créer le dossier resources s'il n'existe pas
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "/app/ressources")
 os.makedirs(os.path.join(RESOURCES_DIR, "videos"), exist_ok=True)
@@ -26,6 +31,9 @@ async def lifespan(app: FastAPI):
     # Startup
     await connect_to_mongo()
     print("✅ Connected to MongoDB Atlas")
+    if is_local():
+        asyncio.create_task(video_worker_main())
+        print("✅ Video worker started in local environment")
     yield
     # Shutdown
     await close_mongo_connection()
