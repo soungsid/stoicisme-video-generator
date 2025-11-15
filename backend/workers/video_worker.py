@@ -6,6 +6,8 @@ import asyncio
 import sys
 import os
 
+from services.script_service import ScriptService
+
 # Ajouter le répertoire parent au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -13,15 +15,13 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 import traceback
-from datetime import datetime
 
 # Charger les variables d'environnement
 load_dotenv()
 
 # Import après load_dotenv
-from models import IdeaStatus, JobStatus
+from models import IdeaStatus
 from services.queue_service import QueueService
-from agents.script_generator_agent import ScriptGeneratorAgent
 from agents.script_adapter_agent import ScriptAdapterAgent
 from services.audio_service import AudioService
 from services.video_service import VideoService
@@ -131,15 +131,7 @@ class VideoWorker:
             # Étape 1: Générer le script
             if start_from == "script":
                 await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_GENERATING, 10, "Génération du script...")
-                
-                agent = ScriptGeneratorAgent()
-                script = await agent.generate_script(
-                    title=idea["title"],
-                    keywords=idea.get("keywords", []),
-                    duration_seconds=idea["duration_seconds"]
-                )
-                script.idea_id = idea_id
-                script.title = idea["title"]
+                self.script_service.generate_script(idea_id)
                 
                 await scripts_collection.insert_one(script.model_dump())
                 script_id = script.id
@@ -265,6 +257,7 @@ class VideoWorker:
         database.db_client = self.db_client
         
         self.queue_service = QueueService()
+        self.script_service = ScriptService()
         
         await self.run()
     

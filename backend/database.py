@@ -46,17 +46,17 @@ def get_database():
 
 # Collections
 def get_ideas_collection():
-    return db.ideas
+    return get_database().ideas
 
 def get_scripts_collection():
-    return db.scripts
+    return get_database().scripts
 
 def get_videos_collection():
-    return db.videos
+    return get_database().videos
 
 def get_config_collection():
-    return db.config
+    return get_database().config
 
 def get_queue_collection():
     """Collection pour la queue de jobs vidéo"""
-    return db.video_queue
+    return get_database().video_queue
