@@ -206,7 +206,8 @@ class VideoService:
                 video_type=video_type,
                 video_path=video_url,  # URL accessible via /media
                 video_relative_path=output_path,
-                duration_seconds=audio_duration_sec
+                duration_seconds=audio_duration_sec,
+                youtube_description=script["youtube_description"]
             )
             
             # Sauvegarder la vidéo

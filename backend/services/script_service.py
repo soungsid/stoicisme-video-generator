@@ -74,9 +74,12 @@ class ScriptService:
                 script_content=script.original_script,
                 keywords=idea.get("keywords", [])
             )
+            print(f"description pondu par description agent : {description}")
             script.youtube_description = description
 
         except Exception:
+            print(f"Erreur lors de la generation de la description youtube")
+
             script.youtube_description = idea["title"]
 
         # Sauvegarde en DB

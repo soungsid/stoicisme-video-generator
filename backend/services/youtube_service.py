@@ -294,10 +294,12 @@ class YouTubeService:
                     {"id": video["script_id"]}, 
                     {"_id": 0}
                 )
-                if script and script.get("youtube_description"):
-                    youtube_description = script["youtube_description"]
-                elif script:
+            if video.get("youtube_description"):
+                    youtube_description = video["youtube_description"]
+            elif script :
                     youtube_description = f"{video['title']}\n\n{script.get('original_script', '')[:500]}..."
+                    
+            print(f"Uplod la video sur youtube {video}")
             
             # 3. Préparer les métadonnées
             title = video.get("title", "Vidéo sans titre")
