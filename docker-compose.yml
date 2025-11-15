@@ -168,7 +168,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_BACKEND_URL=stoicisme-backend.smartinterviewer.app
+      - REACT_APP_BACKEND_URL=${STOICISME_BACKEND_DOMAINE}
     depends_on:
       - backend
     networks:
