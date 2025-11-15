@@ -37,7 +37,7 @@ services:
       - RESOURCES_DIR=${RESOURCES_DIR}
       - STOICISME_BACKEND_DOMAINE=${STOICISME_BACKEND_DOMAINE}
       - STOICISME_FRONTEND_DOMAINE=${STOICISME_FRONTEND_DOMAINE}
-      - HOST_BACKEND=${HOST_BACKEND}
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
 
     volumes:
       - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
@@ -144,7 +144,7 @@ services:
       - RESOURCES_DIR=${RESOURCES_DIR}
       - STOICISME_BACKEND_DOMAINE=${STOICISME_BACKEND_DOMAINE}
       - STOICISME_FRONTEND_DOMAINE=${STOICISME_FRONTEND_DOMAINE}
-      - HOST_BACKEND=${HOST_BACKEND}
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
     volumes:
       - ${DATA_WORKSPACE:-/data/workspace-stoicisme-video-generator/ressources}:/app/ressources
     depends_on:
@@ -168,7 +168,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_BACKEND_URL=${STOICISME_BACKEND_DOMAINE}
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
     depends_on:
       - backend
     networks:

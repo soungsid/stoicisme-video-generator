@@ -10,8 +10,10 @@ COPY package.json yarn.lock ./
 # Installer les dépendances
 RUN yarn install --frozen-lockfile
 
-# Copier le code source
+# Copier le code source (exclure .env pour éviter les conflits)
 COPY . .
+# Supprimer le fichier .env s'il existe pour éviter les conflits avec les variables d'environnement Docker
+RUN rm -f .env
 
 # Build de production
 RUN yarn build
