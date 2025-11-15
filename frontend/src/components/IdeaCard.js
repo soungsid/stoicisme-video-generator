@@ -1,8 +1,8 @@
+import { AlertCircle, CheckCircle, CheckSquare, Clock, FileText, Loader, Play, Square, Trash2, X, XCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, Trash2, Play, Loader, Square, CheckSquare, AlertCircle, FileText, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ProgressBar from './ProgressBar';
 import { queueApi } from '../api';
+import ProgressBar from './ProgressBar';
 
 function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDelete, onStartPipeline }) {
   const navigate = useNavigate();
@@ -255,8 +255,14 @@ function IdeaCard({ idea, selected, onToggleSelect, onValidate, onReject, onDele
               {nextStep.label}
             </button>
           )}
-          
-          <button
+            <button
+                onClick={() => onStartPipeline('video_generating')}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Regenerer Video
+              </button>          
+            <button
             onClick={onDelete}
             disabled={isProcessing || isQueued}
             className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50"
