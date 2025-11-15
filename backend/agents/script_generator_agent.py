@@ -1,5 +1,3 @@
-from typing import Tuple
-from models import Script
 from agents.base_agent import BaseAIAgent
 
 class ScriptGeneratorAgent(BaseAIAgent):
@@ -56,14 +54,9 @@ Structure recommandée:
                 max_tokens=8000
             )
             
-            script = Script(
-                idea_id="",  # Sera défini par l'appelant
-                title=title,
-                original_script=script_text
-            )
-            
+        
             print(f"✅ Generated script: {len(script_text)} characters")
-            return script
+            return script_text
             
         except Exception as e:
             print(f"❌ Error generating script: {str(e)}")

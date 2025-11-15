@@ -10,19 +10,10 @@ class VideoType(str, Enum):
 
 class IdeaStatus(str, Enum):
     PENDING = "pending"
-    VALIDATED = "validated"
     QUEUED = "queued"
-    PROCESSING = "processing"
-    SCRIPT_GENERATING = "script_generating"
     SCRIPT_GENERATED = "script_generated"
-    SCRIPT_ADAPTING = "script_adapting"
-    SCRIPT_ADAPTED = "script_adapted"
-    AUDIO_GENERATING = "audio_generating"
     AUDIO_GENERATED = "audio_generated"
-    VIDEO_GENERATING = "video_generating"
     VIDEO_GENERATED = "video_generated"
-    UPLOADED = "uploaded"
-    REJECTED = "rejected"
     ERROR = "error"
 
 class JobStatus(str, Enum):
@@ -42,11 +33,7 @@ class VideoIdea(BaseModel):
     section_titles: Optional[List[str]] = None  # Titres des sections générés
     status: IdeaStatus = IdeaStatus.PENDING
     error_message: Optional[str] = None
-    progress_percentage: int = 0
-    current_step: Optional[str] = None
-    last_successful_step: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
-    validated_at: Optional[datetime] = None
     
 class Script(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

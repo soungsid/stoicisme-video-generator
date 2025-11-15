@@ -62,10 +62,16 @@ class ScriptService:
         # SCRIPT CLASSIQUE
         else:
             agent = ScriptGeneratorAgent()
-            script = await agent.generate_script(
+            script_text = await agent.generate_script(
                 title=idea["title"],
                 keywords=idea.get("keywords", []),
                 duration_seconds=idea.get("duration_seconds", 30)
+            )
+            
+            script = Script(
+                idea_id=idea_id,
+                title=idea["title"],
+                original_script=script_text
             )
 
         # Description YouTube
@@ -73,7 +79,7 @@ class ScriptService:
             desc_agent = YouTubeDescriptionAgent()
             description = await desc_agent.generate_description(
                 title=idea["title"],
-                script_content=script.original_script,
+                script=script.original_script,
                 keywords=idea.get("keywords", [])
             )
             print(f"description pondu par description agent : {description}")

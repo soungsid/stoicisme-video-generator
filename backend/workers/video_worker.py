@@ -55,49 +55,34 @@ class VideoWorker:
             print(f"❌ Worker MongoDB connection failed: {e}")
             raise
     
-    async def update_idea_progress(self, idea_id: str, status_value: IdeaStatus, progress: int, step: str, error: str = None, last_successful: str = None):
-        """Mettre à jour la progression d'une idée"""
+    async def update_idea_status(self, idea_id: str, status: IdeaStatus, error: str = None):
+        """Mettre à jour le statut d'une idée"""
         ideas_collection = self.db.ideas
-        update_data = {
-            "status": status_value,
-            "progress_percentage": progress,
-            "current_step": step
-        }
+        update_data = {"status": status}
         if error:
             update_data["error_message"] = error
-        if last_successful:
-            update_data["last_successful_step"] = last_successful
         
         await ideas_collection.update_one(
             {"id": idea_id},
             {"$set": update_data}
         )
-    
-    def determine_start_step(self, idea, start_from):
-        """
-        Déterminer l'étape de démarrage en fonction de:
-        1. La dernière étape réussie (last_successful_step)
-        2. Le paramètre start_from du job
+
+    def determine_start_step(self, idea):
+        """Déterminer l'étape de démarrage en fonction du statut actuel de l'idée."""
+        status_to_step = {
+            IdeaStatus.PENDING: "script",
+            IdeaStatus.QUEUED: "script",
+            IdeaStatus.SCRIPT_GENERATED: "audio",
+            IdeaStatus.AUDIO_GENERATED: "video",
+            IdeaStatus.VIDEO_GENERATED: None,  # Terminé
+        }
         
-        Retourne l'étape à partir de laquelle commencer
-        """
-        last_successful = idea.get("last_successful_step")
+        current_status = IdeaStatus(idea.get("status"))
+        next_step = status_to_step.get(current_status)
         
-        # Si on a une dernière étape réussie, reprendre juste après
-        if last_successful:
-            step_order = {
-                "script_generated": "adapt",
-                "script_adapted": "audio", 
-                "audio_generated": "video",
-                "video_generated": None  # Déjà terminé
-            }
-            next_step = step_order.get(last_successful)
-            if next_step:
-                print(f"📍 Reprise après '{last_successful}' → Démarrage à '{next_step}'")
-                return next_step
-        
-        # Sinon, utiliser le paramètre start_from
-        return start_from
+        if next_step:
+            print(f"📍 Reprise à partir du statut '{current_status.value}' → Démarrage à '{next_step}'")
+        return next_step
     
     async def process_job(self, job):
         """Traiter un job de génération vidéo"""
@@ -116,41 +101,34 @@ class VideoWorker:
                 raise Exception(f"Idea {idea_id} not found")
             
             # Déterminer l'étape de démarrage (reprise intelligente)
-            start_from = self.determine_start_step(idea, start_from)
+            start_step = self.determine_start_step(idea)
             
-            if not start_from:
-                print(f"✅ Idea {idea_id} already completed (last_successful: video_generated)")
+            if not start_step:
+                print(f"✅ Idea {idea_id} already completed.")
                 await self.queue_service.complete_job(job.job_id)
                 return
-            
-            # Mettre à jour le statut à PROCESSING
-            await self.update_idea_progress(idea_id, IdeaStatus.PROCESSING, 5, f"Reprise du traitement à l'étape: {start_from}")
-            
+
             script_id = None
             
             # Étape 1: Générer le script
-            if start_from == "script":
-                await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_GENERATING, 10, "Génération du script...")
+            if start_step == "script":
+                print(f"📝 Generating script for idea {idea_id}")
                 await self.script_service.generate_script(idea_id)
-                
-                await scripts_collection.insert_one(script.model_dump())
-                script_id = script.id
-                
-                await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_GENERATED, 25, "Script généré", last_successful="script_generated")
-            else:
-                # Récupérer le script existant
-                script = await scripts_collection.find_one({"idea_id": idea_id}, {"_id": 0})
-                if script:
-                    script_id = script["id"]
+                # Le statut est mis à jour dans script_service
             
-            # Étape 2: Adapter le script
-            if start_from in ["script", "adapt"] and script_id:
-                await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_ADAPTING, 35, "Adaptation ElevenLabs...")
+            # Récupérer le script_id pour les étapes suivantes
+            script = await scripts_collection.find_one({"idea_id": idea_id}, {"_id": 0})
+            if not script:
+                raise Exception(f"Script for idea {idea_id} not found after generation step")
+            script_id = script["id"]
+
+            # Étape 2: Adapter le script et Générer l'audio
+            if start_step in ["script", "audio"]:
+                print(f"🔊 Generating audio for idea {idea_id}")
                 
+                # Adapter le script
                 adapter = ScriptAdapterAgent()
-                script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
                 adapted_script, phrases = await adapter.adapt_script(script["original_script"])
-                
                 await scripts_collection.update_one(
                     {"id": script_id},
                     {"$set": {
@@ -159,36 +137,25 @@ class VideoWorker:
                     }}
                 )
                 
-                await self.update_idea_progress(idea_id, IdeaStatus.SCRIPT_ADAPTED, 50, "Script adapté", last_successful="script_adapted")
-            
-            # Étape 3: Générer l'audio
-            if start_from in ["script", "adapt", "audio"] and script_id:
-                await self.update_idea_progress(idea_id, IdeaStatus.AUDIO_GENERATING, 60, "Génération audio...")
-                
-                script = await scripts_collection.find_one({"id": script_id}, {"_id": 0})
+                # Générer l'audio
                 audio_service = AudioService()
                 audio_generation = await audio_service.generate_audio_with_timestamps(
                     script_id=script_id,
                     idea_id=idea_id,
-                    phrases=script["phrases"]
+                    phrases=phrases
                 )
-                
-                # Sauvegarder les timestamps
                 await scripts_collection.update_one(
                     {"id": script_id},
                     {"$set": {"audio_phrases": [phrase.model_dump() for phrase in audio_generation.phrases]}}
                 )
-                
-                await self.update_idea_progress(idea_id, IdeaStatus.AUDIO_GENERATED, 75, "Audio généré", last_successful="audio_generated")
-            
-            # Étape 4: Générer la vidéo
-            if start_from in ["script", "adapt", "audio", "video"] and script_id:
-                await self.update_idea_progress(idea_id, IdeaStatus.VIDEO_GENERATING, 85, "Génération vidéo...")
-                
+                await self.update_idea_status(idea_id, IdeaStatus.AUDIO_GENERATED)
+
+            # Étape 3: Générer la vidéo
+            if start_step in ["script", "audio", "video"]:
+                print(f"🎥 Generating video for idea {idea_id}")
                 video_service = VideoService()
-                video = await video_service.generate_video(script_id=script_id)
-                
-                await self.update_idea_progress(idea_id, IdeaStatus.VIDEO_GENERATED, 100, "Vidéo prête !", last_successful="video_generated")
+                await video_service.generate_video(script_id=script_id)
+                await self.update_idea_status(idea_id, IdeaStatus.VIDEO_GENERATED)
             
             # Job complété avec succès
             await self.queue_service.complete_job(job.job_id)
@@ -198,19 +165,8 @@ class VideoWorker:
             error_msg = f"{str(e)}\\n{traceback.format_exc()}"
             print(f"❌ Job {job.job_id} failed: {error_msg}")
             
-            # Récupérer la dernière étape réussie
-            idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
-            last_successful = idea.get("last_successful_step", "aucune")
-            
-            # Mettre à jour l'idée avec l'erreur ET la dernière étape réussie
-            await self.update_idea_progress(
-                idea_id, 
-                IdeaStatus.ERROR, 
-                0, 
-                f"Erreur après '{last_successful}'",
-                error_msg[:500],
-                last_successful
-            )
+            # Mettre à jour l'idée avec l'erreur
+            await self.update_idea_status(idea_id, IdeaStatus.ERROR, error_msg[:1000])
             
             # Marquer le job comme échoué
             await self.queue_service.fail_job(job.job_id, error_msg[:500])
@@ -265,7 +221,7 @@ class VideoWorker:
     
     async def stop(self):
         """Arrêter le worker"""
-        print("🛑 Stopping worker...")
+        print("� Stopping worker...")
         self.running = False
         if self.db_client:
             self.db_client.close()

@@ -5,7 +5,6 @@ import ConfirmModal from '../components/ConfirmModal';
 import GenerateIdeasModal from '../components/GenerateIdeasModal';
 import IdeaCard from '../components/IdeaCard';
 import Toast from '../components/Toast';
-import ValidateIdeaModal from '../components/ValidateIdeaModal';
 
 function IdeasPage() {
   const [ideas, setIdeas] = useState([]);
@@ -14,8 +13,6 @@ function IdeasPage() {
   const [generating, setGenerating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIdeas, setSelectedIdeas] = useState([]);
-  const [selectedIdea, setSelectedIdea] = useState(null);
-  const [showValidateModal, setShowValidateModal] = useState(false);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
   const [toast, setToast] = useState(null);
@@ -106,41 +103,6 @@ function IdeasPage() {
     }
   };
 
-  const handleValidateIdea = (idea) => {
-    setSelectedIdea(idea);
-    setShowValidateModal(true);
-  };
-
-  const handleValidateSubmit = async (validationData) => {
-    try {
-      await ideasApi.validateIdea(selectedIdea.id, validationData);
-      setShowValidateModal(false);
-      setToast({ type: 'success', message: 'Idée validée avec succès !' });
-      await loadIdeas();
-    } catch (error) {
-      console.error('Error validating:', error);
-      setToast({ type: 'error', message: error.response?.data?.detail || 'Erreur de validation' });
-    }
-  };
-
-  const handleRejectIdea = (ideaId) => {
-    setConfirmModal({
-      title: 'Rejeter cette idée ?',
-      message: 'L\'idée sera marquée comme rejetée.',
-      onConfirm: async () => {
-        try {
-          await ideasApi.rejectIdea(ideaId);
-          setToast({ type: 'success', message: 'Idée rejetée' });
-          await loadIdeas();
-        } catch (error) {
-          console.error('Error rejecting:', error);
-          setToast({ type: 'error', message: 'Erreur lors du rejet' });
-        }
-        setConfirmModal(null);
-      },
-      onCancel: () => setConfirmModal(null)
-    });
-  };
 
   const handleDeleteIdea = (ideaId) => {
     setConfirmModal({
@@ -216,10 +178,8 @@ function IdeasPage() {
     }
 
     const actionLabels = {
-      'validate': 'Valider',
-      'reject': 'Rejeter',
       'delete': 'Supprimer',
-      'generate': 'Générer'
+      'generate': 'Lancer la génération'
     };
 
     setConfirmModal({
@@ -304,9 +264,7 @@ function IdeasPage() {
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Sélectionner une action...</option>
-                <option value="validate">Valider</option>
-                <option value="reject">Rejeter</option>
-                <option value="generate">Générer</option>
+                <option value="generate">Lancer la génération</option>
                 <option value="delete">Supprimer</option>
               </select>
               <button
@@ -362,21 +320,11 @@ function IdeasPage() {
               idea={idea}
               selected={selectedIdeas.includes(idea.id)}
               onToggleSelect={() => toggleSelectIdea(idea.id)}
-              onValidate={() => handleValidateIdea(idea)}
-              onReject={() => handleRejectIdea(idea.id)}
               onDelete={() => handleDeleteIdea(idea.id)}
               onStartPipeline={(startFrom) => handleStartPipeline(idea.id, startFrom)}
             />
           ))}
         </div>
-      )}
-
-      {showValidateModal && (
-        <ValidateIdeaModal
-          idea={selectedIdea}
-          onClose={() => setShowValidateModal(false)}
-          onSubmit={handleValidateSubmit}
-        />
       )}
 
       {showGenerateModal && (

@@ -22,12 +22,6 @@ async def start_pipeline(idea_id: str, start_from: str = "script"):
                 detail=f"Idea {idea_id} not found"
             )
         
-        if idea["status"] == IdeaStatus.PENDING:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Idea must be validated first"
-            )
-        
         # Ajouter à la queue au lieu de lancer en background
         queue_service = QueueService()
         job = await queue_service.add_job(idea_id, start_from)

@@ -131,58 +131,6 @@ async def get_idea(idea_id: str):
             detail=f"Error fetching idea: {str(e)}"
         )
 
-@router.patch("/{idea_id}/validate", response_model=VideoIdea)
-async def validate_idea(idea_id: str, request: ValidateIdeaRequest):
-    """
-    Valider une idée et définir ses paramètres (durée, type)
-    """
-    try:
-        from services.idea_service import IdeaService
-        
-        service = IdeaService()
-        result = await service.validate_idea(
-            idea_id=idea_id,
-            video_type=request.video_type,
-            duration_seconds=request.duration_seconds,
-            keywords=request.keywords
-        )
-        
-        return result
-        
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error validating idea: {str(e)}"
-        )
-
-@router.patch("/{idea_id}/reject", response_model=VideoIdea)
-async def reject_idea(idea_id: str):
-    """
-    Rejeter une idée
-    """
-    try:
-        from services.idea_service import IdeaService
-        
-        service = IdeaService()
-        result = await service.reject_idea(idea_id=idea_id)
-        
-        return result
-        
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error rejecting idea: {str(e)}"
-        )
 
 @router.delete("/{idea_id}")
 async def delete_idea(idea_id: str):
@@ -212,7 +160,7 @@ async def delete_idea(idea_id: str):
 async def batch_action(idea_ids: List[str], action: str):
     """
     Effectuer une action sur plusieurs idées à la fois
-    Actions possibles: validate, reject, delete, generate
+    Actions possibles: delete, generate
     """
     try:
         from services.queue_service import QueueService
@@ -235,30 +183,7 @@ async def batch_action(idea_ids: List[str], action: str):
                     })
                     continue
                 
-                if action == "validate":
-                    # Valider l'idée
-                    from services.idea_service import IdeaService
-                    idea_service = IdeaService()
-                    # Valider avec paramètres par défaut
-                    await ideas_collection.update_one(
-                        {"id": idea_id},
-                        {
-                            "$set": {
-                                "status": IdeaStatus.VALIDATED,
-                                "validated_at": datetime.now()
-                            }
-                        }
-                    )
-                    results["success"].append(idea_id)
-                    
-                elif action == "reject":
-                    # Rejeter l'idée
-                    from services.idea_service import IdeaService
-                    idea_service = IdeaService()
-                    await idea_service.reject_idea(idea_id)
-                    results["success"].append(idea_id)
-                    
-                elif action == "delete":
+                if action == "delete":
                     # Supprimer l'idée
                     from services.idea_service import IdeaService
                     idea_service = IdeaService()
@@ -267,10 +192,10 @@ async def batch_action(idea_ids: List[str], action: str):
                     
                 elif action == "generate":
                     # Ajouter à la queue de génération
-                    if idea["status"] != IdeaStatus.VALIDATED:
+                    if idea["status"] != IdeaStatus.PENDING:
                         results["failed"].append({
                             "id": idea_id,
-                            "reason": "Idea must be validated first"
+                            "reason": "Idea is not pending"
                         })
                         continue
                     
