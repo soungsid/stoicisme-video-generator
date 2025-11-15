@@ -6,7 +6,6 @@ import asyncio
 import sys
 import os
 
-from services.script_service import ScriptService
 
 # Ajouter le répertoire parent au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,6 +24,8 @@ from services.queue_service import QueueService
 from agents.script_adapter_agent import ScriptAdapterAgent
 from services.audio_service import AudioService
 from services.video_service import VideoService
+from services.script_service import ScriptService
+
 
 class VideoWorker:
     """Worker qui traite les jobs de génération vidéo"""

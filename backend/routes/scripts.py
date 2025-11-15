@@ -1,6 +1,7 @@
 from fastapi import APIRouter
-from services.script_service import ScriptService
 from models import ScriptGenerationRequest
+from services.script_service import ScriptService
+
 
 router = APIRouter()
 service = ScriptService()
