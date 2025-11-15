@@ -50,6 +50,23 @@ class QueueService:
         print(f"✅ Job added to queue: {job.job_id} for idea {idea_id}")
         return job
     
+    async def list_all_jobs(self, status: Optional[JobStatus] = None,) -> List[VideoJob]:
+        """
+        Lister tous les jobs
+        Triés par: priority DESC, created_at ASC
+        """
+        query = {}
+        if status:
+            query["status"] = status
+            
+        jobs = []
+        cursor = self.queue_collection.find(query).sort([("priority", -1), ("created_at", 1)])
+        
+        async for job_data in cursor:
+            jobs.append(VideoJob(**job_data))
+        
+        return jobs
+
     async def get_next_job(self) -> Optional[VideoJob]:
         """
         Récupérer le prochain job à traiter

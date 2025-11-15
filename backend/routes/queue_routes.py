@@ -1,7 +1,9 @@
 """
 Routes pour la gestion de la queue de jobs
 """
+from typing import Optional
 from fastapi import APIRouter, HTTPException, status
+from models import JobStatus
 from services.queue_service import QueueService
 from database import get_ideas_collection
 
@@ -22,6 +24,12 @@ async def get_queue_stats():
             detail=f"Error getting queue stats: {str(e)}"
         )
 
+@router.get("/jobs")
+async def get_all_jobs(status: Optional[JobStatus] = None):
+    queue_service = QueueService()
+    jobs = await queue_service.list_all_jobs(status=status)
+    return jobs
+    
 @router.get("/status/{idea_id}")
 async def get_job_status(idea_id: str):
     """
@@ -77,12 +85,6 @@ async def cancel_job(idea_id: str):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No job found for idea {idea_id}"
-            )
-        
-        if job.status != "queued":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot cancel job with status {job.status}. Only queued jobs can be cancelled."
             )
         
         await queue_service.cancel_job(job.job_id)

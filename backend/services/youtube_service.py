@@ -273,7 +273,6 @@ class YouTubeService:
         try:
             from database import get_videos_collection, get_scripts_collection, get_ideas_collection
             from models import IdeaStatus
-            from datetime import datetime, timezone
             
             # 1. Récupérer la vidéo depuis MongoDB
             videos_collection = get_videos_collection()
