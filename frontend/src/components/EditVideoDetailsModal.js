@@ -121,7 +121,7 @@ function EditVideoDetailsModal({ video, onClose, onSave }) {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Chemin vidéo
+                Url video (video_path)
               </label>
               <input
                 type="text"
@@ -134,7 +134,7 @@ function EditVideoDetailsModal({ video, onClose, onSave }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Chemin relatif vidéo
+                Chemin relatif vidéo (video_relative_path)
               </label>
               <input
                 type="text"

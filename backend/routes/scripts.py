@@ -23,5 +23,5 @@ async def get_script_by_idea(idea_id: str):
     return await service.get_script_by_idea(idea_id)
 
 @router.patch("/{script_id}")
-async def update_script(script_id: str, title=None, original_script=None, keywords=None):
-    return await service.update_script(script_id, title, original_script, keywords)
+async def update_script(script_id: str, title=None, original_script=None, keywords=None, youtube_description=None, video_guideline=None):
+    return await service.update_script(script_id, title, original_script, keywords, youtube_description, video_guideline)

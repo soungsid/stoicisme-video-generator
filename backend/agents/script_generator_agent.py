@@ -8,7 +8,7 @@ class ScriptGeneratorAgent(BaseAIAgent):
     def __init__(self):
         super().__init__()
     
-    async def generate_script(self, title: str, keywords: list, duration_seconds: int) -> any:
+    async def generate_script(self, title: str, keywords: list, duration_seconds: int, video_guideline: str = None) -> any:
         """
         Générer un script pour une vidéo
         """
@@ -17,6 +17,15 @@ class ScriptGeneratorAgent(BaseAIAgent):
         # Estimer le nombre de mots (environ 150 mots par minute de parole)
         words_per_minute = 150
         target_words = int((duration_seconds / 60) * words_per_minute)
+        
+        # Construire le prompt avec les guidelines si fournies
+        guideline_section = ""
+        if video_guideline and video_guideline.strip():
+            guideline_section = f"""
+INSTRUCTIONS SPÉCIALES:
+{video_guideline}
+
+"""
         
         prompt = f"""
 Tu es un scénariste expert spécialisé dans le contenu YouTube sur le stoïcisme ou simplement une histoire emouvante et inspirante.
@@ -27,6 +36,7 @@ TITRE: {title}
 MOTS-CLÉS: {', '.join(keywords)}
 DURÉE: {duration_seconds} secondes (environ {target_words} mots)
 
+{guideline_section}
 Le script doit:
 1. Captiver dès les 3 premières secondes (hook fort)
 2. Être conversationnel et engageant (comme si tu parlais à un ami)

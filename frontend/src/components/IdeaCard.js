@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, CheckSquare, Clock, FileText, Play, Square, Trash2, X, Loader } from 'lucide-react';
+import { AlertCircle, CheckCircle, CheckSquare, Clock, FileText, Play, Square, Trash2, X, Loader, Edit } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { queueApi } from '../api';
@@ -88,7 +88,7 @@ const ActionsDropdown = ({ onRegenerate }) => {
 };
 
 
-function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline }) {
+function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline, onEdit }) {
   const navigate = useNavigate();
   const [queueInfo, setQueueInfo] = useState(null);
   
@@ -249,6 +249,13 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline })
           )}
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => onEdit(idea)}
+              disabled={isProcessing || isQueued}
+              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md disabled:opacity-50"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
             <button
               onClick={onDelete}
               disabled={isProcessing || isQueued}

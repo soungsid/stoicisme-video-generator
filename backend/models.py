@@ -47,6 +47,7 @@ class Script(BaseModel):
     youtube_description: Optional[str] = Field(None, description="Description YouTube générée automatiquement")
     elevenlabs_adapted_script: Optional[str] = None
     phrases: Optional[List[str]] = []
+    video_guideline: Optional[str] = Field(None, description="Instructions supplémentaires pour le LLM lors de la génération du script")
     created_at: datetime = Field(default_factory=datetime.now)
     
 class AudioPhrase(BaseModel):

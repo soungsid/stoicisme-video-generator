@@ -65,7 +65,8 @@ class ScriptService:
             script_text = await agent.generate_script(
                 title=idea["title"],
                 keywords=idea.get("keywords", []),
-                duration_seconds=idea.get("duration_seconds", 30)
+                duration_seconds=idea.get("duration_seconds", 30),
+                video_guideline=idea.get("video_guideline")
             )
             
             script = Script(
@@ -166,7 +167,7 @@ class ScriptService:
     # ----------------------------------------------------------------------
     # Update script
     # ----------------------------------------------------------------------
-    async def update_script(self, script_id: str, title=None, original_script=None, keywords=None):
+    async def update_script(self, script_id: str, title=None, original_script=None, keywords=None, youtube_description=None, video_guideline=None):
 
         script = await get_scripts_collection().find_one({"id": script_id}, {"_id": 0})
         if not script:
@@ -194,6 +195,12 @@ class ScriptService:
                 {"id": script["idea_id"]},
                 {"$set": {"keywords": keywords}}
             )
+
+        if youtube_description is not None:
+            update_data["youtube_description"] = youtube_description
+
+        if video_guideline is not None:
+            update_data["video_guideline"] = video_guideline
 
         if update_data:
             updated = await get_scripts_collection().find_one_and_update(

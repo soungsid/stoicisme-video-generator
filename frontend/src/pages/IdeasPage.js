@@ -2,6 +2,7 @@ import { CheckSquare, Loader, Plus, Search, Square } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { ideasApi, pipelineApi } from '../api';
 import ConfirmModal from '../components/ConfirmModal';
+import EditIdeaModal from '../components/EditIdeaModal';
 import GenerateIdeasModal from '../components/GenerateIdeasModal';
 import IdeaCard from '../components/IdeaCard';
 import Toast from '../components/Toast';
@@ -18,6 +19,7 @@ function IdeasPage() {
   const [toast, setToast] = useState(null);
   const [batchAction, setBatchAction] = useState('');
   const [processingBatch, setProcessingBatch] = useState(false);
+  const [editingIdea, setEditingIdea] = useState(null);
 
   useEffect(() => {
     loadIdeas();
@@ -213,6 +215,29 @@ function IdeasPage() {
     });
   };
 
+  const handleEditIdea = (idea) => {
+    setEditingIdea(idea);
+  };
+
+  const handleSaveIdea = async (updatedData) => {
+    try {
+      // Note: Pour l'instant, nous n'avons pas d'endpoint pour mettre à jour une idée
+      // Nous devons créer cette fonctionnalité dans le backend
+      // Pour l'instant, nous allons simplement afficher un message
+      setToast({ 
+        type: 'info', 
+        message: 'La fonctionnalité de mise à jour des idées sera bientôt disponible' 
+      });
+      setEditingIdea(null);
+    } catch (error) {
+      console.error('Error updating idea:', error);
+      setToast({ 
+        type: 'error', 
+        message: error.response?.data?.detail || 'Erreur lors de la mise à jour' 
+      });
+    }
+  };
+
 
   if (loading && ideas.length === 0) {
     return (
@@ -322,6 +347,7 @@ function IdeasPage() {
               onToggleSelect={() => toggleSelectIdea(idea.id)}
               onDelete={() => handleDeleteIdea(idea.id)}
               onStartPipeline={(startFrom) => handleStartPipeline(idea.id, startFrom)}
+              onEdit={handleEditIdea}
             />
           ))}
         </div>
@@ -331,6 +357,14 @@ function IdeasPage() {
         <GenerateIdeasModal
           onClose={() => setShowGenerateModal(false)}
           onSubmit={handleGenerateIdeas}
+        />
+      )}
+
+      {editingIdea && (
+        <EditIdeaModal
+          idea={editingIdea}
+          onClose={() => setEditingIdea(null)}
+          onSave={handleSaveIdea}
         />
       )}
 
