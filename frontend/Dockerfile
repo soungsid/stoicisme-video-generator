@@ -21,14 +21,24 @@ RUN yarn build
 # Stage de production avec nginx
 FROM nginx:alpine
 
+# Installer gettext (pour envsubst)
+RUN apk add --no-cache gettext
+
 # Copier les fichiers buildés
 COPY --from=build /app/build /usr/share/nginx/html
 
 # Copier la configuration nginx personnalisée
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copier le script d'entrée et le rendre exécutable
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Exposer le port
 EXPOSE 3000
+
+# Utiliser le script d'entrée
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Démarrer nginx
 CMD ["nginx", "-g", "daemon off;"]
