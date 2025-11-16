@@ -24,6 +24,23 @@ class ScriptService:
                 detail=f"Idea {idea_id} not found"
             )
 
+        # Vérifier si l'idée a déjà un script original (script custom)
+        if idea.get("original_script"):
+            print(f"⚠️  L'idée {idea_id} a déjà un script original, pas de génération nécessaire")
+            # Récupérer le script existant
+            existing_script = await get_scripts_collection().find_one({"idea_id": idea_id}, {"_id": 0})
+            if existing_script:
+                return Script(**existing_script)
+            else:
+                # Créer un script à partir du script original
+                script = Script(
+                    idea_id=idea_id,
+                    title=idea["title"],
+                    original_script=idea["original_script"]
+                )
+                await get_scripts_collection().insert_one(script.model_dump())
+                return script
+
         
 
         video_type = idea.get("video_type", "short")
@@ -61,14 +78,17 @@ class ScriptService:
 
         # SCRIPT CLASSIQUE
         else:
-            agent = ScriptGeneratorAgent()
-            script_text = await agent.generate_script(
-                title=idea["title"],
-                keywords=idea.get("keywords", []),
-                duration_seconds=idea.get("duration_seconds", 30),
-                video_guideline=idea.get("video_guideline")
-            )
-            
+            if not idea.get("original_script"):
+                agent = ScriptGeneratorAgent()
+                script_text = await agent.generate_script(
+                    title=idea["title"],
+                    keywords=idea.get("keywords", []),
+                    duration_seconds=idea.get("duration_seconds", 30),
+                    video_guideline=idea.get("video_guideline")
+                )
+            else:
+                script_text = idea.get("original_script")
+                
             script = Script(
                 idea_id=idea_id,
                 title=idea["title"],

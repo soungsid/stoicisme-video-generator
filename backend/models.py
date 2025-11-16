@@ -36,6 +36,7 @@ class VideoIdea(BaseModel):
     section_titles: Optional[List[str]] = None  # Titres des sections générés
     status: IdeaStatus = IdeaStatus.PENDING
     script_id: Optional[str] = None  # ID du script généré
+    original_script: Optional[str] = Field(None, description="Script original pour les idées custom")
     error_message: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     
@@ -112,16 +113,10 @@ class IdeaGenerationRequest(BaseModel):
     count: int = Field(default=5, ge=1, le=20)
     keywords: Optional[List[str]] = None
     custom_title: Optional[str] = Field(None, description="Titre personnalisé pour l'idée (ex: '5 Habitudes terribles qui ruinent votre matinée!')")
+    script_text: Optional[str] = Field(None, min_length=50, description="Script personnalisé (si fourni, le script ne sera pas généré automatiquement)")
     video_type: VideoType = VideoType.SHORT
     duration_seconds: int = Field(default=30, ge=10, le=600)
     sections_count: Optional[int] = Field(None, ge=2, le=10, description="Nombre de sections pour vidéos longues (type normal)")
-
-class CustomScriptRequest(BaseModel):
-    script_text: str = Field(..., min_length=50)
-    custom_title: Optional[str] = Field(None, description="Titre optionnel pour le script custom")
-    keywords: Optional[List[str]] = None
-    video_type: VideoType = VideoType.SHORT
-    duration_seconds: int = Field(default=30, ge=10, le=600)
 
 class ScriptGenerationRequest(BaseModel):
     idea_id: str

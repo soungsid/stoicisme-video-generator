@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
-from models import VideoIdea, IdeaStatus, IdeaGenerationRequest, ValidateIdeaRequest, CustomScriptRequest, Script
+from models import VideoIdea, IdeaStatus, IdeaGenerationRequest, ValidateIdeaRequest, Script
 from database import get_ideas_collection
-from agents.idea_generator_agent import IdeaGeneratorAgent
+from services.idea_management_service import IdeaManagementService
 from datetime import datetime
 
 router = APIRouter()
@@ -12,80 +12,18 @@ async def generate_ideas(request: IdeaGenerationRequest):
     """
     Générer de nouvelles idées de vidéos sur le stoïcisme
     
-    Si custom_title est fourni, une seule idée sera créée avec ce titre
-    et les mots-clés seront utilisés pour enrichir le script ultérieurement.
+    Modes disponibles :
+    - Génération automatique (count idées)
+    - Génération avec mots-clés
+    - Titre personnalisé (une seule idée)
+    - Script personnalisé (une seule idée, script_text fourni)
+    
+    Si script_text est fourni, le script ne sera pas généré automatiquement.
     """
     try:
-        agent = IdeaGeneratorAgent()
-        
-        # Si un titre personnalisé est fourni
-        if request.custom_title:
-            # Créer directement l'idée avec le titre personnalisé
-            idea = VideoIdea(
-                title=request.custom_title,
-                keywords=request.keywords or [],
-                video_type=request.video_type,
-                duration_seconds=request.duration_seconds,
-                sections_count=request.sections_count if request.video_type.value == "normal" else None,
-                status=IdeaStatus.PENDING
-            )
-            ideas = [idea]
-            print(f"✨ Idée créée avec titre personnalisé: {request.custom_title}")
-        # Sinon, générer via LLM
-        elif request.keywords:
-            ideas = await agent.generate_ideas_with_keywords(
-                count=request.count, 
-                keywords=request.keywords
-            )
-            # Appliquer video_type, duration et sections_count aux idées générées
-            for idea in ideas:
-                idea.video_type = request.video_type
-                idea.duration_seconds = request.duration_seconds
-                if request.video_type.value == "normal" and request.sections_count:
-                    idea.sections_count = request.sections_count
-        else:
-            ideas = await agent.generate_ideas(count=request.count)
-            # Appliquer video_type, duration et sections_count aux idées générées
-            for idea in ideas:
-                idea.video_type = request.video_type
-                idea.duration_seconds = request.duration_seconds
-                if request.video_type.value == "normal" and request.sections_count:
-                    idea.sections_count = request.sections_count
-        
-        # Générer les titres de sections si nécessaire
-        if request.video_type.value == "normal" and request.sections_count and request.sections_count > 0:
-            from agents.section_title_generator_agent import SectionTitleGeneratorAgent
-            section_agent = SectionTitleGeneratorAgent()
-            
-            for idea in ideas:
-                try:
-                    section_titles = await section_agent.generate_section_titles(
-                        title=idea.title,
-                        keywords=idea.keywords,
-                        sections_count=request.sections_count
-                    )
-                    idea.section_titles = section_titles
-                    print(f"✅ Titres de sections générés pour: {idea.title}")
-                except Exception as e:
-                    print(f"⚠️  Erreur génération sections pour {idea.title}: {e}")
-                    idea.section_titles = []
-        
-        # Sauvegarder en base de données
-        ideas_collection = get_ideas_collection()
-        ideas_dict = [idea.model_dump() for idea in ideas]
-        
-        if ideas_dict:
-            await ideas_collection.insert_many(ideas_dict)
-            # Retirer les _id ajoutés par MongoDB
-            for idea_dict in ideas_dict:
-                idea_dict.pop('_id', None)
-        
-        return {
-            "success": True,
-            "count": len(ideas),
-            "ideas": ideas_dict,
-            "custom_title_used": bool(request.custom_title)
-        }
+        service = IdeaManagementService()
+        result = await service.create_ideas(request)
+        return result
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -275,59 +213,4 @@ async def generate_section_titles(idea_id: str, sections_count: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating section titles: {str(e)}"
-        )
-
-@router.post("/custom-script", response_model=VideoIdea)
-async def create_idea_with_custom_script(request: CustomScriptRequest):
-    """
-    Créer une idée avec un script personnalisé
-    Le système génère un titre si non fourni, sinon utilise le titre custom
-    Note: Pour les scripts custom, on ignore complètement le système de sections
-    """
-    try:
-        from agents.idea_generator_agent import IdeaGeneratorAgent
-        from database import get_scripts_collection
-        import uuid
-        
-        # Utiliser le titre fourni ou en générer un basé sur le script
-        if request.custom_title:
-            title = request.custom_title
-            print(f"✨ Utilisation du titre personnalisé: {title}")
-        else:
-            agent = IdeaGeneratorAgent()
-            title = await agent.generate_title_from_script(request.script_text, request.keywords or [])
-            print(f"✨ Titre généré: {title}")
-        
-        # Créer l'idée (SANS sections car script custom)
-        idea = VideoIdea(
-            title=title,
-            keywords=request.keywords or [],
-            video_type=request.video_type,
-            duration_seconds=request.duration_seconds,
-            sections_count=None,  # Pas de sections pour script custom
-            section_titles=None,  # Pas de sections pour script custom
-            status=IdeaStatus.SCRIPT_GENERATED,
-            validated_at=datetime.now()
-        )
-        
-        # Créer le script directement
-        script = Script(
-            idea_id=idea.id,
-            title=title,
-            original_script=request.script_text
-        )
-        
-        # Sauvegarder
-        ideas_collection = get_ideas_collection()
-        scripts_collection = get_scripts_collection()
-        
-        await ideas_collection.insert_one(idea.model_dump())
-        await scripts_collection.insert_one(script.model_dump())
-        
-        return idea
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating custom idea: {str(e)}"
         )

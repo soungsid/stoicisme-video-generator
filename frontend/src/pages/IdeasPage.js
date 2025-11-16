@@ -83,7 +83,7 @@ function IdeasPage() {
         setToast({ type: 'success', message: `${data.count} idées générées avec les mots-clés !` });
       } else if (data.type === 'custom') {
         // Option 3: Script custom
-        await ideasApi.createWithCustomScript({
+        await ideasApi.generateIdeas({
           script_text: data.script,
           custom_title: data.customTitle,
           keywords: data.keywords,

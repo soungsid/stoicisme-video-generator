@@ -12,8 +12,6 @@ const api = axios.create({
 export const ideasApi = {
   generateIdeas: (data) => 
     api.post('/api/ideas/generate', data),
-  createWithCustomScript: (data) => 
-    api.post('/api/ideas/custom-script', data),
   getAllIdeas: () => api.get('/api/ideas/'),
   getIdea: (id) => api.get(`/api/ideas/${id}`),
   validateIdea: (id, data) => api.patch(`/api/ideas/${id}/validate`, data),
