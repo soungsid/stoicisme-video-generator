@@ -15,7 +15,7 @@ load_dotenv(dotenv_path=env_path, override=True)
 from database import connect_to_mongo, close_mongo_connection
 
 # Import routes
-from routes import ideas, scripts, audio, videos, youtube_routes, config, pipeline, queue_routes, queue_management
+from routes import ideas, scripts, audio, videos, youtube_routes, config, pipeline, queue_routes, queue_management, migrations
 
 # Import helpers and workers
 from helpers.environment import is_local
@@ -79,6 +79,7 @@ app.include_router(config.router, prefix="/api/config", tags=["Configuration"])
 app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Pipeline"])
 app.include_router(queue_routes.router, prefix="/api/queue", tags=["Queue"])
 app.include_router(queue_management.router, prefix="/api/youtube/queue", tags=["YouTube Queue"])
+app.include_router(migrations.router, prefix="/api/migrations", tags=["Migrations"])
 
 if __name__ == "__main__":
     import uvicorn
