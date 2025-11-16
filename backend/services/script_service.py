@@ -93,10 +93,13 @@ class ScriptService:
         # Sauvegarde en DB
         await get_scripts_collection().insert_one(script.model_dump())
 
-        # Update statut
+        # Update statut et script_id
         await get_ideas_collection().update_one(
             {"id": idea_id},
-            {"$set": {"status": IdeaStatus.SCRIPT_GENERATED}}
+            {"$set": {
+                "status": IdeaStatus.SCRIPT_GENERATED,
+                "script_id": script.id
+            }}
         )
 
         return script

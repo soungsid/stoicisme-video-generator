@@ -72,8 +72,11 @@ class VideoWorker:
         status_to_step = {
             IdeaStatus.PENDING: "script",
             IdeaStatus.QUEUED: "script",
+            IdeaStatus.SCRIPT_GENERATING: "script",
             IdeaStatus.SCRIPT_GENERATED: "audio",
+            IdeaStatus.AUDIO_GENERATING: "audio",
             IdeaStatus.AUDIO_GENERATED: "video",
+            IdeaStatus.VIDEO_GENERATING: "video",
             IdeaStatus.VIDEO_GENERATED: None,  # Terminé
         }
         
@@ -113,6 +116,7 @@ class VideoWorker:
             # Étape 1: Générer le script
             if start_step == "script":
                 print(f"📝 Generating script for idea {idea_id}")
+                await self.update_idea_status(idea_id, IdeaStatus.SCRIPT_GENERATING)
                 await self.script_service.generate_script(idea_id)
                 # Le statut est mis à jour dans script_service
             
@@ -125,6 +129,7 @@ class VideoWorker:
             # Étape 2: Adapter le script et Générer l'audio
             if start_step in ["script", "audio"]:
                 print(f"🔊 Generating audio for idea {idea_id}")
+                await self.update_idea_status(idea_id, IdeaStatus.AUDIO_GENERATING)
                 
                 # Adapter le script
                 adapter = ScriptAdapterAgent()
@@ -153,6 +158,7 @@ class VideoWorker:
             # Étape 3: Générer la vidéo
             if start_step in ["script", "audio", "video"]:
                 print(f"🎥 Generating video for idea {idea_id}")
+                await self.update_idea_status(idea_id, IdeaStatus.VIDEO_GENERATING)
                 video_service = VideoService()
                 await video_service.generate_video(script_id=script_id)
                 await self.update_idea_status(idea_id, IdeaStatus.VIDEO_GENERATED)

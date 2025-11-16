@@ -11,8 +11,11 @@ class VideoType(str, Enum):
 class IdeaStatus(str, Enum):
     PENDING = "pending"
     QUEUED = "queued"
+    SCRIPT_GENERATING = "script_generating"
     SCRIPT_GENERATED = "script_generated"
+    AUDIO_GENERATING = "audio_generating"
     AUDIO_GENERATED = "audio_generated"
+    VIDEO_GENERATING = "video_generating"
     VIDEO_GENERATED = "video_generated"
     ERROR = "error"
 
@@ -32,6 +35,7 @@ class VideoIdea(BaseModel):
     sections_count: Optional[int] = None  # Nombre de sections pour vidéos longues (normal)
     section_titles: Optional[List[str]] = None  # Titres des sections générés
     status: IdeaStatus = IdeaStatus.PENDING
+    script_id: Optional[str] = None  # ID du script généré
     error_message: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     

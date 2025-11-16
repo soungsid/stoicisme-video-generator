@@ -1,48 +1,71 @@
-import { AlertCircle, CheckCircle, CheckSquare, Clock, FileText, Play, Square, Trash2, X } from 'lucide-react';
+import { AlertCircle, CheckCircle, CheckSquare, Clock, FileText, Play, Square, Trash2, X, Loader } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { queueApi } from '../api';
 
-const StatusIndicator = ({ status }) => {
-  const steps = ['Script', 'Audio', 'Vidéo'];
-  const statusOrder = ['script_generated', 'audio_generated', 'video_generated'];
+const StatusIndicator = ({ status, errorMessage }) => {
+  // Tous les statuts dans l'ordre
+  const allStatuses = [
+    'pending',
+    'queued', 
+    'script_generating',
+    'script_generated',
+    'audio_generating',
+    'audio_generated', 
+    'video_generating',
+    'video_generated'
+  ];
   
-  // Déterminer l'index actif basé sur le statut
-  let activeIndex = statusOrder.indexOf(status);
+  // Déterminer l'index du statut actuel
+  const currentIndex = allStatuses.indexOf(status);
+  const isError = status === 'error';
   
-  // Si le statut est 'queued', on est à l'étape 0 (script)
-  if (status === 'queued') activeIndex = 0;
-  
-  // Si le statut n'est pas dans l'ordre, on utilise -1 (aucune étape active)
-  if (activeIndex === -1 && status !== 'queued') activeIndex = -1;
-
   return (
-    <div className="flex items-center space-x-4">
-      {steps.map((step, index) => {
-        // Une étape est complétée si son index est inférieur à l'index actif
-        const isCompleted = activeIndex > index;
-        // L'étape actuelle est celle qui correspond à l'index actif
-        const isCurrent = activeIndex === index;
-        const isError = status === 'error';
+    <div className="space-y-2">
+      <div className="flex items-center space-x-2 overflow-x-auto py-2">
+        {allStatuses.map((stepStatus, index) => {
+          const isCompleted = index < currentIndex;
+          const isCurrent = index === currentIndex;
+          const isGenerating = stepStatus.includes('generating');
+          const isErrorStep = isError && index === currentIndex;
 
-        return (
-          <div key={step} className="flex items-center">
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                isCompleted ? 'bg-green-500' : 
-                isError ? 'bg-red-500' : 
-                isCurrent ? 'bg-blue-500' : 
-                'bg-gray-300'
-              }`}
-            >
-              {isCompleted ? <CheckCircle className="w-4 h-4 text-white" /> : <span className="text-xs font-bold text-white">{index + 1}</span>}
+          return (
+            <div key={stepStatus} className="flex items-center flex-shrink-0">
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                  isErrorStep ? 'bg-red-500' :
+                  isCompleted ? 'bg-green-500' : 
+                  isCurrent ? (isGenerating ? 'bg-blue-500' : 'bg-blue-300') : 
+                  'bg-gray-300'
+                }`}
+              >
+                {isErrorStep ? (
+                  <AlertCircle className="w-4 h-4 text-white" />
+                ) : isCompleted ? (
+                  <CheckCircle className="w-4 h-4 text-white" />
+                ) : isCurrent && isGenerating ? (
+                  <Loader className="w-4 h-4 text-white animate-spin" />
+                ) : (
+                  <span className="text-xs font-bold text-white">{index + 1}</span>
+                )}
+              </div>
+              <span className={`ml-2 text-xs ${isCompleted || isCurrent ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
+                {stepStatus.replace('_', ' ')}
+              </span>
             </div>
-            <span className={`ml-2 text-sm ${isCompleted || isCurrent ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
-              {step}
-            </span>
+          );
+        })}
+      </div>
+      
+      {/* Affichage du message d'erreur */}
+      {isError && errorMessage && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+          <div className="flex items-start">
+            <AlertCircle className="h-4 w-4 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-800">{errorMessage}</p>
           </div>
-        );
-      })}
+        </div>
+      )}
     </div>
   );
 };
@@ -72,7 +95,8 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline })
   // Charger les informations de queue
   useEffect(() => {
     const loadQueueInfo = async () => {
-      if (idea.status === 'queued' || idea.status === 'processing') {
+      if (idea.status === 'queued' || idea.status === 'processing' || 
+          idea.status === 'script_generating' || idea.status === 'audio_generating' || idea.status === 'video_generating') {
         try {
           const response = await queueApi.getJobStatus(idea.id);
           setQueueInfo(response.data);
@@ -84,9 +108,10 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline })
     
     loadQueueInfo();
     
-    // Rafraîchir toutes les 5 secondes si en queue ou processing
+    // Rafraîchir toutes les 5 secondes si en queue ou en cours de génération
     const interval = setInterval(() => {
-      if (idea.status === 'queued' || idea.status === 'processing') {
+      if (idea.status === 'queued' || idea.status === 'processing' || 
+          idea.status === 'script_generating' || idea.status === 'audio_generating' || idea.status === 'video_generating') {
         loadQueueInfo();
       }
     }, 5000);
@@ -107,12 +132,15 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline })
   
   const getStatusInfo = (status) => {
     const statusMap = {
-      pending: { label: 'Prêt à lancer', color: 'bg-yellow-100 text-yellow-800' },
-      queued: { label: 'En attente', color: 'bg-orange-100 text-orange-800' },
-      script_generated: { label: 'Script généré', color: 'bg-indigo-200 text-indigo-900' },
-      audio_generated: { label: 'Audio généré', color: 'bg-pink-200 text-pink-900' },
-      video_generated: { label: 'Terminé', color: 'bg-green-600 text-white' },
-      error: { label: 'Erreur', color: 'bg-red-600 text-white' },
+      pending: { label: 'Prêt à lancer', color: 'bg-yellow-100 text-yellow-800', icon: null },
+      queued: { label: 'En attente', color: 'bg-orange-100 text-orange-800', icon: <Clock className="h-3 w-3 mr-1" /> },
+      script_generating: { label: 'Génération du script...', color: 'bg-blue-100 text-blue-800', icon: <Loader className="h-3 w-3 mr-1 animate-spin" /> },
+      script_generated: { label: 'Script généré', color: 'bg-indigo-200 text-indigo-900', icon: null },
+      audio_generating: { label: 'Génération audio...', color: 'bg-purple-100 text-purple-800', icon: <Loader className="h-3 w-3 mr-1 animate-spin" /> },
+      audio_generated: { label: 'Audio généré', color: 'bg-pink-200 text-pink-900', icon: null },
+      video_generating: { label: 'Génération vidéo...', color: 'bg-teal-100 text-teal-800', icon: <Loader className="h-3 w-3 mr-1 animate-spin" /> },
+      video_generated: { label: 'Terminé', color: 'bg-green-600 text-white', icon: null },
+      error: { label: 'Erreur', color: 'bg-red-600 text-white', icon: <AlertCircle className="h-3 w-3 mr-1" /> },
     };
     return statusMap[status] || statusMap.pending;
   };
@@ -122,7 +150,7 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline })
   const isQueued = idea.status === 'queued';
   const isError = idea.status === 'error';
   const isProcessing = idea.status === 'queued';
-  const hasScript = !!idea.script_id ;
+  const hasScript = !!idea.script_id;
 
   return (
     <div className="bg-white shadow rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow">
@@ -145,6 +173,7 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline })
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                  {statusInfo.icon}
                   {statusInfo.label}
                 </span>
                 {isQueued && queueInfo && queueInfo.queue_position && (
@@ -182,17 +211,7 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline })
           {/* Status Indicator */}
           {idea.status !== 'pending' && (
             <div className="mt-4">
-              <StatusIndicator status={idea.status} />
-            </div>
-          )}
-
-          {/* Error Message */}
-          {isError && idea.error_message && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-              <div className="flex items-start">
-                <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800">{idea.error_message}</p>
-              </div>
+              <StatusIndicator status={idea.status} errorMessage={idea.error_message} />
             </div>
           )}
         </div>

@@ -21,7 +21,7 @@ function IdeasPage() {
 
   useEffect(() => {
     loadIdeas();
-    const interval = setInterval(loadIdeas, 60000);
+    const interval = setInterval(loadIdeas, 6000);
     return () => clearInterval(interval);
   }, []);
 
