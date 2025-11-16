@@ -8,37 +8,16 @@ import os
 # Ajouter le répertoire parent au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.server_api import ServerApi
-from dotenv import load_dotenv
-
-# Charger les variables d'environnement
-load_dotenv()
+from database import get_ideas_collection, get_scripts_collection
 
 async def migrate_database():
     """Migrer la base de données pour ajouter les nouveaux champs"""
     
-    # Connexion à MongoDB
-    username = os.getenv("MONGO_USERNAME")
-    password = os.getenv("MONGO_PASSWORD")
-    cluster = os.getenv("MONGO_CLUSTER")
-    app_name = os.getenv("MONGO_APP_NAME")
-    db_name = os.getenv("DB_NAME", "interview_video_generator")
-    
-    connection_string = f"mongodb+srv://{username}:{password}@{cluster}/?retryWrites=true&w=majority&appName={app_name}"
-    
-    try:
-        client = AsyncIOMotorClient(connection_string, server_api=ServerApi('1'))
-        db = client[db_name]
-        await client.admin.command('ping')
-        print(f"✅ Connected to MongoDB: {db_name}")
-    except Exception as e:
-        print(f"❌ MongoDB connection failed: {e}")
-        return
-    
     # Migration des idées
-    ideas_collection = db.ideas
-    scripts_collection = db.scripts
+    ideas_collection = get_ideas_collection()
+    scripts_collection = get_scripts_collection()
+    
+    print("✅ Using existing database connection")
     
     print("🔄 Starting migration...")
     
@@ -122,8 +101,6 @@ async def migrate_database():
     print(f"   Total ideas: {total_ideas}")
     print(f"   Ideas with script_id: {ideas_with_script}")
     print(f"   Ideas without script_id: {total_ideas - ideas_with_script}")
-    
-    client.close()
 
 if __name__ == "__main__":
     asyncio.run(migrate_database())
