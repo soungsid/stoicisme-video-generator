@@ -118,48 +118,77 @@ class ElevenLabsService:
             print(f"❌ Other ElevenLabs error: {error_message}")
             raise error
     
-    async def generate_audio(self, text: str, output_path: str) -> Tuple[str, int]:
+    async def generate_audio(self, text: str, output_path: str, max_retries: int = 3) -> Tuple[str, int]:
         """
-        Générer l'audio pour un texte donné
+        Générer l'audio pour un texte donné avec retry automatique en cas d'erreur de crédits
         Retourne: (chemin du fichier, durée en millisecondes)
         """
-        try:
-            print(f"🎵 Generating audio {output_path} for text: {text[:100]}...")
-            
-            # Obtenir le client avec la clé actuelle
-            client = self._get_next_client()
-            
-            # Stocker la clé actuelle pour la gestion d'erreur
-            current_api_key = self._get_available_keys()[(self.current_key_index - 1) % len(self._get_available_keys())]
-            
+        retry_count = 0
+        
+        while retry_count < max_retries:
             try:
-                # Générer l'audio
-                audio = client.text_to_speech.convert(
-                    text=text,
-                    voice_id=self.voice_id,
-                    model_id="eleven_v3",
-                    output_format="mp3_44100_128"  
-                )
-                print("✅ Audio generated successfully. Next step: saving audio")
+                print(f"🎵 Generating audio {output_path} for text: {text[:100]}... (attempt {retry_count + 1}/{max_retries})")
                 
-                # Sauvegarder l'audio
-                save(audio, output_path)
+                # Obtenir le client avec la clé actuelle
+                client = self._get_next_client()
                 
-                # Calculer la durée avec pydub
-                from pydub import AudioSegment
-                audio_segment = AudioSegment.from_mp3(output_path)
-                duration_ms = len(audio_segment)
+                # Stocker la clé actuelle pour la gestion d'erreur
+                available_keys = self._get_available_keys()
+                current_api_key = available_keys[(self.current_key_index - 1) % len(available_keys)]
                 
-                print(f"✅ Generated audio: {output_path} ({duration_ms}ms)")
-                return output_path, duration_ms
-                
+                try:
+                    # Générer l'audio
+                    audio = client.text_to_speech.convert(
+                        text=text,
+                        voice_id=self.voice_id,
+                        model_id="eleven_v3",
+                        output_format="mp3_44100_128"  
+                    )
+                    print("✅ Audio generated successfully. Next step: saving audio")
+                    
+                    # Sauvegarder l'audio
+                    save(audio, output_path)
+                    
+                    # Calculer la durée avec pydub
+                    from pydub import AudioSegment
+                    audio_segment = AudioSegment.from_mp3(output_path)
+                    duration_ms = len(audio_segment)
+                    
+                    print(f"✅ Generated audio: {output_path} ({duration_ms}ms)")
+                    return output_path, duration_ms
+                    
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    # Gérer l'erreur ElevenLabs spécifique
+                    error_message = str(e)
+                    
+                    # Vérifier si c'est une erreur de crédits
+                    if self._is_credit_error(error_message):
+                        print(f"💳 Credit limit detected for API key: {current_api_key[:10]}...")
+                        self._mark_key_as_exhausted(current_api_key)
+                        
+                        # Si c'est une erreur de crédits, on réessaie avec la clé suivante
+                        retry_count += 1
+                        print(f"🔄 Retrying with next API key... ({retry_count}/{max_retries})")
+                        continue
+                    else:
+                        # Autres erreurs (authentification, réseau, etc.) - on propage l'erreur
+                        print(f"❌ Other ElevenLabs error: {error_message}")
+                        raise e
+                        
             except Exception as e:
-                # Gérer l'erreur ElevenLabs spécifique
-                self._handle_elevenlabs_error(e, current_api_key)
-                
-        except Exception as e:
-            print(f"❌ Error generating audio: {str(e)}")
-            raise
+                # Si on arrive ici, c'est une erreur non liée aux crédits ou toutes les retries ont échoué
+                if retry_count >= max_retries - 1:
+                    print(f"❌ Max retries reached. Error generating audio: {str(e)}")
+                    raise
+                else:
+                    retry_count += 1
+                    print(f"🔄 Retrying... ({retry_count}/{max_retries})")
+                    continue
+        
+        # Si on arrive ici, toutes les retries ont échoué
+        raise Exception(f"Failed to generate audio after {max_retries} attempts")
     
     async def generate_multiple_audios(self, phrases: List[str], output_dir: str) -> List[Tuple[str, int]]:
         """

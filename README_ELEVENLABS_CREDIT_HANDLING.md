@@ -34,11 +34,12 @@ Le système analyse les messages d'erreur ElevenLabs pour détecter les indicate
 - `usage limit`
 - `limit exceeded`
 
-### Rotation des Clés
+### Rotation des Clés avec Retry Automatique
 1. Le service charge les 5 clés API depuis les variables d'environnement
 2. À chaque requête, il utilise la prochaine clé disponible
-3. Si une clé est épuisée, elle est automatiquement exclue de la rotation
-4. Le système continue avec les clés restantes
+3. **Si une clé est épuisée, le système réessaie automatiquement avec la clé suivante**
+4. Jusqu'à 3 tentatives automatiques sont effectuées
+5. Si toutes les clés sont épuisées, une exception est levée
 
 ### Nettoyage Quotidien
 - La liste des clés épuisées est **vidée automatiquement toutes les 24 heures**
