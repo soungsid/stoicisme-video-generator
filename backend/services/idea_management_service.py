@@ -25,7 +25,7 @@ class IdeaManagementService:
     
     async def create_ideas(self, request: IdeaGenerationRequest) -> Dict:
         """
-        Créer des idées de vidéos selon différents modes
+        Créer des idées de vidéos selon la nouvelle structure
         
         Args:
             request: Requête de génération d'idées
@@ -35,33 +35,28 @@ class IdeaManagementService:
         """
         try:
             ideas = []
+            count = request.count
             
-            # Mode 1: Script personnalisé (une seule idée)
-            if request.script_text:
-                idea = await self._create_custom_script_idea(request)
-                ideas = [idea]
-                print(f"✨ Idée créée avec script personnalisé: {idea.title}")
+            # Si request.count n'est pas défini ou est égal à 0, count = 1
+            if not count or count == 0:
+                count = 1
             
-            # Mode 2: Titre personnalisé (une seule idée)
-            elif request.custom_title:
-                idea = await self._create_custom_title_idea(request)
-                ideas = [idea]
-                print(f"✨ Idée créée avec titre personnalisé: {request.custom_title}")
-            
-            # Mode 3: Génération avec mots-clés
-            elif request.keywords:
-                ideas = await self._generate_ideas_with_keywords(request)
-            
-            # Mode 4: Génération automatique
-            else:
-                ideas = await self._generate_automatic_ideas(request)
+            # Boucler de 1 à count
+            previously_generated_titles = []
+            for i in range(count):
+                idea = await self.generer_une_idee(request, previously_generated_titles)
+                ideas.append(idea)
+                previously_generated_titles.append(idea.title)
+                print(f"✅ Idée {i+1}/{count} générée: {idea.title}")
             
             # Générer les titres de sections si nécessaire
             if request.video_type.value == "normal" and request.sections_count and request.sections_count > 0:
                 await self._generate_section_titles(ideas, request.sections_count)
             
             # Sauvegarder en base de données
+            print(f"💾 Sauvegarde de {len(ideas)} idées...")
             ideas_dict = await self._save_ideas(ideas)
+            print(f"✅ {len(ideas_dict)} idées sauvegardées")
             
             return {
                 "success": True,
@@ -77,80 +72,96 @@ class IdeaManagementService:
                 detail=f"Error creating ideas: {str(e)}"
             )
     
-    async def _create_custom_script_idea(self, request: IdeaGenerationRequest) -> VideoIdea:
-        """Créer une idée avec un script personnalisé"""
-        # Utiliser le titre fourni ou en générer un basé sur le script
+    async def generer_une_idee(self, request: IdeaGenerationRequest, previously_generated_titles: List[str]) -> VideoIdea:
+        """
+        Générer une seule idée en prenant en compte tous les paramètres
+        
+        Args:
+            request: Requête de génération d'idées
+            previously_generated_titles: Liste des titres déjà générés
+            
+        Returns:
+            VideoIdea: Idée générée
+        """
+        # Générer le titre si la request ne contient pas de titre
         if request.custom_title:
             title = request.custom_title
             print(f"✨ Utilisation du titre personnalisé: {title}")
         else:
-            title = await self.idea_generator.generate_title_from_script(
-                request.script_text, 
-                request.keywords or []
-            )
-            print(f"✨ Titre généré: {title}")
+            # Utiliser la méthode unifiée de génération
+            idea = await self.idea_generator.generate_idea(request, previously_generated_titles)
+            title = idea.title
         
-        # Créer l'idée (SANS sections car script custom)
-        idea = VideoIdea(
+        # Construire l'objet VideoIdea
+        video_idea = VideoIdea(
             title=title,
-            keywords=request.keywords or [],
-            video_type=request.video_type,
-            duration_seconds=request.duration_seconds,
-            sections_count=None,  # Pas de sections pour script custom
-            section_titles=None,  # Pas de sections pour script custom
-            status=IdeaStatus.PENDING,  # On laisse en PENDING pour la génération de script
-            original_script=request.script_text,  # Stocker le script original
-            validated_at=datetime.now()
-        )
-        
-        # Sauvegarder l'idée
-        ideas_collection = get_ideas_collection()
-        await ideas_collection.insert_one(idea.model_dump())
-        
-        # Générer le script via le service de script
-        await self._generate_script_for_custom_idea(idea.id, request.script_text)
-        
-        # Récupérer l'idée mise à jour
-        updated_idea = await ideas_collection.find_one({"id": idea.id}, {"_id": 0})
-        
-        return VideoIdea(**updated_idea)
-    
-    async def _create_custom_title_idea(self, request: IdeaGenerationRequest) -> VideoIdea:
-        """Créer une idée avec un titre personnalisé"""
-        idea = VideoIdea(
-            title=request.custom_title,
             keywords=request.keywords or [],
             video_type=request.video_type,
             duration_seconds=request.duration_seconds,
             sections_count=request.sections_count if request.video_type.value == "normal" else None,
             status=IdeaStatus.PENDING
         )
-        return idea
+        
+        # Persister en base de données
+        await self._save_single_idea(video_idea)
+        
+        # Si request.sections_count est supérieur à zéro, générer les titres des sections
+        if request.video_type.value == "normal" and request.sections_count and request.sections_count > 0:
+            await self._generate_section_titles_for_single_idea(video_idea, request.sections_count)
+        
+        # Si request.script_text existe, appeler le service de génération de script
+        if request.script_text:
+            await self._generate_script_for_idea(video_idea.id, request.script_text)
+        
+        return video_idea
     
-    async def _generate_ideas_with_keywords(self, request: IdeaGenerationRequest) -> List[VideoIdea]:
-        """Générer des idées avec mots-clés"""
-        ideas = await self.idea_generator.generate_ideas_with_keywords(
-            count=request.count, 
-            keywords=request.keywords
-        )
-        # Appliquer les paramètres aux idées générées
-        for idea in ideas:
-            idea.video_type = request.video_type
-            idea.duration_seconds = request.duration_seconds
-            if request.video_type.value == "normal" and request.sections_count:
-                idea.sections_count = request.sections_count
-        return ideas
+    async def _save_single_idea(self, idea: VideoIdea):
+        """Sauvegarder une seule idée en base de données"""
+        try:
+            ideas_collection = get_ideas_collection()
+            await ideas_collection.insert_one(idea.model_dump())
+            print(f"💾 Idée sauvegardée: {idea.title}")
+        except Exception as e:
+            print(f"❌ Erreur sauvegarde idée {idea.title}: {e}")
+            raise
     
-    async def _generate_automatic_ideas(self, request: IdeaGenerationRequest) -> List[VideoIdea]:
-        """Générer des idées automatiquement"""
-        ideas = await self.idea_generator.generate_ideas(count=request.count)
-        # Appliquer les paramètres aux idées générées
-        for idea in ideas:
-            idea.video_type = request.video_type
-            idea.duration_seconds = request.duration_seconds
-            if request.video_type.value == "normal" and request.sections_count:
-                idea.sections_count = request.sections_count
-        return ideas
+    async def _generate_section_titles_for_single_idea(self, idea: VideoIdea, sections_count: int):
+        """Générer les titres de sections pour une seule idée"""
+        try:
+            section_agent = SectionTitleGeneratorAgent()
+            section_titles = await section_agent.generate_section_titles(
+                title=idea.title,
+                keywords=idea.keywords,
+                sections_count=sections_count
+            )
+            idea.section_titles = section_titles
+            print(f"✅ Titres de sections générés pour: {idea.title}")
+        except Exception as e:
+            print(f"⚠️  Erreur génération sections pour {idea.title}: {e}")
+            idea.section_titles = []
+    
+    async def _generate_script_for_idea(self, idea_id: str, script_text: str):
+        """
+        Générer un script pour une idée
+        
+        Args:
+            idea_id: ID de l'idée
+            script_text: Texte du script personnalisé
+        """
+        try:
+            # Mettre à jour l'idée avec le script original
+            ideas_collection = get_ideas_collection()
+            await ideas_collection.update_one(
+                {"id": idea_id},
+                {"$set": {
+                    "original_script": script_text,
+                    "status": IdeaStatus.SCRIPT_GENERATED
+                }}
+            )
+            print(f"✅ Script associé à l'idée {idea_id}")
+        except Exception as e:
+            print(f"❌ Erreur association script pour l'idée {idea_id}: {str(e)}")
+            raise
     
     async def _generate_section_titles(self, ideas: List[VideoIdea], sections_count: int):
         """Générer les titres de sections pour les idées"""
@@ -171,68 +182,17 @@ class IdeaManagementService:
     
     async def _save_ideas(self, ideas: List[VideoIdea]) -> List[Dict]:
         """Sauvegarder les idées en base de données"""
-        ideas_collection = get_ideas_collection()
-        ideas_dict = [idea.model_dump() for idea in ideas]
-        
-        if ideas_dict:
-            await ideas_collection.insert_many(ideas_dict)
-            # Retirer les _id ajoutés par MongoDB
-            for idea_dict in ideas_dict:
-                idea_dict.pop('_id', None)
-        
-        return ideas_dict
-    
-    async def _generate_script_for_custom_idea(self, idea_id: str, script_text: str):
-        """
-        Générer un script pour une idée custom
-        
-        Args:
-            idea_id: ID de l'idée
-            script_text: Texte du script personnalisé
-        """
         try:
-            # Vérifier si un script existe déjà pour cette idée
-            scripts_collection = get_scripts_collection()
-            existing_script = await scripts_collection.find_one({"idea_id": idea_id}, {"_id": 0})
+            ideas_dict = [idea.model_dump() for idea in ideas]
             
-            if existing_script:
-                print(f"⚠️  Script déjà existant pour l'idée {idea_id}, mise à jour en cours...")
-                # Mettre à jour le script existant
-                await scripts_collection.update_one(
-                    {"idea_id": idea_id},
-                    {"$set": {
-                        "original_script": script_text,
-                        "elevenlabs_adapted_script": None,
-                        "phrases": []
-                    }}
-                )
-            else:
-                # Créer un nouveau script
+            if ideas_dict:
                 ideas_collection = get_ideas_collection()
-                idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
-                
-                if not idea:
-                    raise ValueError(f"Idea {idea_id} not found")
-                
-                script = Script(
-                    idea_id=idea_id,
-                    title=idea["title"],
-                    original_script=script_text
-                )
-                
-                await scripts_collection.insert_one(script.model_dump())
-                
-                # Mettre à jour l'idée avec l'ID du script
-                await ideas_collection.update_one(
-                    {"id": idea_id},
-                    {"$set": {
-                        "status": IdeaStatus.SCRIPT_GENERATED,
-                        "script_id": script.id
-                    }}
-                )
+                await ideas_collection.insert_many(ideas_dict)
+                # Retirer les _id ajoutés par MongoDB
+                for idea_dict in ideas_dict:
+                    idea_dict.pop('_id', None)
             
-            print(f"✅ Script généré pour l'idée custom {idea_id}")
-            
+            return ideas_dict
         except Exception as e:
-            print(f"❌ Erreur lors de la génération du script pour l'idée custom {idea_id}: {str(e)}")
+            print(f"❌ Erreur dans _save_ideas: {e}")
             raise
