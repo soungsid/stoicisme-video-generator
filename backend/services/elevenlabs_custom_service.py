@@ -2,13 +2,16 @@ import os
 import elevenlabs
 from elevenlabs.client import ElevenLabs
 from elevenlabs import save
-from typing import List, Tuple
+from typing import List, Tuple, Set
 import asyncio
 from functools import lru_cache
+import time
+import json
 
 class ElevenLabsService:
     """
     Service pour gérer les appels à ElevenLabs avec rotation des 5 clés API
+    et gestion des erreurs de crédits
     """
     
     def __init__(self):
@@ -17,6 +20,9 @@ class ElevenLabsService:
         #t8BrjWUT5Z23DLLBzbuY
         #Bj9UqZbhQsanLzgalpEG austin
         self.voice_id = os.getenv("ELEVENLABS_VOICE_ID", "t8BrjWUT5Z23DLLBzbuY")
+        self.exhausted_keys: Set[str] = set()
+        self.last_cleanup_time = time.time()
+        self.cleanup_interval = 24 * 60 * 60  # 24 heures en secondes
         
     def _load_api_keys(self) -> List[str]:
         """Charger toutes les clés API ElevenLabs disponibles"""
@@ -32,13 +38,85 @@ class ElevenLabsService:
         print(f"✅ Loaded {len(keys)} ElevenLabs API keys")
         return keys
     
+    def _cleanup_exhausted_keys(self):
+        """Nettoyer la liste des clés épuisées tous les 24 heures"""
+        current_time = time.time()
+        if current_time - self.last_cleanup_time >= self.cleanup_interval:
+            print(f"🧹 Cleaning up exhausted keys list (was {len(self.exhausted_keys)} keys)")
+            self.exhausted_keys.clear()
+            self.last_cleanup_time = current_time
+    
+    def _is_key_exhausted(self, api_key: str) -> bool:
+        """Vérifier si une clé API est épuisée"""
+        return api_key in self.exhausted_keys
+    
+    def _mark_key_as_exhausted(self, api_key: str):
+        """Marquer une clé API comme épuisée"""
+        if api_key not in self.exhausted_keys:
+            self.exhausted_keys.add(api_key)
+            print(f"⚠️  Marked API key as exhausted: {api_key[:10]}...")
+    
+    def _get_available_keys(self) -> List[str]:
+        """Obtenir la liste des clés API disponibles (non épuisées)"""
+        available_keys = [key for key in self.api_keys if not self._is_key_exhausted(key)]
+        if not available_keys:
+            raise ValueError("All ElevenLabs API keys are exhausted. Please add new keys or wait for daily reset.")
+        return available_keys
+    
     def _get_next_client(self) -> ElevenLabs:
         """Obtenir le prochain client ElevenLabs avec rotation"""
-        api_key = self.api_keys[self.current_key_index]
-        self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
+        # Nettoyer les clés épuisées si nécessaire
+        self._cleanup_exhausted_keys()
         
-        print(f"Using ElevenLabs key #{self.current_key_index + 1}/{len(self.api_keys)}")
+        # Obtenir les clés disponibles
+        available_keys = self._get_available_keys()
+        
+        # Si toutes les clés sont épuisées, on réinitialise l'index
+        if self.current_key_index >= len(available_keys):
+            self.current_key_index = 0
+        
+        api_key = available_keys[self.current_key_index]
+        self.current_key_index = (self.current_key_index + 1) % len(available_keys)
+        
+        print(f"🔑 Using ElevenLabs key #{self.current_key_index + 1}/{len(available_keys)} (total: {len(self.api_keys)}, exhausted: {len(self.exhausted_keys)})")
         return ElevenLabs(api_key=api_key)
+    
+    def _is_credit_error(self, error_message: str) -> bool:
+        """
+        Détecter si l'erreur est liée aux crédits épuisés
+        """
+        credit_indicators = [
+            "insufficient credits",
+            "not enough credits",
+            "quota exceeded",
+            "quota limit",
+            "character limit",
+            "character quota",
+            "monthly character limit",
+            "monthly quota",
+            "usage limit",
+            "limit exceeded"
+        ]
+        
+        error_lower = error_message.lower()
+        return any(indicator in error_lower for indicator in credit_indicators)
+    
+    def _handle_elevenlabs_error(self, error: Exception, current_api_key: str):
+        """
+        Gérer les erreurs ElevenLabs et détecter les problèmes de crédits
+        """
+        error_message = str(error)
+        print(f"🔍 Analyzing ElevenLabs error: {error_message}")
+        
+        # Vérifier si c'est une erreur de crédits
+        if self._is_credit_error(error_message):
+            print(f"💳 Credit limit detected for API key: {current_api_key[:10]}...")
+            self._mark_key_as_exhausted(current_api_key)
+            raise Exception(f"ElevenLabs credit limit reached for this API key. Key has been temporarily disabled.")
+        else:
+            # Autres erreurs (authentification, réseau, etc.)
+            print(f"❌ Other ElevenLabs error: {error_message}")
+            raise error
     
     async def generate_audio(self, text: str, output_path: str) -> Tuple[str, int]:
         """
@@ -46,29 +124,39 @@ class ElevenLabsService:
         Retourne: (chemin du fichier, durée en millisecondes)
         """
         try:
-            print(f"generation audio {output_path} for the text {text} ", )
+            print(f"🎵 Generating audio {output_path} for text: {text[:100]}...")
+            
+            # Obtenir le client avec la clé actuelle
             client = self._get_next_client()
             
-            # Générer l'audio
-            audio = client.text_to_speech.convert(
-                text=text,
-                voice_id=self.voice_id,
-                model_id="eleven_v3",
-                output_format="mp3_44100_128"  
-            )
-            print("l'audio a été generé avec succes. Nex step sauvegarde de l'audio")
+            # Stocker la clé actuelle pour la gestion d'erreur
+            current_api_key = self._get_available_keys()[(self.current_key_index - 1) % len(self._get_available_keys())]
             
-            # Sauvegarder l'audio
-            save(audio, output_path)
-            
-            # Calculer la durée avec pydub
-            from pydub import AudioSegment
-            audio_segment = AudioSegment.from_mp3(output_path)
-            duration_ms = len(audio_segment)
-            
-            print(f"✅ Generated audio: {output_path} ({duration_ms}ms)")
-            return output_path, duration_ms
-            
+            try:
+                # Générer l'audio
+                audio = client.text_to_speech.convert(
+                    text=text,
+                    voice_id=self.voice_id,
+                    model_id="eleven_v3",
+                    output_format="mp3_44100_128"  
+                )
+                print("✅ Audio generated successfully. Next step: saving audio")
+                
+                # Sauvegarder l'audio
+                save(audio, output_path)
+                
+                # Calculer la durée avec pydub
+                from pydub import AudioSegment
+                audio_segment = AudioSegment.from_mp3(output_path)
+                duration_ms = len(audio_segment)
+                
+                print(f"✅ Generated audio: {output_path} ({duration_ms}ms)")
+                return output_path, duration_ms
+                
+            except Exception as e:
+                # Gérer l'erreur ElevenLabs spécifique
+                self._handle_elevenlabs_error(e, current_api_key)
+                
         except Exception as e:
             print(f"❌ Error generating audio: {str(e)}")
             raise
@@ -99,5 +187,3 @@ async def main():
     
 if __name__ == "__main__":
     asyncio.run(main())
-    
-    
