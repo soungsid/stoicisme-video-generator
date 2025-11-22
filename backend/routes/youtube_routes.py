@@ -8,6 +8,7 @@ from models import (
 from database import get_config_collection, get_videos_collection, get_ideas_collection
 from services.youtube_service import YouTubeService
 from services.youtube_scheduling_service import YoutubeSchedulingService
+from services.youtube_thumbnail_service import YouTubeThumbnailService
 from datetime import datetime
 import os
 import traceback
@@ -296,4 +297,138 @@ async def unschedule_video(video_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error unscheduling video: {str(e)}"
+        )
+
+# ===== ROUTES POUR LA GESTION DES THUMBNAILS =====
+
+@router.post("/thumbnail/update/{youtube_video_id}")
+async def update_youtube_thumbnail(
+    youtube_video_id: str,
+    thumbnail_path: str
+):
+    """
+    Mettre à jour le thumbnail d'une vidéo YouTube
+    
+    Args:
+        youtube_video_id: ID de la vidéo YouTube
+        thumbnail_path: Chemin vers le fichier thumbnail
+    """
+    try:
+        thumbnail_service = YouTubeThumbnailService()
+        
+        print(f"🖼️  Mise à jour du thumbnail pour la vidéo {youtube_video_id}...")
+        result = await thumbnail_service.update_thumbnail(
+            youtube_video_id=youtube_video_id,
+            thumbnail_path=thumbnail_path
+        )
+        
+        print("✅ Thumbnail mis à jour avec succès!")
+        
+        return {
+            "success": True,
+            "message": "Thumbnail updated successfully",
+            "result": result
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating thumbnail: {str(e)}"
+        )
+
+@router.post("/thumbnail/update-by-video/{video_id}")
+async def update_thumbnail_by_video_id(video_id: str):
+    """
+    Mettre à jour le thumbnail d'une vidéo YouTube en utilisant l'ID de la vidéo locale
+    
+    Args:
+        video_id: ID de la vidéo dans la base de données
+    """
+    try:
+        thumbnail_service = YouTubeThumbnailService()
+        
+        print(f"🖼️  Mise à jour du thumbnail pour la vidéo locale {video_id}...")
+        result = await thumbnail_service.update_thumbnail_by_video_id(video_id=video_id)
+        
+        print("✅ Thumbnail mis à jour avec succès!")
+        
+        return {
+            "success": True,
+            "message": "Thumbnail updated successfully",
+            "result": result
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating thumbnail: {str(e)}"
+        )
+
+@router.get("/thumbnail/info/{youtube_video_id}")
+async def get_thumbnail_info(youtube_video_id: str):
+    """
+    Récupérer les informations sur les thumbnails d'une vidéo YouTube
+    
+    Args:
+        youtube_video_id: ID de la vidéo YouTube
+    """
+    try:
+        thumbnail_service = YouTubeThumbnailService()
+        
+        print(f"ℹ️  Récupération des infos thumbnail pour la vidéo {youtube_video_id}...")
+        result = await thumbnail_service.get_thumbnail_info(youtube_video_id=youtube_video_id)
+        
+        return {
+            "success": True,
+            "result": result
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting thumbnail info: {str(e)}"
+        )
+
+@router.post("/thumbnail/batch-update")
+async def batch_update_thumbnails(video_ids: list):
+    """
+    Mettre à jour les thumbnails de plusieurs vidéos en lot
+    
+    Args:
+        video_ids: Liste des IDs de vidéos locales
+    """
+    try:
+        thumbnail_service = YouTubeThumbnailService()
+        
+        print(f"🖼️  Mise à jour en lot des thumbnails pour {len(video_ids)} vidéos...")
+        result = await thumbnail_service.batch_update_thumbnails(video_ids=video_ids)
+        
+        return {
+            "success": True,
+            "message": f"Batch thumbnail update completed: {len(result['successful'])} successful, {len(result['failed'])} failed",
+            "result": result
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error in batch thumbnail update: {str(e)}"
         )
