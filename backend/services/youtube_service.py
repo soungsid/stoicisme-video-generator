@@ -363,7 +363,7 @@ class YouTubeService:
                 ideas_collection = get_ideas_collection()
                 await ideas_collection.update_one(
                     {"id": video["idea_id"]},
-                    {"$set": {"status": IdeaStatus.UPLOADED}}
+                    {"$set": {"status": IdeaStatus.VIDEO_UPLOADED}}
                 )
                 print(f"✅ Idea status updated to UPLOADED")
             

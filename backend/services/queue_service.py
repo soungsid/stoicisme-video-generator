@@ -26,7 +26,30 @@ class QueueService:
         })
         
         if existing_job:
+            # Si un job existe déjà, on retourne le job existant sans modifier son statut
             return VideoJob(**existing_job)
+        
+        # Récupérer le statut actuel de l'idée pour déterminer l'étape de départ
+        idea = await self.ideas_collection.find_one({"id": idea_id}, {"_id": 0})
+        current_idea_status = idea.get("status") if idea else None
+        
+        # Mapper le statut de l'idée vers l'étape de départ appropriée
+        status_to_start_from_map = {
+            IdeaStatus.PENDING: "script",
+            IdeaStatus.SCRIPT_GENERATED: "adapt",
+            IdeaStatus.SCRIPT_GENERATING: "script",
+            IdeaStatus.AUDIO_GENERATING: "audio",
+            IdeaStatus.AUDIO_GENERATED: "video",
+            IdeaStatus.VIDEO_GENERATING: "video",
+            IdeaStatus.VIDEO_GENERATED: "video",  # Déjà généré, mais pourrait être pour re-génération
+            IdeaStatus.ERROR: "script",  # En cas d'erreur, recommencer depuis le début
+        }
+        
+        # Utiliser le statut de l'idée pour déterminer l'étape de départ, sauf si spécifié explicitement
+        if start_from == "script" and current_idea_status:
+            calculated_start_from = status_to_start_from_map.get(current_idea_status, "script")
+            print(f"📍 Détermination automatique de l'étape de départ: '{current_idea_status}' -> '{calculated_start_from}'")
+            start_from = calculated_start_from
         
         # Créer un nouveau job
         job = VideoJob(
@@ -47,7 +70,7 @@ class QueueService:
             }}
         )
         
-        print(f"✅ Job added to queue: {job.job_id} for idea {idea_id}")
+        print(f"✅ Job added to queue: {job.job_id} for idea {idea_id} (start_from: {start_from})")
         return job
     
     async def list_all_jobs(self, status: Optional[JobStatus] = None,) -> List[VideoJob]:

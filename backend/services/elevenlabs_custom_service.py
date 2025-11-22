@@ -17,9 +17,9 @@ class ElevenLabsService:
     def __init__(self):
         self.api_keys = self._load_api_keys()
         self.current_key_index = 0
-        #t8BrjWUT5Z23DLLBzbuY
+        #t8BrjWUT5Z23DLLBzbuY voix feminine
         #Bj9UqZbhQsanLzgalpEG austin
-        self.voice_id = os.getenv("ELEVENLABS_VOICE_ID", "t8BrjWUT5Z23DLLBzbuY")
+        self.voice_id = os.getenv("ELEVENLABS_VOICE_ID", "NOpBlnGInO9m6vDvFkFC")
         self.exhausted_keys: Set[str] = set()
         self.last_cleanup_time = time.time()
         self.cleanup_interval = 24 * 60 * 60  # 24 heures en secondes
@@ -139,7 +139,7 @@ class ElevenLabsService:
                 try:
                     # Générer l'audio
                     audio = client.text_to_speech.convert(
-                        text=text,
+                        text="[excited] " + text,
                         voice_id=self.voice_id,
                         model_id="eleven_v3",
                         output_format="mp3_44100_128"  

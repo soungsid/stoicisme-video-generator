@@ -1,9 +1,9 @@
+import { FileText, Sparkles, Tag, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { X, Sparkles, Tag, FileText } from 'lucide-react';
 
 function GenerateIdeasModal({ onClose, onSubmit }) {
   const [activeTab, setActiveTab] = useState('auto');
-  const [count, setCount] = useState(5);
+  const [count, setCount] = useState(1);
   const [keywords, setKeywords] = useState('');
   const [customScript, setCustomScript] = useState('');
   const [customTitle, setCustomTitle] = useState('');

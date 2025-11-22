@@ -53,15 +53,13 @@ class IdeaManagementService:
             if request.video_type.value == "normal" and request.sections_count and request.sections_count > 0:
                 await self._generate_section_titles(ideas, request.sections_count)
             
-            # Sauvegarder en base de données
-            print(f"💾 Sauvegarde de {len(ideas)} idées...")
-            ideas_dict = await self._save_ideas(ideas)
-            print(f"✅ {len(ideas_dict)} idées sauvegardées")
+
+            print(f"✅ {len(ideas)} idées sauvegardées")
             
             return {
                 "success": True,
                 "count": len(ideas),
-                "ideas": ideas_dict,
+                "ideas": [idea.model_dump() for idea in ideas],
                 "custom_title_used": bool(request.custom_title),
                 "custom_script_used": bool(request.script_text)
             }
@@ -154,13 +152,16 @@ class IdeaManagementService:
             await ideas_collection.update_one(
                 {"id": idea_id},
                 {"$set": {
-                    "original_script": script_text,
-                    "status": IdeaStatus.SCRIPT_GENERATED
+                    "original_script": script_text
                 }}
             )
-            print(f"✅ Script associé à l'idée {idea_id}")
+            
+            # Appeler le service de génération de script
+            # Le service vérifie si le script est déjà fourni et ne le regénère pas
+            await self.script_service.generate_script(idea_id)
+            print(f"✅ Script généré pour l'idée {idea_id}")
         except Exception as e:
-            print(f"❌ Erreur association script pour l'idée {idea_id}: {str(e)}")
+            print(f"❌ Erreur génération script pour l'idée {idea_id}: {str(e)}")
             raise
     
     async def _generate_section_titles(self, ideas: List[VideoIdea], sections_count: int):

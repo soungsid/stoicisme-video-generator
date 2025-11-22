@@ -17,6 +17,8 @@ class IdeaStatus(str, Enum):
     AUDIO_GENERATED = "audio_generated"
     VIDEO_GENERATING = "video_generating"
     VIDEO_GENERATED = "video_generated"
+    VIDEO_UPLOADED = "video_uploaded"
+
     ERROR = "error"
 
 class JobStatus(str, Enum):
@@ -110,7 +112,7 @@ class YouTubeConfig(BaseModel):
     is_authenticated: bool = False
 
 class IdeaGenerationRequest(BaseModel):
-    count: int = Field(default=5, ge=1, le=20)
+    count: int = Field(default=0, ge=0, le=5)
     keywords: Optional[List[str]] = None
     custom_title: Optional[str] = Field(None, description="Titre personnalisé pour l'idée (ex: '5 Habitudes terribles qui ruinent votre matinée!')")
     script_text: Optional[str] = Field(None, min_length=50, description="Script personnalisé (si fourni, le script ne sera pas généré automatiquement)")
