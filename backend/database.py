@@ -60,3 +60,7 @@ def get_config_collection():
 def get_queue_collection():
     """Collection pour la queue de jobs vidéo"""
     return get_database().video_queue
+
+def get_timestamps_collection():
+    """Collection pour les timestamps des transcriptions"""
+    return get_database().timestamps

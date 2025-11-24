@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from models import IdeaStatus
 from database import get_ideas_collection, get_scripts_collection
 from services.queue_service import QueueService
+from services.audio_service import AudioService
 import traceback
 
 router = APIRouter()
@@ -73,4 +74,39 @@ async def get_pipeline_status(idea_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting status: {str(e)}"
+        )
+
+@router.post("/generate-timestamps/{idea_id}")
+async def generate_timestamps_only(idea_id: str):
+    """
+    Générer uniquement les timestamps pour une idée (si l'audio existe déjà)
+    """
+    try:
+        ideas_collection = get_ideas_collection()
+        idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
+        
+        if not idea:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Idea {idea_id} not found"
+            )
+        
+        # Générer les timestamps directement (pas via la queue)
+        audio_service = AudioService()
+        timestamp_document = await audio_service.generate_timestamps_only(idea_id)
+        
+        return {
+            "success": True,
+            "message": "Timestamps generated successfully",
+            "idea_id": idea_id,
+            "timestamps_count": len(timestamp_document.timestamps),
+            "total_duration_ms": timestamp_document.total_duration_ms
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating timestamps: {str(e)}"
         )

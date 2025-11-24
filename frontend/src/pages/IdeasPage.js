@@ -128,8 +128,15 @@ function IdeasPage() {
 
   const handleStartPipeline = async (ideaId, startFrom = 'script') => {
     try {
-      await pipelineApi.startPipeline(ideaId, startFrom);
-      setToast({ type: 'info', message: 'Pipeline démarré' });
+      if (startFrom === 'timestamps') {
+        // Générer uniquement les timestamps
+        await pipelineApi.generateTimestamps(ideaId);
+        setToast({ type: 'info', message: 'Génération des timestamps démarrée' });
+      } else {
+        // Pipeline normal
+        await pipelineApi.startPipeline(ideaId, startFrom);
+        setToast({ type: 'info', message: 'Pipeline démarré' });
+      }
       await loadIdeas();
     } catch (error) {
       console.error('Error starting pipeline:', error);

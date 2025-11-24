@@ -176,3 +176,19 @@ class VideoSection(BaseModel):
     duration_seconds: float
     start_time: float = 0.0
     end_time: float = 0.0
+
+class TimestampItem(BaseModel):
+    """Représente un élément de timestamp individuel"""
+    text: str
+    start_time_ms: int
+    end_time_ms: int
+    confidence: Optional[float] = None
+
+class Timestamp(BaseModel):
+    """Représente tous les timestamps d'une idée dans un seul document"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    idea_id: str
+    timestamps: List[TimestampItem] = []
+    total_duration_ms: int = 0
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)

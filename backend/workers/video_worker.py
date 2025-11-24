@@ -142,17 +142,9 @@ class VideoWorker:
                     }}
                 )
                 
-                # Générer l'audio
+                # Générer l'audio avec concaténation et timestamps
                 audio_service = AudioService()
-                audio_generation = await audio_service.generate_audio_with_timestamps(
-                    script_id=script_id,
-                    idea_id=idea_id,
-                    phrases=phrases
-                )
-                await scripts_collection.update_one(
-                    {"id": script_id},
-                    {"$set": {"audio_phrases": [phrase.model_dump() for phrase in audio_generation.phrases]}}
-                )
+                audio_generation = await audio_service.complete_audio_generation_with_timestamps(script_id)
                 await self.update_idea_status(idea_id, IdeaStatus.AUDIO_GENERATED)
 
             # Étape 3: Générer la vidéo

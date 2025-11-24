@@ -81,6 +81,9 @@ const ActionsDropdown = ({ onRegenerate }) => {
           <button onClick={() => { onRegenerate('script'); setIsOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Régénérer Script</button>
           <button onClick={() => { onRegenerate('audio'); setIsOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Régénérer Audio</button>
           <button onClick={() => { onRegenerate('video'); setIsOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Régénérer Vidéo</button>
+          <button onClick={() => { onRegenerate('timestamps'); setIsOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Générer Timestamps</button>
+          <hr className="my-1" />
+          <button onClick={() => { onRegenerate('pipeline'); setIsOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50">Lancer le pipeline complet</button>
         </div>
       )}
     </div>

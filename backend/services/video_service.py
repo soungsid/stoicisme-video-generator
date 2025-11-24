@@ -47,26 +47,12 @@ class VideoService:
         print(f"Selected template: {selected}")
         return template_path
     
-    def _concatenate_audio_files(self, audio_dir: str, output_path: str) -> int:
-        """Concaténer tous les fichiers audio dans un seul fichier"""
-        audio_files = sorted([f for f in os.listdir(audio_dir) if f.endswith('.mp3')])
-        
-        if not audio_files:
-            raise ValueError("No audio files found")
-        
-        # Utiliser pydub pour concaténer
-        combined = AudioSegment.empty()
-        for audio_file in audio_files:
-            audio_path = os.path.join(audio_dir, audio_file)
-            audio = AudioSegment.from_mp3(audio_path)
-            combined += audio
-        
-        # Exporter
-        combined.export(output_path, format="mp3")
-        duration_ms = len(combined)
-        
-        print(f"✅ Concatenated {len(audio_files)} audio files: {duration_ms/1000:.2f}s")
-        return duration_ms
+    def _get_combined_audio_path(self, audio_dir: str) -> str:
+        """Obtenir le chemin de l'audio concaténé"""
+        combined_audio_path = os.path.join(audio_dir, "combined_audio.mp3")
+        if not os.path.exists(combined_audio_path):
+            raise ValueError(f"Combined audio file not found: {combined_audio_path}")
+        return combined_audio_path
     
     async def generate_video(
         self,
@@ -121,11 +107,17 @@ class VideoService:
             print("📹 Sélection d'un template vidéo aléatoire...")
             template_path = self._select_random_template()
             
-            # Concaténer les audios
-            print("🎵 Concaténation des fichiers audio...")
-            combined_audio_path = os.path.join(video_dir, "combined_audio.mp3")
-            audio_duration_ms = self._concatenate_audio_files(audio_dir, combined_audio_path)
-            print(f"✅ Audio combiné: {audio_duration_ms/1000:.2f}s")
+            # Utiliser l'audio déjà concaténé
+            print("🎵 Utilisation de l'audio concaténé...")
+            combined_audio_path = self._get_combined_audio_path(audio_dir)
+            
+            # Obtenir la durée de l'audio concaténé
+            audio_clip = AudioFileClip(combined_audio_path)
+            audio_duration_sec = audio_clip.duration
+            audio_duration_ms = int(audio_duration_sec * 1000)
+            audio_clip.close()
+            
+            print(f"✅ Audio concaténé utilisé: {audio_duration_sec:.2f}s")
             
             # Charger le template vidéo
             print("📽️ Chargement du template vidéo...")
@@ -148,25 +140,12 @@ class VideoService:
             # Ajouter l'audio à la vidéo
             final_video = video_clip.set_audio(audio_clip)
             
-            # Ajouter les sous-titres si disponibles
-            """ if script.get("phrases"):
-                print("📝 Préparation des sous-titres...")
-                from database import get_scripts_collection
-                scripts_collection = get_scripts_collection()
-                
-                # Récupérer le script complet avec les données audio
-                full_script = await scripts_collection.find_one({"id": script["id"]}, {"_id": 0})
-                
-                if full_script and full_script.get("audio_phrases"):
-                    print(f"✍️ Génération de {len(full_script['audio_phrases'])} sous-titres...")
-                    subtitle_clips = self.subtitle_service.create_subtitle_clips(
-                        full_script["audio_phrases"],
-                        int(final_video.w),
-                        int(final_video.h)
-                    )
-                    if subtitle_clips:
-                        final_video = CompositeVideoClip([final_video] + subtitle_clips)
-                        print(f"✅ {len(subtitle_clips)} sous-titres ajoutés") """
+            # Ajouter les sous-titres via le service centralisé
+            print("📝 Ajout des sous-titres via le service centralisé...")
+            final_video = await self.subtitle_service.add_subtitles_to_video(
+                final_video=final_video,
+                idea_id=idea_id
+            )
             
             # Chemin de sortie
             output_path = os.path.join(video_dir, f"{slugify(title)}.mp4")

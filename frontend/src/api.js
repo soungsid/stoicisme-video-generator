@@ -84,6 +84,7 @@ export const pipelineApi = {
   startPipeline: (ideaId, startFrom = 'script') => 
     api.post(`/api/pipeline/generate/${ideaId}?start_from=${startFrom}`),
   getPipelineStatus: (ideaId) => api.get(`/api/pipeline/status/${ideaId}`),
+  generateTimestamps: (ideaId) => api.post(`/api/pipeline/generate-timestamps/${ideaId}`),
 };
 
 // Queue API
