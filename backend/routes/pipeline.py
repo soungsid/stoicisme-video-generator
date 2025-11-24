@@ -25,7 +25,7 @@ async def start_pipeline(idea_id: str, start_from: str = "script"):
         
         # Ajouter à la queue au lieu de lancer en background
         queue_service = QueueService()
-        job = await queue_service.add_job(idea_id, start_from)
+        job = await queue_service.add_job(idea_id, start_from, is_regeneration=False) # is_regeneration=False pour le pipeline complet
         
         # Obtenir la position dans la queue
         position = await queue_service.get_queue_position(idea_id)
@@ -46,6 +46,48 @@ async def start_pipeline(idea_id: str, start_from: str = "script"):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error adding to queue: {str(e)}"
         )
+        
+@router.post("/regenerate/script/{idea_id}")
+async def regenerate_script(idea_id: str):
+    """Régénérer uniquement le script"""
+    queue_service = QueueService()
+    job = await queue_service.add_job(idea_id, start_from='script', is_regeneration=True)
+    return {
+        "success": True,
+        "message": "Script regeneration job added to queue",
+        "job_id": job.job_id,
+        "idea_id": idea_id,
+        "queue_position": await queue_service.get_queue_position(idea_id),
+        "start_from": "script"
+    }
+
+@router.post("/regenerate/audio/{idea_id}")
+async def regenerate_audio(idea_id: str):
+    """Régénérer uniquement l'audio"""
+    queue_service = QueueService()
+    job = await queue_service.add_job(idea_id, start_from='audio', is_regeneration=True)
+    return {
+        "success": True,
+        "message": "Audio regeneration job added to queue",
+        "job_id": job.job_id,
+        "idea_id": idea_id,
+        "queue_position": await queue_service.get_queue_position(idea_id),
+        "start_from": "audio"
+    }
+
+@router.post("/regenerate/video/{idea_id}")
+async def regenerate_video(idea_id: str):
+    """Régénérer uniquement la vidéo"""
+    queue_service = QueueService()
+    job = await queue_service.add_job(idea_id, start_from='video', is_regeneration=True)
+    return {
+        "success": True,
+        "message": "Video regeneration job added to queue",
+        "job_id": job.job_id,
+        "idea_id": idea_id,
+        "queue_position": await queue_service.get_queue_position(idea_id),
+        "start_from": "video"
+    }
 
 @router.get("/status/{idea_id}")
 async def get_pipeline_status(idea_id: str):

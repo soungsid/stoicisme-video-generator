@@ -15,7 +15,7 @@ class QueueService:
         self.queue_collection = get_queue_collection()
         self.ideas_collection = get_ideas_collection()
     
-    async def add_job(self, idea_id: str, start_from: str = "script", priority: int = 0) -> VideoJob:
+    async def add_job(self, idea_id: str, start_from: str = "script", priority: int = 0, is_regeneration: bool = False) -> VideoJob:
         """
         Ajouter un job à la queue
         """
@@ -25,9 +25,13 @@ class QueueService:
             "status": {"$in": [JobStatus.QUEUED, JobStatus.PROCESSING]}
         })
         
-        if existing_job:
-            # Si un job existe déjà, on retourne le job existant sans modifier son statut
+        if existing_job and not is_regeneration:
+            # Si un job existe déjà et que ce n'est PAS une régénération, on retourne le job existant sans modifier son statut
             return VideoJob(**existing_job)
+        elif existing_job and is_regeneration:
+            # Si c'est une régénération et qu'un job existe, annuler l'ancien job pour le remplacer
+            print(f"⚠️ Cancelling existing job {existing_job['job_id']} for idea {idea_id} to prioritize regeneration.")
+            await self.cancel_job(existing_job["job_id"])
         
         # Récupérer le statut actuel de l'idée pour déterminer l'étape de départ
         idea = await self.ideas_collection.find_one({"id": idea_id}, {"_id": 0})
@@ -36,8 +40,9 @@ class QueueService:
         # Mapper le statut de l'idée vers l'étape de départ appropriée
         status_to_start_from_map = {
             IdeaStatus.PENDING: "script",
-            IdeaStatus.SCRIPT_GENERATED: "adapt",
+            IdeaStatus.QUEUED: "script",
             IdeaStatus.SCRIPT_GENERATING: "script",
+            IdeaStatus.SCRIPT_GENERATED: "audio",
             IdeaStatus.AUDIO_GENERATING: "audio",
             IdeaStatus.AUDIO_GENERATED: "video",
             IdeaStatus.VIDEO_GENERATING: "video",
@@ -45,8 +50,8 @@ class QueueService:
             IdeaStatus.ERROR: "script",  # En cas d'erreur, recommencer depuis le début
         }
         
-        # Utiliser le statut de l'idée pour déterminer l'étape de départ, sauf si spécifié explicitement
-        if start_from == "script" and current_idea_status:
+        # Utiliser le statut de l'idée pour déterminer l'étape de départ, sauf si spécifié explicitement OU si c'est une régénération
+        if not is_regeneration and start_from == "script" and current_idea_status:
             calculated_start_from = status_to_start_from_map.get(current_idea_status, "script")
             print(f"📍 Détermination automatique de l'étape de départ: '{current_idea_status}' -> '{calculated_start_from}'")
             start_from = calculated_start_from
@@ -56,21 +61,35 @@ class QueueService:
             idea_id=idea_id,
             start_from=start_from,
             priority=priority,
-            status=JobStatus.QUEUED
+            status=JobStatus.QUEUED,
+            is_regeneration=is_regeneration # Passer le nouveau champ
         )
         
         await self.queue_collection.insert_one(job.model_dump())
         
         # Mettre à jour le statut de l'idée
+        new_idea_status = IdeaStatus.QUEUED
+        new_current_step = "En attente dans la queue"
+        
+        # Si c'est une régénération, on peut indiquer quelle étape est en attente de régénération
+        if is_regeneration:
+            new_current_step = f"Régénération {start_from} en attente"
+            if start_from == "script":
+                new_idea_status = IdeaStatus.SCRIPT_GENERATING # Ou un statut plus approprié pour "en attente de script"
+            elif start_from == "audio":
+                new_idea_status = IdeaStatus.AUDIO_GENERATING
+            elif start_from == "video":
+                new_idea_status = IdeaStatus.VIDEO_GENERATING
+
         await self.ideas_collection.update_one(
             {"id": idea_id},
             {"$set": {
-                "status": IdeaStatus.QUEUED,
-                "current_step": "En attente dans la queue"
+                "status": new_idea_status,
+                "current_step": new_current_step
             }}
         )
         
-        print(f"✅ Job added to queue: {job.job_id} for idea {idea_id} (start_from: {start_from})")
+        print(f"✅ Job added to queue: {job.job_id} for idea {idea_id} (start_from: {start_from}, regeneration: {is_regeneration})")
         return job
     
     async def list_all_jobs(self, status: Optional[JobStatus] = None,) -> List[VideoJob]:

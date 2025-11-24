@@ -19,12 +19,12 @@ import traceback
 load_dotenv()
 
 # Import après load_dotenv
-from models import IdeaStatus
+from models import IdeaStatus, JobStatus # Ajout de JobStatus
 from services.queue_service import QueueService
 from agents.script_adapter_agent import ScriptAdapterAgent
 from services.audio_service import AudioService
 from services.video_service import VideoService
-
+from services.script_service import ScriptService # Import du ScriptService
 
 class VideoWorker:
     """Worker qui traite les jobs de génération vidéo"""
@@ -35,6 +35,7 @@ class VideoWorker:
         self.db_client = None
         self.running = False
         self.poll_interval = 5  # Vérifier la queue toutes les 5 secondes
+        self.script_service = None # Ajout de script_service
     
     async def connect_to_mongo(self):
         """Connexion à MongoDB"""
@@ -73,7 +74,7 @@ class VideoWorker:
             IdeaStatus.PENDING: "script",
             IdeaStatus.QUEUED: "script",
             IdeaStatus.SCRIPT_GENERATING: "script",
-            IdeaStatus.SCRIPT_GENERATED: "audio",
+            IdeaStatus.SCRIPT_GENERATED: "audio", # Changé de "audio" à "script_generated"
             IdeaStatus.AUDIO_GENERATING: "audio",
             IdeaStatus.AUDIO_GENERATED: "video",
             IdeaStatus.VIDEO_GENERATING: "video",
@@ -91,8 +92,9 @@ class VideoWorker:
         """Traiter un job de génération vidéo"""
         idea_id = job.idea_id
         start_from = job.start_from
+        is_regeneration = job.is_regeneration # Récupérer le flag de régénération
         
-        print(f"🎬 Starting job {job.job_id} for idea {idea_id} (start_from: {start_from})")
+        print(f"🎬 Starting job {job.job_id} for idea {idea_id} (start_from: {start_from}, regeneration: {is_regeneration})")
         
         try:
             ideas_collection = self.db.ideas
@@ -103,7 +105,56 @@ class VideoWorker:
             if not idea:
                 raise Exception(f"Idea {idea_id} not found")
             
-            # Déterminer l'étape de démarrage (reprise intelligente)
+            # --- Logique pour la régénération d'une seule étape ---
+            if is_regeneration:
+                print(f"🔄 Executing single-step regeneration for idea {idea_id}, step: {start_from}")
+                
+                if start_from == "script":
+                    await self.update_idea_status(idea_id, IdeaStatus.SCRIPT_GENERATING)
+                    await self.script_service.generate_script(idea_id)
+                    await self.update_idea_status(idea_id, IdeaStatus.SCRIPT_GENERATED) # Mettre à jour le statut après
+                
+                elif start_from == "audio":
+                    script = await scripts_collection.find_one({"idea_id": idea_id}, {"_id": 0})
+                    if not script:
+                        raise Exception(f"Script for idea {idea_id} not found, cannot regenerate audio.")
+                    script_id = script["id"]
+                    
+                    await self.update_idea_status(idea_id, IdeaStatus.AUDIO_GENERATING)
+                    adapter = ScriptAdapterAgent()
+                    adapted_script, phrases = await adapter.adapt_script(script["original_script"])
+                    await scripts_collection.update_one(
+                        {"id": script_id},
+                        {"$set": {
+                            "elevenlabs_adapted_script": adapted_script,
+                            "phrases": phrases
+                        }}
+                    )
+                    audio_service = AudioService()
+                    await audio_service.complete_audio_generation_with_timestamps(script_id)
+                    await self.update_idea_status(idea_id, IdeaStatus.AUDIO_GENERATED)
+
+                elif start_from == "video":
+                    script = await scripts_collection.find_one({"idea_id": idea_id}, {"_id": 0})
+                    if not script:
+                        raise Exception(f"Script for idea {idea_id} not found, cannot regenerate video.")
+                    script_id = script["id"]
+                    
+                    await self.update_idea_status(idea_id, IdeaStatus.VIDEO_GENERATING)
+                    video_service = VideoService()
+                    await video_service.generate_video(script_id=script_id)
+                    await self.update_idea_status(idea_id, IdeaStatus.VIDEO_GENERATED)
+                
+                else:
+                    raise Exception(f"Unsupported regeneration step: {start_from}")
+                
+                await self.queue_service.complete_job(job.job_id)
+                print(f"✅ Single-step regeneration job {job.job_id} for idea {idea_id} ({start_from}) completed successfully")
+                return # Finir le traitement ici pour la régénération d'une seule étape
+            # --- Fin de la logique de régénération d'une seule étape ---
+
+
+            # --- Logique du pipeline complet avec reprise intelligente ---
             start_step = self.determine_start_step(idea)
             
             if not start_step:
@@ -127,7 +178,7 @@ class VideoWorker:
             script_id = script["id"]
 
             # Étape 2: Adapter le script et Générer l'audio
-            if start_step in ["script", "audio"]:
+            if start_step in ["script", "audio"]: # start_step sera "audio" si le script est déjà généré
                 print(f"🔊 Generating audio for idea {idea_id}")
                 await self.update_idea_status(idea_id, IdeaStatus.AUDIO_GENERATING)
                 
@@ -148,7 +199,7 @@ class VideoWorker:
                 await self.update_idea_status(idea_id, IdeaStatus.AUDIO_GENERATED)
 
             # Étape 3: Générer la vidéo
-            if start_step in ["script", "audio", "video"]:
+            if start_step in ["script", "audio", "video"]: # start_step sera "video" si l'audio est déjà généré
                 print(f"🎥 Generating video for idea {idea_id}")
                 await self.update_idea_status(idea_id, IdeaStatus.VIDEO_GENERATING)
                 video_service = VideoService()
@@ -213,13 +264,13 @@ class VideoWorker:
         database.db_client = self.db_client
         
         self.queue_service = QueueService()
-        self.script_service = ScriptService()
+        self.script_service = ScriptService() # Initialiser ScriptService
         
         await self.run()
     
     async def stop(self):
         """Arrêter le worker"""
-        print("� Stopping worker...")
+        print("🛑 Stopping worker...")
         self.running = False
         if self.db_client:
             self.db_client.close()
@@ -231,7 +282,7 @@ async def main():
     try:
         await worker.start()
     except KeyboardInterrupt:
-        print("\\n🛑 Worker interrupted by user")
+        print("\n🛑 Worker interrupted by user")
         await worker.stop()
     except Exception as e:
         print(f"❌ Worker crashed: {e}")

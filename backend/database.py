@@ -64,3 +64,7 @@ def get_queue_collection():
 def get_timestamps_collection():
     """Collection pour les timestamps des transcriptions"""
     return get_database().timestamps
+
+def get_audio_generations_collection():
+    """Collection pour les générations audio"""
+    return get_database().audio_generations

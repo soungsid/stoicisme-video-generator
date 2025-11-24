@@ -102,6 +102,7 @@ class VideoJob(BaseModel):
     error_message: Optional[str] = None
     retry_count: int = 0
     max_retries: int = 1
+    is_regeneration: bool = False # Nouveau champ pour indiquer si c'est une régénération d'étape
 
 class YouTubeConfig(BaseModel):
     client_id: Optional[str] = None

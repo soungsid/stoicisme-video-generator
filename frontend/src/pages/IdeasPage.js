@@ -128,15 +128,27 @@ function IdeasPage() {
 
   const handleStartPipeline = async (ideaId, startFrom = 'script') => {
     try {
+      let message = 'Pipeline démarré';
       if (startFrom === 'timestamps') {
-        // Générer uniquement les timestamps
         await pipelineApi.generateTimestamps(ideaId);
-        setToast({ type: 'info', message: 'Génération des timestamps démarrée' });
+        message = 'Génération des timestamps démarrée';
+      } else if (startFrom === 'script') {
+        await pipelineApi.regenerateScript(ideaId);
+        message = 'Régénération du script démarrée';
+      } else if (startFrom === 'audio') {
+        await pipelineApi.regenerateAudio(ideaId);
+        message = 'Régénération de l\'audio démarrée';
+      } else if (startFrom === 'video') {
+        await pipelineApi.regenerateVideo(ideaId);
+        message = 'Régénération de la vidéo démarrée';
+      } else if (startFrom === 'pipeline') { // Pour le bouton "Lancer le pipeline complet"
+        await pipelineApi.startPipeline(ideaId, 'script'); // Toujours démarrer du script pour le pipeline complet
+        message = 'Pipeline complet démarré';
       } else {
-        // Pipeline normal
+        // Fallback for default pipeline start
         await pipelineApi.startPipeline(ideaId, startFrom);
-        setToast({ type: 'info', message: 'Pipeline démarré' });
       }
+      setToast({ type: 'info', message: message });
       await loadIdeas();
     } catch (error) {
       console.error('Error starting pipeline:', error);
