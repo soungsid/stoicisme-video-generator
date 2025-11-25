@@ -97,4 +97,10 @@ export const queueApi = {
   cancelJob: (ideaId) => api.post(`/api/queue/cancel/${ideaId}`),
 };
 
+// Images API
+export const imagesApi = {
+  generateImages: (ideaId) => api.post(`/api/images/generate/${ideaId}`),
+  getImagesStatus: (ideaId) => api.get(`/api/images/status/${ideaId}`),
+};
+
 export default api;

@@ -1,7 +1,7 @@
-import { AlertCircle, CheckCircle, CheckSquare, Clock, FileText, Play, Square, Trash2, X, Loader, Edit } from 'lucide-react';
+import { AlertCircle, CheckCircle, CheckSquare, Clock, Edit, FileText, Image, Loader, Play, Square, Trash2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { queueApi } from '../api';
+import { queueApi, imagesApi } from '../api';
 
 const StatusIndicator = ({ status, errorMessage }) => {
   // Tous les statuts dans l'ordre
@@ -94,6 +94,8 @@ const ActionsDropdown = ({ onRegenerate }) => {
 function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline, onEdit }) {
   const navigate = useNavigate();
   const [queueInfo, setQueueInfo] = useState(null);
+  const [generatingImages, setGeneratingImages] = useState(false);
+  const [imagesStatus, setImagesStatus] = useState(null);
   
   // Charger les informations de queue
   useEffect(() => {
@@ -121,6 +123,22 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline, o
     
     return () => clearInterval(interval);
   }, [idea.id, idea.status]);
+
+  // Charger le statut des images
+  useEffect(() => {
+    const loadImagesStatus = async () => {
+      try {
+        const response = await imagesApi.getImagesStatus(idea.id);
+        setImagesStatus(response.data);
+      } catch (error) {
+        console.error('Error loading images status:', error);
+      }
+    };
+
+    if (idea.script_id) {
+      loadImagesStatus();
+    }
+  }, [idea.id, idea.script_id]);
   
   const handleCancelJob = async () => {
     if (!window.confirm('Annuler la génération ?')) return;
@@ -130,6 +148,28 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline, o
       window.location.reload();
     } catch (error) {
       alert('Erreur lors de l\'annulation: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleGenerateImages = async () => {
+    if (!window.confirm('Générer les images pour cette idée ?')) return;
+    
+    try {
+      setGeneratingImages(true);
+      const response = await imagesApi.generateImages(idea.id);
+      
+      if (response.data.success) {
+        alert(`✅ ${response.data.message}`);
+        // Recharger le statut des images
+        const statusResponse = await imagesApi.getImagesStatus(idea.id);
+        setImagesStatus(statusResponse.data);
+      } else {
+        alert('❌ Erreur lors de la génération des images');
+      }
+    } catch (error) {
+      alert('❌ Erreur: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setGeneratingImages(false);
     }
   };
   
@@ -154,6 +194,7 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline, o
   const isError = idea.status === 'error';
   const isProcessing = idea.status === 'queued';
   const hasScript = !!idea.script_id;
+  const hasImages = imagesStatus?.has_images || idea.generated_images?.length > 0;
 
   return (
     <div className="bg-white shadow rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow">
@@ -183,6 +224,12 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline, o
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-200 text-orange-900">
                     <Clock className="h-3 w-3 mr-1" />
                     Position: {queueInfo.queue_position}
+                  </span>
+                )}
+                {hasImages && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <Image className="h-3 w-3 mr-1" />
+                    {imagesStatus?.total_images || idea.total_images || 0} images
                   </span>
                 )}
                 {idea.video_type && (
@@ -228,6 +275,21 @@ function IdeaCard({ idea, selected, onToggleSelect, onDelete, onStartPipeline, o
             >
               <FileText className="h-4 w-4 mr-1" />
               Voir script
+            </button>
+          )}
+          
+          {hasScript && !hasImages && (
+            <button
+              onClick={handleGenerateImages}
+              disabled={generatingImages || isProcessing || isQueued}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+            >
+              {generatingImages ? (
+                <Loader className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Image className="h-4 w-4 mr-1" />
+              )}
+              {generatingImages ? 'Génération...' : 'Générer images'}
             </button>
           )}
           
