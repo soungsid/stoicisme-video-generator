@@ -6,8 +6,9 @@ from typing import List
 from datetime import datetime
 
 from agents.image_prompt_generator_agent import ImagePromptGeneratorAgent
-from backend.models import Script
+from models import Script
 from database import get_ideas_collection, get_scripts_collection
+from services.resource_config_service import ResourceConfigService
 
 router = APIRouter()
 
@@ -38,43 +39,21 @@ async def generate_images_for_idea(idea_id: str):
         ideas_collection = get_ideas_collection()
         scripts_collection = get_scripts_collection()
         
-        idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})
-        if not idea:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Idea {idea_id} not found"
-            )
-        
-        if not idea.get("script_id"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No script found for this idea"
-            )
-        
+        idea = await ideas_collection.find_one({"id": idea_id}, {"_id": 0})        
         script: Script = await scripts_collection.find_one({"id": idea["script_id"]}, {"_id": 0})
-        if not script:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Script {idea['script_id']} not found"
-            )
-        
         script_text = script.get("original_script", "")
-        if not script_text:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Script text is empty"
-            )
-        
+       
         # Générer les prompts d'images
         agent = ImagePromptGeneratorAgent()
         image_prompts = await agent.generate_image_prompts(script_text)
         
-        # Créer le répertoire pour les images
-        video_directory = f"generated_images/{idea_id}"
-        os.makedirs(video_directory, exist_ok=True)
+        # Utiliser ResourceConfigService pour obtenir le répertoire des images
+        resource_config = ResourceConfigService()
+        directories = resource_config.get_idea_directories(idea_id, idea.get("title", ""))
+        image_directory = directories["image_directory"]
         
         # Générer les images via l'API externe
-        generated_images = await _generate_images_with_api(image_prompts, video_directory)
+        generated_images = await _generate_images_with_api(image_prompts, image_directory)
         
         # Mettre à jour l'idée avec les informations d'images
         await ideas_collection.update_one(
@@ -108,58 +87,30 @@ async def generate_images_for_idea(idea_id: str):
 
 async def _generate_images_with_api(image_prompts: List[str], output_directory: str) -> List[str]:
     """
-    Génère les images via l'API externe (votre API sur localhost:8000)
+    Génère toutes les images en une seule requête via l'API externe
     """
-    generated_images = []
+    # Construire le payload avec tous les prompts
+    payload = {
+        "video_directory": output_directory,
+        "timestamps_script_prompt": image_prompts,
+        "video_script": f"Video script with {len(image_prompts)} images"
+    }
+    
+    headers = {
+        "Content-Type": "application/json"
+    }
     
     async with httpx.AsyncClient() as client:
-        for i, prompt in enumerate(image_prompts):
-            try:
-                # Construire le payload selon votre documentation
-                payload = {
-                    "video_directory": output_directory,
-                    "timestamps_script_prompt": [prompt],
-                    "video_script": f"Image {i+1}: {prompt}"
-                }
+        response = await client.post(
+            f"{IMAGE_API_BASE_URL}/generate/image/video",
+            json=payload,
+            headers=headers,
+            timeout=300.0  # Timeout de 5 minutes pour générer toutes les images
+        )
+        result = response.json()
+        return result["generated_images"]
                 
-                headers = {
-                    "Content-Type": "application/json"
-                }
-                
-                # Ajouter l'authentification si nécessaire
-                if IMAGE_API_KEY:
-                    headers["Authorization"] = f"Bearer {IMAGE_API_KEY}"
-                
-                response = await client.post(
-                    f"{IMAGE_API_BASE_URL}/generate/image/video",
-                    json=payload,
-                    headers=headers,
-                    timeout=60.0  # Timeout de 60 secondes
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    if result.get("status") == "success" and result.get("generated_images"):
-                        # Ajouter le chemin de la première image générée
-                        generated_images.append(result["generated_images"][0])
-                    else:
-                        print(f"⚠️ API returned non-success status for prompt {i+1}: {result}")
-                        # Créer un chemin par défaut
-                        default_path = f"{output_directory}/image_{i+1}.jpg"
-                        generated_images.append(default_path)
-                else:
-                    print(f"⚠️ API error for prompt {i+1}: {response.status_code} - {response.text}")
-                    # Créer un chemin par défaut en cas d'erreur
-                    default_path = f"{output_directory}/image_{i+1}.jpg"
-                    generated_images.append(default_path)
-                    
-            except Exception as e:
-                print(f"❌ Error generating image {i+1}: {str(e)}")
-                # Créer un chemin par défaut en cas d'erreur
-                default_path = f"{output_directory}/image_{i+1}.jpg"
-                generated_images.append(default_path)
     
-    return generated_images
 
 @router.get("/status/{idea_id}")
 async def get_images_status(idea_id: str):

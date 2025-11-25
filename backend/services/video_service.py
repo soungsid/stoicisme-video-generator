@@ -7,6 +7,7 @@ from slugify import slugify
 from moviepy.editor import VideoFileClip, AudioFileClip,  CompositeVideoClip
 from pydub import AudioSegment
 from services.subtitle_service import SubtitleService
+from services.resource_config_service import ResourceConfigService
 
 class VideoService:
     """
@@ -15,37 +16,24 @@ class VideoService:
     
     def __init__(self):
         self.REACT_APP_BACKEND_URL = os.getenv("REACT_APP_BACKEND_URL", "http://localhost:8001")
-        self.resources_dir = os.getenv("RESOURCES_DIR", "/app/ressources")
-        self.template_dir = os.path.join(self.resources_dir, "video-template")
-        self.videos_dir = os.path.join(self.resources_dir, "videos")
+        self.resource_config = ResourceConfigService()
         self.subtitle_service = SubtitleService()  # Service de sous-titres
-        
-        # Créer les dossiers si nécessaire
-        os.makedirs(self.template_dir, exist_ok=True)
-        os.makedirs(self.videos_dir, exist_ok=True)
     
-    def get_video_directory(self, title: str, subdir: str = None) -> str:
+    def get_video_directory(self, idea_id: str, title: str) -> str:
         """Obtenir le répertoire pour une vidéo"""
-        slug = slugify(title)
-        video_dir = os.path.join(self.videos_dir, slug)
-        
-        if subdir:
-            video_dir = os.path.join(video_dir, subdir)
-        
-        os.makedirs(video_dir, exist_ok=True)
-        return video_dir
+        directories = self.resource_config.get_idea_directories(idea_id, title)
+        return directories["video_directory"]
     
     def _select_random_template(self) -> str:
         """Sélectionner un template vidéo aléatoire"""
-        templates = [f for f in os.listdir(self.template_dir) if f.endswith('.mp4')]
+        templates = self.resource_config.get_template_files()
         
         if not templates:
             raise ValueError("No video templates found")
         
         selected = random.choice(templates)
-        template_path = os.path.join(self.template_dir, selected)
-        print(f"Selected template: {selected}")
-        return template_path
+        print(f"Selected template: {os.path.basename(selected)}")
+        return selected
     
     def _get_combined_audio_path(self, audio_dir: str) -> str:
         """Obtenir le chemin de l'audio concaténé"""
@@ -100,8 +88,9 @@ class VideoService:
             print(f"🎬 Début de la génération vidéo pour: {title}")
             
             # Répertoires
-            video_dir = self.get_video_directory(title)
-            audio_dir = self.get_video_directory(title, "audio")
+            video_dir = self.get_video_directory(idea_id, title)
+            directories = self.resource_config.get_idea_directories(idea_id, title)
+            audio_dir = directories["audio_directory"]
             
             # Sélectionner un template
             print("📹 Sélection d'un template vidéo aléatoire...")
@@ -173,7 +162,7 @@ class VideoService:
             
             # Créer l'URL accessible pour le frontend
             # Convertir /app/ressources/videos/slug/video.mp4 → /media/videos/slug/video.mp4
-            relative_path = os.path.relpath(output_path, self.resources_dir)
+            relative_path = os.path.relpath(output_path, self.resource_config.get_resources_dir())
             video_url = f"{self.REACT_APP_BACKEND_URL}/media/{relative_path}"
             
             # Créer l'objet Video

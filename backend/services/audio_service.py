@@ -2,6 +2,7 @@ import os
 from typing import List
 from models import AudioGeneration, AudioPhrase, Timestamp, TimestampItem
 from services.elevenlabs_custom_service import ElevenLabsService
+from services.resource_config_service import ResourceConfigService
 from slugify import slugify
 from pydub import AudioSegment
 
@@ -12,16 +13,12 @@ class AudioService:
     
     def __init__(self):
         self.elevenlabs_service = ElevenLabsService()
-        self.resources_dir = os.getenv("RESOURCES_DIR", "/app/ressources")
-        self.base_audio_dir = os.path.join(self.resources_dir, "videos")
+        self.resource_config = ResourceConfigService()
     
-    def _get_audio_directory(self, title: str) -> str:
-        """Créer le répertoire audio pour une vidéo"""
-        slug = slugify(title)
-        video_dir = os.path.join(self.base_audio_dir, slug)
-        audio_dir = os.path.join(video_dir, "audio")
-        os.makedirs(audio_dir, exist_ok=True)
-        return audio_dir
+    def _get_audio_directory(self, idea_id: str, title: str) -> str:
+        """Créer le répertoire audio pour une idée"""
+        directories = self.resource_config.get_idea_directories(idea_id, title)
+        return directories["audio_directory"]
     
     async def generate_audio_with_timestamps(
         self,
@@ -41,7 +38,7 @@ class AudioService:
             if not idea:
                 raise ValueError(f"Idea {idea_id} not found")
             
-            audio_dir = self._get_audio_directory(idea["title"])
+            audio_dir = self._get_audio_directory(idea_id, idea["title"])
             
             # Générer l'audio pour chaque phrase
             audio_phrases = []
@@ -209,7 +206,7 @@ class AudioService:
                 raise ValueError(f"Idea {idea_id} not found")
             
             # Vérifier si l'audio concaténé existe
-            audio_dir = self._get_audio_directory(idea["title"])
+            audio_dir = self._get_audio_directory(idea_id, idea["title"])
             combined_audio_path = os.path.join(audio_dir, "combined_audio.mp3")
             
             if not os.path.exists(combined_audio_path):
