@@ -3,7 +3,6 @@ from typing import List
 from models import AudioGeneration, AudioPhrase, Timestamp, TimestampItem
 from services.elevenlabs_custom_service import ElevenLabsService
 from services.resource_config_service import ResourceConfigService
-from slugify import slugify
 from pydub import AudioSegment
 
 class AudioService:

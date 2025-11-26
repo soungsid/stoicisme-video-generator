@@ -2,6 +2,8 @@ import os
 from typing import Dict
 import re
 
+from slugify import slugify
+
 class ResourceConfigService:
     """
     Service centralisé pour la gestion des chemins de ressources
@@ -57,8 +59,8 @@ class ResourceConfigService:
         """
         # Créer un nom de dossier basé sur l'ID et le titre (si disponible)
         if idea_title:
-            safe_title = self._sanitize_filename(idea_title)
-            folder_name = f"{idea_id}_{safe_title}"
+            safe_title = slugify(idea_id)
+            folder_name = safe_title
         else:
             folder_name = idea_id
         

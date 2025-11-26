@@ -1,3 +1,4 @@
+import traceback
 from fastapi import APIRouter, HTTPException, status
 import os
 import httpx
@@ -43,10 +44,20 @@ async def generate_images_for_idea(idea_id: str):
         script: Script = await scripts_collection.find_one({"id": idea["script_id"]}, {"_id": 0})
         script_text = script.get("original_script", "")
        
-        # Générer les prompts d'images
-        agent = ImagePromptGeneratorAgent()
-        image_prompts = await agent.generate_image_prompts(script_text)
-        
+        if idea.get("image_prompts") :
+            image_prompts = idea.get("image_prompts")
+        else:
+            # Générer les prompts d'images
+            agent = ImagePromptGeneratorAgent()
+            image_prompts = await agent.generate_image_prompts(script_text)
+            await ideas_collection.update_one(
+            {"id": idea_id},
+            {
+                "$set": {
+                    "image_prompts": image_prompts,
+                }
+            }
+        )
         # Utiliser ResourceConfigService pour obtenir le répertoire des images
         resource_config = ResourceConfigService()
         directories = resource_config.get_idea_directories(idea_id, idea.get("title", ""))
@@ -76,10 +87,8 @@ async def generate_images_for_idea(idea_id: str):
             "total_images": len(generated_images),
             "image_prompts": image_prompts
         }
-        
-    except HTTPException:
-        raise
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating images: {str(e)}"
@@ -109,6 +118,7 @@ async def _generate_images_with_api(image_prompts: List[str], output_directory: 
             timeout=300.0  # Timeout de 5 minutes pour générer toutes les images
         )
         result = response.json()
+        print(f"json returned by {IMAGE_API_BASE_URL}/generate/image/video", result)
         return result["generated_images"]
                 
     
