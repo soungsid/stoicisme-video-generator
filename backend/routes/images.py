@@ -92,7 +92,7 @@ async def _generate_images_with_api(image_prompts: List[str], output_directory: 
     # Construire le payload avec tous les prompts
     payload = {
         "video_directory": output_directory,
-        "timestamps_script_prompt": image_prompts,
+        "timestamps_script_prompt": [image_prompts[0]],
         "video_script": f"Video script with {len(image_prompts)} images"
     }
     
@@ -101,6 +101,7 @@ async def _generate_images_with_api(image_prompts: List[str], output_directory: 
     }
     
     async with httpx.AsyncClient() as client:
+        print(f"📞 call the {IMAGE_API_BASE_URL}/generate/image/video")
         response = await client.post(
             f"{IMAGE_API_BASE_URL}/generate/image/video",
             json=payload,
@@ -129,7 +130,6 @@ async def get_images_status(idea_id: str):
         
         return {
             "idea_id": idea_id,
-            "has_images": "generated_images" in idea,
             "total_images": idea.get("total_images", 0),
             "generated_images": idea.get("generated_images", []),
             "image_prompts": idea.get("image_prompts", []),
