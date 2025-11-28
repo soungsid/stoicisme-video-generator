@@ -86,6 +86,7 @@ class Video(BaseModel):
     uploaded_at: Optional[datetime] = None
     scheduled_publish_date: Optional[datetime] = None
     is_scheduled: bool = False
+    upload_attempts: int = Field(default=0, description="Nombre de tentatives d'upload sur YouTube")
     created_at: datetime = Field(default_factory=datetime.now)
     youtube_description: Optional[str] = None
 

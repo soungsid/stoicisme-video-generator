@@ -18,11 +18,13 @@ class PublicationService:
     async def get_scheduled_videos(self) -> List[Dict]:
         """
         Récupérer les vidéos planifiées dont l'heure est arrivée
+        Ignorer les vidéos avec plus de 5 tentatives d'upload
         """
         videos_collection = get_videos_collection()
         current_time = now_utc()
         
         # Trouver les vidéos planifiées dont la date est passée
+        # Ignorer celles avec plus de 5 tentatives d'upload
         scheduled_videos = await videos_collection.find({
                 "is_scheduled": True,
                 "$or": [
@@ -30,7 +32,8 @@ class PublicationService:
                     {"youtube_video_id": None},                # champ nul
                     {"youtube_video_id": ""}                   # champ vide
                 ],
-                "scheduled_publish_date": {"$lte": current_time}
+                "scheduled_publish_date": {"$lte": current_time},
+                "upload_attempts": {"$lt": 5}  # Ignorer les vidéos avec 5 tentatives ou plus
             }).to_list(length=100)
         
         return scheduled_videos
@@ -45,8 +48,16 @@ class PublicationService:
         Returns:
             Résultat de la publication avec statut
         """
+        videos_collection = get_videos_collection()
+        
         try:
-            print(f"📤 Publication de la vidéo: {video['title']}")
+            # Incrémenter le compteur d'upload_attempts avant la tentative
+            await videos_collection.update_one(
+                {"id": video['id']},
+                {"$inc": {"upload_attempts": 1}}
+            )
+            
+            print(f"📤 Publication de la vidéo: {video['title']} (tentative #{video.get('upload_attempts', 0) + 1})")
             
             # Uploader sur YouTube (le service gère tout automatiquement)
             result = await self.youtube_service.upload_video(
@@ -67,8 +78,6 @@ class PublicationService:
             traceback.print_exc()
             
             # Marquer la vidéo comme ayant une erreur
-            from database import get_videos_collection
-            videos_collection = get_videos_collection()
             await videos_collection.update_one(
                 {"id": video['id']},
                 {
