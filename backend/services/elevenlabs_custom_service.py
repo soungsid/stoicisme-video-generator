@@ -139,7 +139,7 @@ class ElevenLabsService:
                 try:
                     # Générer l'audio
                     audio = client.text_to_speech.convert(
-                        text="[excited] " + text,
+                        text= text,
                         voice_id=self.voice_id,
                         model_id="eleven_v3",
                         output_format="mp3_44100_128"  

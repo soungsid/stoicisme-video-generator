@@ -1,3 +1,4 @@
+from pathlib import Path
 import traceback
 from fastapi import APIRouter, HTTPException, status
 import os
@@ -64,7 +65,7 @@ async def generate_images_for_idea(idea_id: str):
         image_directory = directories["image_directory"]
         
         # Générer les images via l'API externe
-        generated_images = await _generate_images_with_api(image_prompts, image_directory)
+        generated_images = await _generate_images_with_api(image_prompts, image_directory, script_text)
         
         # Mettre à jour l'idée avec les informations d'images
         await ideas_collection.update_one(
@@ -94,20 +95,21 @@ async def generate_images_for_idea(idea_id: str):
             detail=f"Error generating images: {str(e)}"
         )
 
-async def _generate_images_with_api(image_prompts: List[str], output_directory: str) -> List[str]:
+async def _generate_images_with_api(image_prompts: List[str], output_directory: str, script_text :str) -> List[str]:
     """
     Génère toutes les images en une seule requête via l'API externe
     """
     # Construire le payload avec tous les prompts
     payload = {
-        "video_directory": output_directory,
-        "timestamps_script_prompt": [image_prompts[0]],
-        "video_script": f"Video script with {len(image_prompts)} images"
+        "video_directory": Path(output_directory).as_posix(),
+        "timestamps_script_prompt": image_prompts,
+        "video_script": script_text
     }
     
     headers = {
         "Content-Type": "application/json"
     }
+    print(f"payload = {payload}")
     
     async with httpx.AsyncClient() as client:
         print(f"📞 call the {IMAGE_API_BASE_URL}/generate/image/video")

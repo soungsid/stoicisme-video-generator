@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Dict
 import re
 
@@ -14,9 +15,6 @@ class ResourceConfigService:
         self.resources_dir = os.getenv("RESOURCES_DIR", "/app/ressources")
         self.template_dir = os.path.join(self.resources_dir, "video-template")
         self.videos_dir = os.path.join(self.resources_dir, "videos")
-        self.audio_dir = os.path.join(self.resources_dir, "audio")
-        self.images_dir = os.path.join(self.resources_dir, "images")
-        self.subtitles_dir = os.path.join(self.resources_dir, "subtitles")
         
         # Créer les répertoires s'ils n'existent pas
         self._ensure_directories()
@@ -26,63 +24,37 @@ class ResourceConfigService:
         directories = [
             self.resources_dir,
             self.template_dir,
-            self.videos_dir,
-            self.audio_dir,
-            self.images_dir,
-            self.subtitles_dir
+            self.videos_dir
         ]
         
         for directory in directories:
             os.makedirs(directory, exist_ok=True)
     
-    def _sanitize_filename(self, filename: str) -> str:
-        """
-        Nettoie un nom de fichier pour le rendre sûr pour le système de fichiers
-        """
-        # Remplacer les caractères non autorisés par des underscores
-        sanitized = re.sub(r'[<>:"/\\|?*]', '_', filename)
-        # Supprimer les espaces multiples et les espaces en début/fin
-        sanitized = re.sub(r'\s+', ' ', sanitized).strip()
-        # Limiter la longueur
-        return sanitized[:100]
     
     def get_idea_directories(self, idea_id: str, idea_title: str = None) -> Dict[str, str]:
-        """
-        Retourne les répertoires pour une idée spécifique
-        
-        Args:
-            idea_id: L'ID de l'idée
-            idea_title: Le titre de l'idée (optionnel, utilisé pour nommer le dossier)
-            
-        Returns:
-            Dictionnaire avec les chemins des répertoires
-        """
-        # Créer un nom de dossier basé sur l'ID et le titre (si disponible)
         if idea_title:
-            safe_title = slugify(idea_id)
+            safe_title = slugify(idea_title)
             folder_name = safe_title
         else:
             folder_name = idea_id
-        
-        # Répertoire principal de l'idée
-        idea_dir = os.path.join(self.videos_dir, folder_name)
-        
-        # Sous-répertoires
-        video_directory = idea_dir
-        audio_directory = os.path.join(idea_dir, "audio")
-        image_directory = os.path.join(idea_dir, "images")
-        subtitle_directory = os.path.join(idea_dir, "subtitles")
-        
-        # Créer les répertoires
-        for directory in [idea_dir, audio_directory, image_directory, subtitle_directory]:
-            os.makedirs(directory, exist_ok=True)
-        
+
+        base_dir = Path(self.videos_dir)  # convertit en Path OS-safe
+
+        idea_dir = base_dir / folder_name
+        audio_dir = idea_dir / "audio"
+        image_dir = idea_dir / "images"
+        subtitle_dir = idea_dir / "subtitles"
+
+        # Création des dossiers
+        for d in [idea_dir, audio_dir, image_dir, subtitle_dir]:
+            d.mkdir(parents=True, exist_ok=True)
+
         return {
-            "video_directory": video_directory,
-            "audio_directory": audio_directory,
-            "image_directory": image_directory,
-            "subtitle_directory": subtitle_directory,
-            "idea_directory": idea_dir
+            "video_directory": str(idea_dir),
+            "audio_directory": str(audio_dir),
+            "image_directory": str(image_dir),
+            "subtitle_directory": str(subtitle_dir),
+            "idea_directory": str(idea_dir),
         }
     
     def get_template_files(self) -> list:
@@ -97,27 +69,6 @@ class ResourceConfigService:
         except FileNotFoundError:
             return []
     
-    def get_resource_path(self, resource_type: str, filename: str) -> str:
-        """
-        Retourne le chemin complet pour une ressource spécifique
-        
-        Args:
-            resource_type: Type de ressource ('video', 'audio', 'image', 'subtitle')
-            filename: Nom du fichier
-            
-        Returns:
-            Chemin complet vers la ressource
-        """
-        if resource_type == 'video':
-            return os.path.join(self.videos_dir, filename)
-        elif resource_type == 'audio':
-            return os.path.join(self.audio_dir, filename)
-        elif resource_type == 'image':
-            return os.path.join(self.images_dir, filename)
-        elif resource_type == 'subtitle':
-            return os.path.join(self.subtitles_dir, filename)
-        else:
-            raise ValueError(f"Type de ressource non supporté: {resource_type}")
     
     def get_resources_dir(self) -> str:
         """Retourne le répertoire racine des ressources"""
@@ -131,14 +82,6 @@ class ResourceConfigService:
         """Retourne le répertoire des vidéos"""
         return self.videos_dir
     
-    def get_audio_dir(self) -> str:
-        """Retourne le répertoire des fichiers audio"""
-        return self.audio_dir
-    
-    def get_images_dir(self) -> str:
-        """Retourne le répertoire des images"""
-        return self.images_dir
-    
-    def get_subtitles_dir(self) -> str:
-        """Retourne le répertoire des sous-titres"""
-        return self.subtitles_dir
+if __name__ == "__main__":
+    resourceConfigService = ResourceConfigService()
+    print(f" {resourceConfigService.get_idea_directories("", "un titre avec de.chao,edede")}")

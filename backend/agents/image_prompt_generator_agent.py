@@ -129,6 +129,8 @@ Le prompt doit:
 4. Être adapté au contenu stoïcien (si pertinent)
 5. Être réaliste et cinématographique
 6. Utiliser un style photographique ou artistique approprié
+7. modern 2D animation style, clean line art, soft shading, warm colors, expressive faces
+
 
 Exemple de format:
 "cinematic shot of [description], [lighting], [composition], [style], [mood]"
