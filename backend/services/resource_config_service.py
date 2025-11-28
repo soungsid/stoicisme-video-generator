@@ -84,4 +84,4 @@ class ResourceConfigService:
     
 if __name__ == "__main__":
     resourceConfigService = ResourceConfigService()
-    print(f" {resourceConfigService.get_idea_directories("", "un titre avec de.chao,edede")}")
+    print(f" {resourceConfigService.get_idea_directories('', 'un titre avec de.chao,edede')}")
