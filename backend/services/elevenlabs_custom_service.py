@@ -117,7 +117,24 @@ class ElevenLabsService:
             # Autres erreurs (authentification, réseau, etc.)
             print(f"❌ Other ElevenLabs error: {error_message}")
             raise error
-    
+    def _prepare_text(self, text: str) -> str:
+        """
+        Améliore la fluidité : enlève les coupures,
+        optimise ponctuation, ajoute rythme narratif.
+        """
+        import re
+
+        # supprime espaces inutiles
+        cleaned = re.sub(r"\s+", " ", text).strip()
+
+        # remplace les fins de phrase trop sèches par des pauses douces
+        cleaned = cleaned.replace(". ", "... ")
+        cleaned = cleaned.replace("! ", "… ")
+        cleaned = cleaned.replace("? ", "… ")
+
+        # aide Eleven à “chanter” la narration
+        return cleaned
+
     async def generate_audio(self, text: str, output_path: str, max_retries: int = 3) -> Tuple[str, int]:
         """
         Générer l'audio pour un texte donné avec retry automatique en cas d'erreur de crédits
@@ -138,11 +155,25 @@ class ElevenLabsService:
                 
                 try:
                     # Générer l'audio
+                    ssml = f"""
+                        <speak>
+                        <prosody rate="94%" pitch="-3%" volume="+2dB">
+                            {self._prepare_text(text)}
+                        </prosody>
+                        </speak>
+                        """
+                    #brian: nPczCjzI2devNBz1zQrb
                     audio = client.text_to_speech.convert(
-                        text= text,
-                        voice_id=self.voice_id,
-                        model_id="eleven_v3",
-                        output_format="mp3_44100_128"  
+                        text=ssml,
+                        voice_id="nPczCjzI2devNBz1zQrb",
+                        model_id="eleven_multilingual_v2",
+                        output_format="mp3_44100_128",
+                        voice_settings={
+                            "stability": 0.25,
+                            "similarity_boost": 0.85,
+                            "style": 0.70,
+                            "use_speaker_boost": True,
+                        }
                     )
                     print("✅ Audio generated successfully. Next step: saving audio")
                     
@@ -210,7 +241,9 @@ class ElevenLabsService:
 async def main():
     elevenlabs_service = ElevenLabsService()
     text = """
-    Un jeune couple venait d’emménager. Un matin, en prenant leur petit-déjeuner, la jeune femme vit sa voisine étendre son linge. « Son linge n’est pas propre, » dit-elle. « Elle ne sait pas bien laver. Elle devrait utiliser une meilleure lessive. » Son mari resta silencieux. Chaque fois que la voisine suspendait son linge, la jeune femme répétait les mêmes critiques. Un mois plus tard, elle fut étonnée de voir le linge parfaitement propre. « Regarde ! Elle a enfin appris à laver correctement. Qui a bien pu lui montrer ? » Son mari répondit calmement : « Je me suis levé tôt et j’ai nettoyé nos fenêtres. » La vie fonctionne ainsi : ce que nous percevons chez les autres dépend de la clarté de notre propre regard. Ne juge pas trop vite, surtout si ta vision est obscurcie par la colère, la jalousie ou la négativité. Juger quelqu’un ne dit pas qui il est, mais qui tu es.
+    Assez de masques. Assez d'auto-sabotage. Démolissons les illusions.
+Un. "Je n'ai pas le temps." - C'est une excuse pour la peur.
+Deux. "Je changerai demain." - Demain n'existe pas.
     """
     await elevenlabs_service.generate_audio(text, "sss.mp3")
     
