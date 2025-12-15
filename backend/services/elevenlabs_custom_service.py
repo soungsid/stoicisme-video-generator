@@ -157,7 +157,7 @@ class ElevenLabsService:
                     # Générer l'audio
                     ssml = f"""
                         <speak>
-                        <prosody rate="94%" pitch="-3%" volume="+2dB">
+                        <prosody rate="105%" pitch="-1%" volume="soft">
                             {self._prepare_text(text)}
                         </prosody>
                         </speak>
